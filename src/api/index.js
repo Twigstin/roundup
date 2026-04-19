@@ -62,3 +62,14 @@ export const updateEntry = async (entryId, updates) => {
     writeDB(ENTRIES_KEY, entries)
     return entries[index]
 }
+
+//create function to create entry
+export const createEntry = async (entry) => {
+    await delay(300)
+    //fetch entries from database
+    const entries = readDB(ENTRIES_KEY)
+    entries.push(entry)
+    //update changes
+    writeDB(ENTRIES_KEY, entries);
+    return entry
+}
