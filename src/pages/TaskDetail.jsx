@@ -10,6 +10,8 @@ function TaskDetail() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
+  const [editingNoteId, setEditingNoteId] = useState(null)
+  const [noteText, setNoteText] = useState('')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -73,7 +75,7 @@ const filteredEntries = enrichedEntries.filter(entry => {
     return <p className="loading-text">Task not found.</p>
   }
 
-  const handleStatusUpdate = async (entryId, currentStatus) => {
+const handleStatusUpdate = async (entryId, currentStatus) => {
   let newStatus
 
   if (isPayment) {
@@ -92,6 +94,20 @@ const filteredEntries = enrichedEntries.filter(entry => {
   setEntries(prev =>
     prev.map(e => e.id === entryId ? { ...e, status: newStatus } : e)
   )
+}
+
+const handleSaveNote = async (entryId) => {
+  await updateEntry(entryId, {
+    note: noteText,
+    updatedAt: new Date().toISOString()
+  })
+
+  setEntries(prev =>
+    prev.map(e => e.id === entryId ? { ...e, note: noteText } : e)
+  )
+
+  setEditingNoteId(null)
+  setNoteText('')
 }
 
   return (
@@ -212,28 +228,74 @@ const filteredEntries = enrichedEntries.filter(entry => {
   ) : (
     <div className="entry-list">
       {filteredEntries.map(entry => (
-        <div key={entry.id} className="entry-row">
-          <div className="entry-student">
-            <p className="entry-name">{entry.student?.name}</p>
-            <p className="entry-reg">{entry.student?.regNumber}</p>
-          </div>
-          <div className="entry-right">
-  <span className={`status-badge status-${entry.status}`}>
-    {entry.status.replace('_', ' ')}
-  </span>
-  <button
-    className="toggle-btn"
-    onClick={() => handleStatusUpdate(entry.id, entry.status)}
-  >
-    {isPayment
-      ? entry.status === 'not_paid' ? 'Mark part paid'
-        : entry.status === 'part_paid' ? 'Mark paid'
-        : 'Mark not paid'
-      : entry.status === 'pending' ? 'Mark submitted' : 'Mark pending'
-    }
-  </button>
+        <div key={entry.id} className="entry-row-wrapper">
+  <div className="entry-row">
+    <div className="entry-student">
+      <p className="entry-name">{entry.student?.name}</p>
+      <p className="entry-reg">{entry.student?.regNumber}</p>
+    </div>
+    <div className="entry-right">
+      <span className={`status-badge status-${entry.status}`}>
+        {entry.status.replace('_', ' ')}
+      </span>
+      <button
+        className="toggle-btn"
+        onClick={() => handleStatusUpdate(entry.id, entry.status)}
+      >
+        {isPayment
+          ? entry.status === 'not_paid' ? 'Mark part paid'
+            : entry.status === 'part_paid' ? 'Mark paid'
+            : 'Mark not paid'
+          : entry.status === 'pending' ? 'Mark submitted' : 'Mark pending'
+        }
+      </button>
+      <button
+        className="note-btn"
+        onClick={() => {
+          setEditingNoteId(entry.id)
+          setNoteText(entry.note || '')
+        }}
+      >
+        {entry.note ? 'Edit note' : 'Add note'}
+      </button>
+    </div>
+  </div>
+
+  {entry.note && editingNoteId !== entry.id && (
+    <p className="entry-note">{entry.note}</p>
+  )}
+
+  {editingNoteId === entry.id && (
+    <div className="note-editor">
+      <input
+        className="form-input"
+        type="text"
+        placeholder="Add a note…"
+        value={noteText}
+        onChange={(e) => setNoteText(e.target.value)}
+      />
+      <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+        <button
+          className="btn-primary"
+          style={{ padding: '6px 14px', fontSize: '13px' }}
+          onClick={() => handleSaveNote(entry.id)}
+        >
+          Save
+        </button>
+        <button
+          className="btn-secondary"
+          style={{ padding: '6px 14px', fontSize: '13px' }}
+          onClick={() => {
+            setEditingNoteId(null)
+            setNoteText('')
+          }}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  )}
 </div>
-        </div>
       ))}
     </div>
   )}
