@@ -2,20 +2,37 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { getTasks, getStudents, deleteTask } from '../api/index'
 import { readDB } from '../api/db'
+import ConfirmModal from '../components/ConfirmModal'
 
 function Dashboard() {
   const [tasks, setTasks] = useState([])
   const [allEntries, setAllEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
+  const [modalOpen, setModalOpen] = useState(false)
+  const [taskToDelete, setTaskToDelete] = useState(null)
 
-  const handleDelete = async (e, taskId) => {
+  const handleDeleteClick = (e, taskId) => {
   e.stopPropagation()
-  if (!window.confirm('Delete this task? This cannot be undone.')) return
-  await deleteTask(taskId)
-  setTasks(prev => prev.filter(t => t.id !== taskId))
-  setAllEntries(prev => prev.filter(e => e.taskId !== taskId))
+  setTaskToDelete(taskId)
+  setModalOpen(true)
 }
+
+const handleConfirmDelete = async () => {
+  await deleteTask(taskToDelete)
+  setTasks(prev => prev.filter(t => t.id !== taskToDelete))
+  setAllEntries(prev => prev.filter(e => e.taskId !== taskToDelete))
+  setModalOpen(false)
+  setTaskToDelete(null)
+}
+
+const handleCancelDelete = () => {
+  setModalOpen(false)
+  setTaskToDelete(null)
+}
+
+
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -118,7 +135,7 @@ function Dashboard() {
                     )}
                     <button
   className="btn-danger"
-  onClick={(e) => handleDelete(e, task.id)}
+  onClick={(e) => handleDeleteClick(e, task.id)}
 >
   Delete
 </button>
@@ -130,7 +147,7 @@ function Dashboard() {
   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
     <button
       className="btn-danger"
-      onClick={(e) => handleDelete(e, task.id)}
+      onClick={(e) => handleDeleteClick(e, task.id)}
     >
       Delete
     </button>
@@ -141,7 +158,13 @@ function Dashboard() {
             )
           })}
         </div>
-      )}
+      )}{modalOpen && (
+  <ConfirmModal
+    message="Are you sure you want to delete this task? This action cannot be undone."
+    onConfirm={handleConfirmDelete}
+    onCancel={handleCancelDelete}
+  />
+)}
     </div>
   )
 }
