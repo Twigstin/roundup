@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { getTasks, getStudents } from '../api/index'
+import { getTasks, getStudents, deleteTask } from '../api/index'
 import { readDB } from '../api/db'
 
 function Dashboard() {
@@ -8,6 +8,14 @@ function Dashboard() {
   const [allEntries, setAllEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
+
+  const handleDelete = async (e, taskId) => {
+  e.stopPropagation()
+  if (!window.confirm('Delete this task? This cannot be undone.')) return
+  await deleteTask(taskId)
+  setTasks(prev => prev.filter(t => t.id !== taskId))
+  setAllEntries(prev => prev.filter(e => e.taskId !== taskId))
+}
 
   useEffect(() => {
     const fetchData = async () => {
@@ -108,13 +116,27 @@ function Dashboard() {
                         </div>
                       </>
                     )}
-                    <span className="task-card-chevron">›</span>
+                    <button
+  className="btn-danger"
+  onClick={(e) => handleDelete(e, task.id)}
+>
+  Delete
+</button>
+<span className="task-card-chevron">›</span>
                   </div>
                 )}
 
                 {total === 0 && (
-                  <span className="task-card-chevron">›</span>
-                )}
+  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <button
+      className="btn-danger"
+      onClick={(e) => handleDelete(e, task.id)}
+    >
+      Delete
+    </button>
+    <span className="task-card-chevron">›</span>
+  </div>
+)}
               </div>
             )
           })}
