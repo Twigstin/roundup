@@ -62,3 +62,115 @@ body {
   margin: 0 auto;
   width: 100%;
 }
+
+
+.loading-text {
+  color: #888;
+  font-size: 14px;
+  padding: 24px 0;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: #111;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: #333;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 24px;
+  background: #fff;
+  border: 1px dashed #ddd;
+  border-radius: 12px;
+}
+
+.empty-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #111;
+  margin-bottom: 6px;
+}
+
+.empty-subtitle {
+  font-size: 14px;
+  color: #888;
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.task-card {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.task-card:hover {
+  border-color: #bbb;
+}
+
+.task-card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.task-card-title {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.type-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.type-submission {
+  background: #EEEDFE;
+  color: #3C3489;
+}
+
+.type-payment {
+  background: #E1F5EE;
+  color: #085041;
+}
+
+.type-attendance {
+  background: #FAEEDA;
+  color: #633806;
+}
+
+.task-card-chevron {
+  font-size: 20px;
+  color: #bbb;
+}
