@@ -13,10 +13,8 @@ export const getTasks = async () => {
 //create function to create and add new task to database
 export const createTask = async (task) => {
     await delay(300)
-    //get list of tasks from database
     const tasks = readDB(TASKS_KEY)
     tasks.push(task)
-    //save update
     writeDB(TASKS_KEY, tasks)
     return task;
 }
@@ -37,10 +35,8 @@ export const getStudents = async () => {
 //create function add new student to task
 export const createStudent = async (student) => {
     await delay(300)
-    //fetch students
     const students = readDB(STUDENTS_KEY)
     students.push(student)
-    //save update
     writeDB(STUDENTS_KEY, students);
     return student
 }
@@ -55,7 +51,6 @@ export const getEntries = async (taskId) => {
 //create function to update entries
 export const updateEntry = async (entryId, updates) => {
     await delay(300)
-    //fetch entries
     const entries = readDB(ENTRIES_KEY)
     const index = entries.findIndex(e => e.id === entryId)
     entries[index] = { ...entries[index], ...updates }
@@ -66,10 +61,8 @@ export const updateEntry = async (entryId, updates) => {
 //create function to create entry
 export const createEntry = async (entry) => {
     await delay(300)
-    //fetch entries from database
     const entries = readDB(ENTRIES_KEY)
     entries.push(entry)
-    //update changes
     writeDB(ENTRIES_KEY, entries);
     return entry
 }
