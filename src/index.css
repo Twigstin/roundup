@@ -234,3 +234,72 @@ body {
   border-radius: 8px;
   margin-bottom: 16px;
 }
+
+
+.roster-count {
+  font-size: 13px;
+  color: #888;
+}
+
+.btn-secondary {
+  background: #fff;
+  color: #111;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: #f5f5f5;
+}
+
+.btn-danger {
+  background: #fff;
+  color: #c0392b;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  border: 1px solid #f5c6c2;
+  cursor: pointer;
+}
+
+.btn-danger:hover {
+  background: #fdf0ef;
+}
+
+.student-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.student-list-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  padding: 8px 0;
+  font-size: 11px;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 4px;
+}
+
+.student-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  padding: 10px 0;
+  border-bottom: 1px solid #f5f5f5;
+  align-items: center;
+}
+
+.student-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.student-reg {
+  font-size: 13px;
+  color: #666;
+}

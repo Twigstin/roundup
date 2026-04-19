@@ -66,3 +66,10 @@ export const createEntry = async (entry) => {
     writeDB(ENTRIES_KEY, entries);
     return entry
 }
+
+//create function to delete student
+export const deleteStudent = async (studentId) => {
+    await delay(300)
+    const students = readDB(STUDENTS_KEY).filter(student => student.id === studentId)
+    writeDB(STUDENTS_KEY, students)
+}
