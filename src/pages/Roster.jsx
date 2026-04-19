@@ -96,7 +96,7 @@ function Roster() {
   return (
     <div>
       <div className="page-header">
-        <h1 className="page-title">Student roster</h1>
+        <h1 className="page-title bold">Student roster</h1>
         <span className="roster-count">{students.length} students</span>
       </div>
 

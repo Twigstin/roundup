@@ -4,8 +4,39 @@
   box-sizing: border-box;
 }
 
+@font-face {
+  font-family: 'inter';
+  src: url('./assets/Fonts/inter-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'montserrat-bold';
+  src: url('./assets/Fonts/Montserrat-Bold.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'montserrat-regular';
+  src: url('./assets/Fonts/Montserrat-SemiBold.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+}
+
+.bold {
+  font-family: 'montserrat-bold', sans-serif;
+}
+
+.light-bold {
+  font-family: 'montserrat-regular', sans-serif;
+}
+
+
+
 body {
-  font-family: sans-serif;
+  font-family: 'inter', sans-serif;
   background-color: #f5f5f5;
   color: #111;
 }
@@ -43,6 +74,7 @@ body {
   font-size: 14px;
   text-decoration: none;
   color: #555;
+  font-family: 'montserrat-regular', sans-serif;
 }
 
 .nav-link:hover {
@@ -66,8 +98,10 @@ body {
 
 .loading-text {
   color: #888;
-  font-size: 14px;
+  font-size: 1rem;
   padding: 24px 0;
+  text-align: center;
+  font-family: 'montserrat-regular', sans-serif;
 }
 
 .page-header {
@@ -579,4 +613,70 @@ body {
 
 .btn-danger-solid:hover {
   background: #a93226;
+}
+
+@media (max-width: 600px) {
+  .task-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .task-card-stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .task-card-chevron {
+    display: none;
+  }
+
+  .task-stat-divider {
+    display: none;
+  }
+
+  .entry-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .entry-right {
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .toggle-btn {
+    flex: 1;
+  }
+
+  .note-btn {
+    width: 100%;
+  }
+
+  .note-editor {
+    width: 100%;
+  }
+
+  .summary-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .filter-tabs {
+    gap: 4px;
+  }
+
+  .filter-tab {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+}
+
+.entry-row-wrapper {
+  border-bottom: 1px solid #f5f5f5;
+  padding: 12px 0;
+}
+
+.entry-row-wrapper:last-child {
+  border-bottom: none;
 }

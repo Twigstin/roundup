@@ -117,29 +117,29 @@ const handleSaveNote = async (entryId) => {
     </div>
 
     <div className="task-detail-header">
-      <h1 className="page-title">{task.title}</h1>
+      <h1 className="page-title bold">{task.title}</h1>
       <span className={`type-badge type-${task.type}`}>{task.type}</span>
     </div>
 
     <div className={`summary-grid ${isPayment ? 'summary-grid-4' : 'summary-grid-3'}`}>
       <div className="summary-card">
-        <p className="summary-label">Total</p>
-        <p className="summary-number">{total}</p>
+        <p className="summary-label light-bold">Total</p>
+        <p className="summary-number bold">{total}</p>
       </div>
 
       {isPayment ? (
         <>
           <div className="summary-card">
-            <p className="summary-label">Paid</p>
-            <p className="summary-number success">{submittedCount}</p>
+            <p className="summary-label light-bold">Paid</p>
+            <p className="summary-number success bold">{submittedCount}</p>
           </div>
           <div className="summary-card">
-            <p className="summary-label">Part paid</p>
-            <p className="summary-number warning">{partPaidCount}</p>
+            <p className="summary-label light-bold">Part paid</p>
+            <p className="summary-number warning bold">{partPaidCount}</p>
           </div>
           <div className="summary-card">
-            <p className="summary-label">Not paid</p>
-            <p className="summary-number danger">{pendingCount}</p>
+            <p className="summary-label light-bold">Not paid</p>
+            <p className="summary-number danger bold">{pendingCount}</p>
           </div>
         </>
       ) : (
@@ -249,15 +249,6 @@ const handleSaveNote = async (entryId) => {
           : entry.status === 'pending' ? 'Mark submitted' : 'Mark pending'
         }
       </button>
-      <button
-        className="note-btn"
-        onClick={() => {
-          setEditingNoteId(entry.id)
-          setNoteText(entry.note || '')
-        }}
-      >
-        {entry.note ? 'Edit note' : 'Add note'}
-      </button>
     </div>
   </div>
 
@@ -265,7 +256,7 @@ const handleSaveNote = async (entryId) => {
     <p className="entry-note">{entry.note}</p>
   )}
 
-  {editingNoteId === entry.id && (
+  {editingNoteId === entry.id ? (
     <div className="note-editor">
       <input
         className="form-input"
@@ -294,6 +285,16 @@ const handleSaveNote = async (entryId) => {
         </button>
       </div>
     </div>
+  ) : (
+    <button
+      className="note-btn"
+      onClick={() => {
+        setEditingNoteId(entry.id)
+        setNoteText(entry.note || '')
+      }}
+    >
+      {entry.note ? 'Edit note' : 'Add note'}
+    </button>
   )}
 </div>
       ))}

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { getTasks, getStudents, deleteTask } from '../api/index'
+import { getTasks, deleteTask } from '../api/index'
 import { readDB } from '../api/db'
 import ConfirmModal from '../components/ConfirmModal'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 function Dashboard() {
   const [tasks, setTasks] = useState([])
@@ -37,7 +38,7 @@ const handleCancelDelete = () => {
   useEffect(() => {
     const fetchData = async () => {
       const data = await getTasks()
-      const students = await getStudents()
+      //const students = await getStudents()
       const entries = readDB('roundup_entries')
       setTasks(data)
       setAllEntries(entries)
@@ -73,7 +74,7 @@ const handleCancelDelete = () => {
   return (
     <div>
       <div className="page-header">
-        <h1 className="page-title">Your tasks</h1>
+        <h1 className="page-title bold">Your tasks</h1>
         <Link to="/tasks/new" className="btn-primary">+ New task</Link>
       </div>
 

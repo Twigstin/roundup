@@ -8,7 +8,7 @@ function Layout() {
     return (
         <div className="app-shell">
       <nav className="top-nav">
-        <span className="app-name">Roundup</span>
+        <span className="app-name bold">Roundup</span>
         <div className="nav-links">
           <Link
             to="/"

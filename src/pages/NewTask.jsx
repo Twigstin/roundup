@@ -52,7 +52,7 @@ function NewTask() {
       </div>
 
       <div className="form-card">
-        <h1 className="page-title" style={{ marginBottom: '24px' }}>New task</h1>
+        <h1 className="page-title bold" style={{ marginBottom: '24px' }}>New task</h1>
 
         {error && <p className="form-error">{error}</p>}
 
