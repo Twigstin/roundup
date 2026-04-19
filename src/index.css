@@ -303,3 +303,153 @@ body {
   font-size: 13px;
   color: #666;
 }
+
+.task-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.summary-grid {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.summary-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.summary-grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.summary-card {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.summary-label {
+  font-size: 11px;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.summary-number {
+  font-size: 24px;
+  font-weight: 600;
+  color: #111;
+}
+
+.summary-number.success { color: #27500A; }
+.summary-number.warning { color: #633806; }
+.summary-number.danger  { color: #791F1F; }
+
+
+.entry-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.entry-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.entry-row:last-child {
+  border-bottom: none;
+}
+
+.entry-student {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.entry-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.entry-reg {
+  font-size: 12px;
+  color: #888;
+}
+
+.entry-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-badge {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  text-transform: capitalize;
+}
+
+.status-submitted  { background: #EAF3DE; color: #27500A; }
+.status-pending    { background: #FAEEDA; color: #633806; }
+.status-paid       { background: #EAF3DE; color: #27500A; }
+.status-part_paid  { background: #FAEEDA; color: #633806; }
+.status-not_paid   { background: #FCEBEB; color: #791F1F; }
+
+
+.toggle-btn {
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.toggle-btn:hover {
+  background: #f5f5f5;
+}
+
+
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.filter-tab {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #e5e5e5;
+  background: #fff;
+  font-size: 13px;
+  color: #555;
+  cursor: pointer;
+}
+
+.filter-tab:hover {
+  border-color: #bbb;
+  color: #111;
+}
+
+.filter-tab.active {
+  background: #111;
+  color: #fff;
+  border-color: #111;
+}

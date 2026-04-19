@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { getTasks, getEntries, getStudents } from '../api/index'
+import { getTasks, getEntries, getStudents, updateEntry } from '../api/index'
 
 function TaskDetail() {
   const { id } = useParams()
@@ -8,6 +8,8 @@ function TaskDetail() {
   const [entries, setEntries] = useState([])
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState('all')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,22 +32,214 @@ function TaskDetail() {
     return <p className="loading-text">Loading task...</p>
   }
 
+  const isPayment = task?.type === 'payment'
+
+const total = entries.length
+
+const submittedCount = isPayment
+  ? entries.filter(e => e.status === 'paid').length
+  : entries.filter(e => e.status === 'submitted').length
+
+const pendingCount = isPayment
+  ? entries.filter(e => e.status === 'not_paid').length
+  : entries.filter(e => e.status === 'pending').length
+
+const partPaidCount = isPayment
+  ? entries.filter(e => e.status === 'part_paid').length
+  : 0
+
+  const enrichedEntries = entries.map(entry => {
+  const student = students.find(s => s.id === entry.studentId)
+  return { ...entry, student }
+})
+
+const filteredEntries = enrichedEntries.filter(entry => {
+  const matchesSearch =
+    entry.student?.name.toLowerCase().includes(search.toLowerCase()) ||
+    entry.student?.regNumber.toLowerCase().includes(search.toLowerCase())
+
+  const matchesFilter =
+    filter === 'all' ||
+    (filter === 'submitted' && entry.status === 'submitted') ||
+    (filter === 'pending' && entry.status === 'pending') ||
+    (filter === 'paid' && entry.status === 'paid') ||
+    (filter === 'part_paid' && entry.status === 'part_paid') ||
+    (filter === 'not_paid' && entry.status === 'not_paid')
+
+  return matchesSearch && matchesFilter
+})
+
   if (!task) {
     return <p className="loading-text">Task not found.</p>
   }
 
+  const handleStatusUpdate = async (entryId, currentStatus) => {
+  let newStatus
+
+  if (isPayment) {
+    if (currentStatus === 'not_paid') newStatus = 'part_paid'
+    else if (currentStatus === 'part_paid') newStatus = 'paid'
+    else newStatus = 'not_paid'
+  } else {
+    newStatus = currentStatus === 'pending' ? 'submitted' : 'pending'
+  }
+
+  await updateEntry(entryId, {
+    status: newStatus,
+    updatedAt: new Date().toISOString()
+  })
+
+  setEntries(prev =>
+    prev.map(e => e.id === entryId ? { ...e, status: newStatus } : e)
+  )
+}
+
   return (
-    <div>
-      <div className="page-header">
-        <Link to="/" className="back-link">← Back</Link>
+  <div>
+    <div className="page-header">
+      <Link to="/" className="back-link">← Back</Link>
+    </div>
+
+    <div className="task-detail-header">
+      <h1 className="page-title">{task.title}</h1>
+      <span className={`type-badge type-${task.type}`}>{task.type}</span>
+    </div>
+
+    <div className={`summary-grid ${isPayment ? 'summary-grid-4' : 'summary-grid-3'}`}>
+      <div className="summary-card">
+        <p className="summary-label">Total</p>
+        <p className="summary-number">{total}</p>
       </div>
 
-      <div className="task-detail-header">
-        <h1 className="page-title">{task.title}</h1>
-        <span className={`type-badge type-${task.type}`}>{task.type}</span>
-      </div>
+      {isPayment ? (
+        <>
+          <div className="summary-card">
+            <p className="summary-label">Paid</p>
+            <p className="summary-number success">{submittedCount}</p>
+          </div>
+          <div className="summary-card">
+            <p className="summary-label">Part paid</p>
+            <p className="summary-number warning">{partPaidCount}</p>
+          </div>
+          <div className="summary-card">
+            <p className="summary-label">Not paid</p>
+            <p className="summary-number danger">{pendingCount}</p>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="summary-card">
+            <p className="summary-label">Submitted</p>
+            <p className="summary-number success">{submittedCount}</p>
+          </div>
+          <div className="summary-card">
+            <p className="summary-label">Pending</p>
+            <p className="summary-number warning">{pendingCount}</p>
+          </div>
+        </>
+      )}
     </div>
-  )
+
+    <div className="toolbar">
+  <input
+    className="form-input"
+    type="text"
+    placeholder="Search by name or reg number…"
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+  />
+  <div className="filter-tabs">
+    <button
+      className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
+      onClick={() => setFilter('all')}
+    >
+      All
+    </button>
+
+    {isPayment ? (
+      <>
+        <button
+          className={`filter-tab ${filter === 'paid' ? 'active' : ''}`}
+          onClick={() => setFilter('paid')}
+        >
+          Paid
+        </button>
+        <button
+          className={`filter-tab ${filter === 'part_paid' ? 'active' : ''}`}
+          onClick={() => setFilter('part_paid')}
+        >
+          Part paid
+        </button>
+        <button
+          className={`filter-tab ${filter === 'not_paid' ? 'active' : ''}`}
+          onClick={() => setFilter('not_paid')}
+        >
+          Not paid
+        </button>
+      </>
+    ) : (
+      <>
+        <button
+          className={`filter-tab ${filter === 'submitted' ? 'active' : ''}`}
+          onClick={() => setFilter('submitted')}
+        >
+          Submitted
+        </button>
+        <button
+          className={`filter-tab ${filter === 'pending' ? 'active' : ''}`}
+          onClick={() => setFilter('pending')}
+        >
+          Pending
+        </button>
+      </>
+    )}
+  </div>
+</div>
+
+    <div className="form-card">
+  {filteredEntries.length === 0 ? (
+    <div className="empty-state" style={{ border: 'none', padding: '24px' }}>
+      <p className="empty-title">
+        {enrichedEntries.length === 0 ? 'No entries yet' : 'No results found'}
+      </p>
+      <p className="empty-subtitle">
+        {enrichedEntries.length === 0
+          ? 'Create a new task after adding students to your roster'
+          : 'Try a different search or filter'
+        }
+      </p>
+    </div>
+  ) : (
+    <div className="entry-list">
+      {filteredEntries.map(entry => (
+        <div key={entry.id} className="entry-row">
+          <div className="entry-student">
+            <p className="entry-name">{entry.student?.name}</p>
+            <p className="entry-reg">{entry.student?.regNumber}</p>
+          </div>
+          <div className="entry-right">
+  <span className={`status-badge status-${entry.status}`}>
+    {entry.status.replace('_', ' ')}
+  </span>
+  <button
+    className="toggle-btn"
+    onClick={() => handleStatusUpdate(entry.id, entry.status)}
+  >
+    {isPayment
+      ? entry.status === 'not_paid' ? 'Mark part paid'
+        : entry.status === 'part_paid' ? 'Mark paid'
+        : 'Mark not paid'
+      : entry.status === 'pending' ? 'Mark submitted' : 'Mark pending'
+    }
+  </button>
+</div>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
+  </div>
+)
 }
 
 export default TaskDetail
