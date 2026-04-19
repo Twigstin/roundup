@@ -174,3 +174,63 @@ body {
   font-size: 20px;
   color: #bbb;
 }
+
+.back-link {
+  font-size: 14px;
+  color: #555;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: #111;
+}
+
+.form-card {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.form-label {
+  font-size: 13px;
+  color: #555;
+  font-weight: 500;
+}
+
+.form-input {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #111;
+  background: #fff;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #111;
+}
+
+.form-hint {
+  font-size: 12px;
+  color: #999;
+}
+
+.form-error {
+  font-size: 13px;
+  color: #c0392b;
+  background: #fdf0ef;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
