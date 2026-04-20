@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { getStudents, createStudent, deleteStudent, bulkCreateStudents } from '../api/index'
 import ConfirmModal from '../components/ConfirmModal'
+import Spinner from '../components/Spinner'
 
 function Roster() {
   const [students, setStudents] = useState([])
@@ -120,7 +121,11 @@ const handleCancelImport = () => {
   )
 
   if (loading) {
-    return <p className="loading-text">Loading roster...</p>
+    return (
+    <div className="loading-container">
+      <Spinner size={24} />
+    </div>
+  )
   }
 
   return (
@@ -165,9 +170,14 @@ const handleCancelImport = () => {
   className="btn-secondary"
   onClick={() => !importing && fileInputRef.current.click()}
   disabled={importing}
-  style={{ opacity: importing ? 0.6 : 1 }}
+  style={{ opacity: importing ? 0.6 : 1, display: 'flex', alignItems: 'center', gap: '8px' }}
 >
-  {importing ? 'Importing...' : 'Import CSV'}
+  {importing ? (
+    <>
+      <Spinner size={14} />
+      Importing...
+    </>
+  ) : 'Import CSV'}
 </button>
           <input
             ref={fileInputRef}

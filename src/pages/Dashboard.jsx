@@ -4,6 +4,7 @@ import { getTasks, deleteTask } from '../api/index'
 import { readDB } from '../api/db'
 import ConfirmModal from '../components/ConfirmModal'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import Spinner from '../components/Spinner'
 
 function Dashboard() {
   const [tasks, setTasks] = useState([])
@@ -68,7 +69,11 @@ const handleCancelDelete = () => {
   }
 
   if (loading) {
-    return <p className="loading-text">Loading tasks...</p>
+    return (
+    <div className="loading-container">
+      <Spinner size={24} />
+    </div>
+  )
   }
 
   return (

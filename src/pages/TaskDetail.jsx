@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getTasks, getEntries, getStudents, updateEntry } from '../api/index'
+import Spinner from '../components/Spinner'
 
 function TaskDetail() {
   const { id } = useParams()
@@ -31,7 +32,11 @@ function TaskDetail() {
   }, [id])
 
   if (loading) {
-    return <p className="loading-text">Loading task...</p>
+    return (
+    <div className="loading-container">
+      <Spinner size={24} />
+    </div>
+  )
   }
 
   const isPayment = task?.type === 'payment'

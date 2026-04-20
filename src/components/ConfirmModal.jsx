@@ -7,10 +7,10 @@ function ConfirmModal({ message, onConfirm, onCancel }) {
         <p className="modal-message">{message}</p>
         <div className="modal-actions">
           <button className="btn-secondary" onClick={onCancel}>
-            Cancel
+            No
           </button>
           <button className="btn-danger-solid" onClick={onConfirm}>
-            Delete
+            Yes
           </button>
         </div>
       </div>
