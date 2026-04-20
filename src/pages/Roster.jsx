@@ -140,7 +140,7 @@ const handleCancelImport = () => {
 
         {error && <p className="form-error">{error}</p>}
 
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+        <div className='form-input-ctn' id="form-input-ctn">
           <input
             className="form-input"
             type="text"
@@ -181,15 +181,17 @@ const handleCancelImport = () => {
 </button>
           <input
             ref={fileInputRef}
-            type="file"
             accept=".csv"
+            type="file"
             style={{ display: 'none' }}
             onChange={handleCSVImport}
           />
-        </div>
       </div>
 
       <div className="form-card">
+        <div className="class-list-title">
+          <p>Class List</p>
+        </div>
         <input
           className="form-input"
           type="text"
@@ -199,6 +201,7 @@ const handleCancelImport = () => {
           style={{ marginBottom: '16px' }}
         />
 
+        
         {filteredStudents.length === 0 ? (
           <div className="empty-state" style={{ border: 'none', padding: '24px' }}>
             <p className="empty-title">
@@ -210,21 +213,28 @@ const handleCancelImport = () => {
           </div>
         ) : (
           <div className="student-list">
-            <div className="student-list-header">
+            <div className="student-list-header" id="student-list-header">
               <span>Name</span>
               <span>Reg number</span>
               <span></span>
             </div>
             {filteredStudents.map(student => (
               <div key={student.id} className="student-row">
+                <div id='student-row-arr'>
                 <span className="student-name">{student.name}</span>
-                <span className="student-reg">{student.regNumber}</span>
+                <span className="student-reg first">{student.regNumber}</span>
+                </div>
+
+                <span className="student-reg mid">{student.regNumber}</span>
+
+                <div className='remove-name-btn'>
                 <button
                   className="btn-danger"
                   onClick={() => handleRemove(student.id)}
                 >
                   Remove
                 </button>
+                </div>
               </div>
             ))}
           </div>
@@ -238,6 +248,7 @@ const handleCancelImport = () => {
   />
 )}
     </div>
+  </div>
   )
 }
 

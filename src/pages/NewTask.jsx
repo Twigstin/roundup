@@ -2,17 +2,30 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { createTask } from '../api/index'
 import { getStudents, createEntry } from '../api/index'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
 
 function NewTask() {
   const [title, setTitle] = useState('')
-  const [type, setType] = useState('submission')
+  const [type, setType] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
   const handleSubmit = async () => {
+
+    if ((!title.trim()) && (type === '')) {
+      setError('Please enter a task name and select a task type')
+      return
+    }
+    
     if (!title.trim()) {
       setError('Please enter a task name')
+      return
+    }
+
+    if (type === '') {
+      setError('Please select task type')
       return
     }
 
@@ -48,7 +61,7 @@ function NewTask() {
   return (
     <div>
       <div className="page-header">
-        <Link to="/" className="back-link">← Back</Link>
+        <Link to="/" className="back-link"><FontAwesomeIcon icon={faChevronLeft}/> Back</Link>
       </div>
 
       <div className="form-card">
@@ -74,6 +87,7 @@ function NewTask() {
             value={type}
             onChange={(e) => setType(e.target.value)}
           >
+            <option value="">Select task type</option>
             <option value="submission">Submission</option>
             <option value="payment">Payment</option>
             <option value="attendance">Attendance</option>

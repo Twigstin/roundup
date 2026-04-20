@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getTasks, getEntries, getStudents, updateEntry } from '../api/index'
 import Spinner from '../components/Spinner'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
 
 function TaskDetail() {
   const { id } = useParams()
@@ -10,7 +12,7 @@ function TaskDetail() {
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState('total')
   const [editingNoteId, setEditingNoteId] = useState(null)
   const [noteText, setNoteText] = useState('')
 
@@ -66,7 +68,7 @@ const filteredEntries = enrichedEntries.filter(entry => {
     entry.student?.regNumber.toLowerCase().includes(search.toLowerCase())
 
   const matchesFilter =
-    filter === 'all' ||
+    filter === 'total' ||
     (filter === 'submitted' && entry.status === 'submitted') ||
     (filter === 'pending' && entry.status === 'pending') ||
     (filter === 'paid' && entry.status === 'paid') ||
@@ -118,7 +120,7 @@ const handleSaveNote = async (entryId) => {
   return (
   <div>
     <div className="page-header">
-      <Link to="/" className="back-link">← Back</Link>
+      <Link to="/" className="back-link"><FontAwesomeIcon icon={faChevronLeft}/> Back</Link>
     </div>
 
     <div className="task-detail-header">
@@ -127,39 +129,57 @@ const handleSaveNote = async (entryId) => {
     </div>
 
     <div className={`summary-grid ${isPayment ? 'summary-grid-4' : 'summary-grid-3'}`}>
-      <div className="summary-card">
-        <p className="summary-label light-bold">Total</p>
-        <p className="summary-number bold">{total}</p>
-      </div>
+  <div
+    className={`summary-card ${filter === 'total' ? 'summary-card-active' : ''}`}
+    onClick={() => setFilter('total')}
+  >
+    <p className="summary-label">Total</p>
+    <p className="summary-number">{total}</p>
+  </div>
 
-      {isPayment ? (
-        <>
-          <div className="summary-card">
-            <p className="summary-label light-bold">Paid</p>
-            <p className="summary-number success bold">{submittedCount}</p>
-          </div>
-          <div className="summary-card">
-            <p className="summary-label light-bold">Part paid</p>
-            <p className="summary-number warning bold">{partPaidCount}</p>
-          </div>
-          <div className="summary-card">
-            <p className="summary-label light-bold">Not paid</p>
-            <p className="summary-number danger bold">{pendingCount}</p>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="summary-card">
-            <p className="summary-label">Submitted</p>
-            <p className="summary-number success">{submittedCount}</p>
-          </div>
-          <div className="summary-card">
-            <p className="summary-label">Pending</p>
-            <p className="summary-number warning">{pendingCount}</p>
-          </div>
-        </>
-      )}
-    </div>
+  {isPayment ? (
+    <>
+      <div
+        className={`summary-card ${filter === 'paid' ? 'summary-card-active' : ''}`}
+        onClick={() => setFilter('paid')}
+      >
+        <p className="summary-label">Paid</p>
+        <p className="summary-number success">{submittedCount}</p>
+      </div>
+      <div
+        className={`summary-card ${filter === 'part_paid' ? 'summary-card-active' : ''}`}
+        onClick={() => setFilter('part_paid')}
+      >
+        <p className="summary-label">Part paid</p>
+        <p className="summary-number warning">{partPaidCount}</p>
+      </div>
+      <div
+        className={`summary-card ${filter === 'not_paid' ? 'summary-card-active' : ''}`}
+        onClick={() => setFilter('not_paid')}
+      >
+        <p className="summary-label">Not paid</p>
+        <p className="summary-number danger">{pendingCount}</p>
+      </div>
+    </>
+  ) : (
+    <>
+      <div
+        className={`summary-card ${filter === 'submitted' ? 'summary-card-active' : ''}`}
+        onClick={() => setFilter('submitted')}
+      >
+        <p className="summary-label">Submitted</p>
+        <p className="summary-number success">{submittedCount}</p>
+      </div>
+      <div
+        className={`summary-card ${filter === 'pending' ? 'summary-card-active' : ''}`}
+        onClick={() => setFilter('pending')}
+      >
+        <p className="summary-label">Pending</p>
+        <p className="summary-number warning">{pendingCount}</p>
+      </div>
+    </>
+  )}
+</div>
 
     <div className="toolbar">
   <input
@@ -169,52 +189,6 @@ const handleSaveNote = async (entryId) => {
     value={search}
     onChange={(e) => setSearch(e.target.value)}
   />
-  <div className="filter-tabs">
-    <button
-      className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
-      onClick={() => setFilter('all')}
-    >
-      All
-    </button>
-
-    {isPayment ? (
-      <>
-        <button
-          className={`filter-tab ${filter === 'paid' ? 'active' : ''}`}
-          onClick={() => setFilter('paid')}
-        >
-          Paid
-        </button>
-        <button
-          className={`filter-tab ${filter === 'part_paid' ? 'active' : ''}`}
-          onClick={() => setFilter('part_paid')}
-        >
-          Part paid
-        </button>
-        <button
-          className={`filter-tab ${filter === 'not_paid' ? 'active' : ''}`}
-          onClick={() => setFilter('not_paid')}
-        >
-          Not paid
-        </button>
-      </>
-    ) : (
-      <>
-        <button
-          className={`filter-tab ${filter === 'submitted' ? 'active' : ''}`}
-          onClick={() => setFilter('submitted')}
-        >
-          Submitted
-        </button>
-        <button
-          className={`filter-tab ${filter === 'pending' ? 'active' : ''}`}
-          onClick={() => setFilter('pending')}
-        >
-          Pending
-        </button>
-      </>
-    )}
-  </div>
 </div>
 
     <div className="form-card">
