@@ -73,3 +73,12 @@ export const deleteStudent = async (studentId) => {
     const students = readDB(STUDENTS_KEY).filter(student => student.id === studentId)
     writeDB(STUDENTS_KEY, students)
 }
+
+//create function to manage bulk imports
+export const bulkCreateStudents = async (newStudents) => {
+  await delay(100)
+  const existing = readDB(STUDENTS_KEY)
+  const merged = [...existing, ...newStudents]
+  writeDB(STUDENTS_KEY, merged)
+  return newStudents
+}

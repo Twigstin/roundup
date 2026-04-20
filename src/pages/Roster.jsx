@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { getStudents, createStudent, deleteStudent } from '../api/index'
+import { getStudents, createStudent, deleteStudent, bulkCreateStudents } from '../api/index'
+import ConfirmModal from '../components/ConfirmModal'
 
 function Roster() {
   const [students, setStudents] = useState([])
@@ -9,6 +10,9 @@ function Roster() {
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const fileInputRef = useRef(null)
+  const [importing, setImporting] = useState(false)
+  const [showImportWarning, setShowImportWarning] = useState(false)
+  const [pendingFile, setPendingFile] = useState(null)
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -43,46 +47,72 @@ function Roster() {
     setStudents(prev => prev.filter(s => s.id !== studentId))
   }
 
-  const handleCSVImport = (e) => {
-    const file = e.target.files[0]
-    if (!file) return
+  const handleCSVImport = async (e) => {
+  const file = e.target.files[0]
+  if (!file) return
 
-    const reader = new FileReader()
-    reader.onload = async (event) => {
-      const text = event.target.result
-      const lines = text.trim().split('\n')
-      const headers = lines[0].toLowerCase().split(',').map(h => h.trim())
+  const currentStudents = await getStudents()
+  if (currentStudents.length > 0) {
+    setPendingFile(file)
+    setShowImportWarning(true)
+    return
+  }
 
-      const nameIndex = headers.indexOf('name')
-      const regIndex = headers.indexOf('regnumber')
+  processCSV(file)
+}
 
-      if (nameIndex === -1 || regIndex === -1) {
-        setError('CSV must have columns: name, regNumber')
-        return
-      }
+const processCSV = (file) => {
+  setImporting(true)
+  setError('')
 
-      const newStudents = []
+  const reader = new FileReader()
+  reader.onload = async (event) => {
+    const text = event.target.result
+    const lines = text.trim().split('\n')
+    const headers = lines[0].toLowerCase().split(',').map(h => h.trim())
 
-      for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i].split(',').map(c => c.trim())
-        if (!cols[nameIndex] || !cols[regIndex]) continue
+    const nameIndex = headers.indexOf('name')
+    const regIndex = headers.indexOf('regnumber')
 
-        const student = {
-          id: crypto.randomUUID(),
-          name: cols[nameIndex],
-          regNumber: cols[regIndex]
-        }
-
-        await createStudent(student)
-        newStudents.push(student)
-      }
-
-      setStudents(prev => [...prev, ...newStudents])
-      setError('')
+    if (nameIndex === -1 || regIndex === -1) {
+      setError('CSV must have columns: name, regNumber')
+      setImporting(false)
+      return
     }
 
-    reader.readAsText(file)
+    const newStudents = []
+
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(',').map(c => c.trim())
+      if (!cols[nameIndex] || !cols[regIndex]) continue
+
+      newStudents.push({
+        id: crypto.randomUUID(),
+        name: cols[nameIndex],
+        regNumber: cols[regIndex]
+      })
+    }
+
+    await bulkCreateStudents(newStudents)
+    setStudents(prev => [...prev, ...newStudents])
+    setImporting(false)
+    setError('')
   }
+
+  reader.readAsText(file)
+}
+
+const handleConfirmImport = () => {
+  setShowImportWarning(false)
+  processCSV(pendingFile)
+  setPendingFile(null)
+}
+
+const handleCancelImport = () => {
+  setShowImportWarning(false)
+  setPendingFile(null)
+  fileInputRef.current.value = ''
+}
 
   const filteredStudents = students.filter(s =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -123,12 +153,22 @@ function Roster() {
         </div>
 
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn-primary" onClick={handleAddStudent}>
-            Add student
-          </button>
-          <button className="btn-secondary" onClick={() => fileInputRef.current.click()}>
-            Import CSV
-          </button>
+          <button
+  className="btn-primary"
+  onClick={handleAddStudent}
+  disabled={importing}
+  style={{ opacity: importing ? 0.6 : 1 }}
+>
+  Add student
+</button>
+          <button
+  className="btn-secondary"
+  onClick={() => !importing && fileInputRef.current.click()}
+  disabled={importing}
+  style={{ opacity: importing ? 0.6 : 1 }}
+>
+  {importing ? 'Importing...' : 'Import CSV'}
+</button>
           <input
             ref={fileInputRef}
             type="file"
@@ -180,6 +220,13 @@ function Roster() {
           </div>
         )}
       </div>
+      {showImportWarning && (
+  <ConfirmModal
+    message="Students already exist in your roster. Uploading this file will add to the existing list. Do you want to continue?"
+    onConfirm={handleConfirmImport}
+    onCancel={handleCancelImport}
+  />
+)}
     </div>
   )
 }
