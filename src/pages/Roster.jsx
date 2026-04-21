@@ -139,7 +139,7 @@ const handleClearAll = async () => {
     <div>
       <div className="page-header">
         <h1 className="page-title bold">Student roster</h1>
-        <span className="roster-count">{students.length} students</span>
+        <span className="roster-count">{students.length} student{students.length > 1 ? "s" : ""}</span>
       </div>
 
       <div className="form-card" style={{ marginBottom: '16px' }}>

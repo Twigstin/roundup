@@ -1,4 +1,4 @@
-import { delay, readDB, writeDB } from './db.js';
+import { delay, readDB, writeDB, setRosterUpdatedAt, getRosterMeta } from './db.js';
 
 const TASKS_KEY = "roundup_tasks";
 const STUDENTS_KEY = "roundup_students";
@@ -12,11 +12,16 @@ export const getTasks = async () => {
 
 //create function to create and add new task to database
 export const createTask = async (task) => {
-    await delay(300)
-    const tasks = readDB(TASKS_KEY)
-    tasks.push(task)
-    writeDB(TASKS_KEY, tasks)
-    return task;
+  await delay(300)
+  const tasks = readDB(TASKS_KEY)
+  const meta = getRosterMeta()
+  const taskWithSync = {
+    ...task,
+    rosterSyncedAt: meta.updatedAt || new Date().toISOString()
+  }
+  tasks.push(taskWithSync)
+  writeDB(TASKS_KEY, tasks)
+  return taskWithSync
 }
 
 //create function to delete task
@@ -34,11 +39,12 @@ export const getStudents = async () => {
 
 //create function add new student to task
 export const createStudent = async (student) => {
-    await delay(300)
-    const students = readDB(STUDENTS_KEY)
-    students.push(student)
-    writeDB(STUDENTS_KEY, students);
-    return student
+  await delay(300)
+  const students = readDB(STUDENTS_KEY)
+  students.push(student)
+  writeDB(STUDENTS_KEY, students)
+  setRosterUpdatedAt()
+  return student
 }
 
 //create function to fetch entries from database
@@ -69,9 +75,10 @@ export const createEntry = async (entry) => {
 
 //create function to delete student
 export const deleteStudent = async (studentId) => {
-    await delay(300)
-    const students = readDB(STUDENTS_KEY).filter(student => student.id === studentId)
-    writeDB(STUDENTS_KEY, students)
+  await delay(300)
+  const students = readDB(STUDENTS_KEY).filter(s => s.id !== studentId)
+  writeDB(STUDENTS_KEY, students)
+  setRosterUpdatedAt()
 }
 
 //create function to manage bulk imports
@@ -80,6 +87,7 @@ export const bulkCreateStudents = async (newStudents) => {
   const existing = readDB(STUDENTS_KEY)
   const merged = [...existing, ...newStudents]
   writeDB(STUDENTS_KEY, merged)
+  setRosterUpdatedAt()
   return newStudents
 }
 
@@ -96,6 +104,7 @@ export const bulkCreateEntries = async (newEntries) => {
 export const clearAllStudents = async () => {
   await delay(100)
   writeDB(STUDENTS_KEY, [])
+  setRosterUpdatedAt()
 }
 
 export const populateTaskEntries = async (taskId, taskType, students) => {
@@ -118,10 +127,20 @@ export const populateTaskEntries = async (taskId, taskType, students) => {
       updatedAt: new Date().toISOString()
     }))
 
-  if (newEntries.length === 0) return []
+  if (newEntries.length > 0) {
+    const merged = [...existing, ...newEntries]
+    writeDB(ENTRIES_KEY, merged)
+  }
 
-  const merged = [...existing, ...newEntries]
-  writeDB(ENTRIES_KEY, merged)
+  const meta = getRosterMeta()
+  const tasks = readDB(TASKS_KEY)
+  const index = tasks.findIndex(t => t.id === taskId)
+  tasks[index] = {
+    ...tasks[index],
+    rosterSyncedAt: meta.updatedAt || new Date().toISOString()
+  }
+  writeDB(TASKS_KEY, tasks)
+
   return newEntries
 }
 
@@ -133,3 +152,17 @@ export const updateTask = async (taskId, updates) => {
   writeDB(TASKS_KEY, tasks)
   return tasks[index]
 }
+
+export const syncTaskRoster = async (taskId) => {
+  await delay(100)
+  const meta = getRosterMeta()
+  const tasks = readDB(TASKS_KEY)
+  const index = tasks.findIndex(t => t.id === taskId)
+  tasks[index] = {
+    ...tasks[index],
+    rosterSyncedAt: meta.updatedAt || new Date().toISOString()
+  }
+  writeDB(TASKS_KEY, tasks)
+}
+
+export { getRosterMeta }

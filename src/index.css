@@ -297,6 +297,10 @@ body {
   cursor: pointer;
 }
 
+button {
+  font-family: 'inter', sans-serif;
+}
+
 .btn-secondary:hover {
   background: #f5f5f5;
 }
@@ -657,6 +661,18 @@ body {
     align-items: flex-start;
     gap: 12px;
   }
+
+  .roster-update-banner {
+  background: #E6F1FB;
+  border: 1px solid #85B7EB;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
   #btn-danger-all-clear {
     display: flex;
   }
@@ -898,4 +914,40 @@ body {
   flex: 1;
   font-size: 16px;
   font-weight: 500;
+}
+
+.roster-update-banner {
+  background: #E6F1FB;
+  border: 1px solid #85B7EB;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.roster-update-text {
+  flex: 1;
+}
+
+.roster-update-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #0C447C;
+  margin-bottom: 4px;
+}
+
+.roster-update-subtitle {
+  font-size: 13px;
+  color: #185FA5;
+  line-height: 1.5;
+}
+
+.roster-update-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
 }

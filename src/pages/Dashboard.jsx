@@ -101,7 +101,7 @@ const handleCancelDelete = () => {
               >
                 <div className="task-card-left">
                   <div className="task-card-top">
-                    <span className="task-card-title">{task.title}</span>
+                    <span className="task-card-title light-bold">{task.title}</span>
                     <span className={`type-badge type-${task.type}`}>{task.type}</span>
                   </div>
                   <p className="task-card-meta">{total} students</p>
@@ -143,7 +143,7 @@ const handleCancelDelete = () => {
   className="btn-danger"
   onClick={(e) => handleDeleteClick(e, task.id)}
 >
-  Delete
+  Delete Task
 </button>
 <span className="task-card-chevron">›</span>
                   </div>
@@ -155,7 +155,7 @@ const handleCancelDelete = () => {
       className="btn-danger"
       onClick={(e) => handleDeleteClick(e, task.id)}
     >
-      Delete
+      Delete Task
     </button>
     <span className="task-card-chevron">›</span>
   </div>

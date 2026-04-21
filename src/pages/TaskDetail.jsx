@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { getTasks, getEntries, getStudents, updateEntry, populateTaskEntries, updateTask } from '../api/index'
+import { getTasks, getEntries, getStudents, updateEntry, populateTaskEntries, updateTask, getRosterMeta, syncTaskRoster } from '../api/index'
 import Spinner from '../components/Spinner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
@@ -18,20 +18,33 @@ function TaskDetail() {
   const [populating, setPopulating] = useState(false)
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleText, setTitleText] = useState('')
+  const [showRosterUpdate, setShowRosterUpdate] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
-      const allTasks = await getTasks()
-      const foundTask = allTasks.find(t => t.id === id)
+  const allTasks = await getTasks()
+  const foundTask = allTasks.find(t => t.id === id)
+  const allEntries = await getEntries(id)
+  const allStudents = await getStudents()
+  const meta = getRosterMeta()
 
-      const allEntries = await getEntries(id)
-      const allStudents = await getStudents()
+  setTask(foundTask)
+  setEntries(allEntries)
+  setStudents(allStudents)
 
-      setTask(foundTask)
-      setEntries(allEntries)
-      setStudents(allStudents)
-      setLoading(false)
-    }
+  if (
+    foundTask &&
+    meta.updatedAt &&
+    foundTask.rosterSyncedAt &&
+    new Date(meta.updatedAt) > new Date(foundTask.rosterSyncedAt)
+  ) {
+    const existingStudentIds = allEntries.map(e => e.studentId)
+    const hasNewStudents = allStudents.some(s => !existingStudentIds.includes(s.id))
+    if (hasNewStudents) setShowRosterUpdate(true)
+  }
+
+  setLoading(false)
+}
 
     fetchData()
   }, [id])
@@ -134,6 +147,21 @@ const handleSaveTitle = async () => {
   setEditingTitle(false)
 }
 
+const handleRosterSync = async () => {
+  setShowRosterUpdate(false)
+  setPopulating(true)
+  const newEntries = await populateTaskEntries(task.id, task.type, students)
+  setEntries(prev => [...prev, ...newEntries])
+  setTask(prev => ({ ...prev, rosterSyncedAt: new Date().toISOString() }))
+  setPopulating(false)
+}
+
+const handleDismissRosterUpdate = async () => {
+  await syncTaskRoster(task.id)
+  setTask(prev => ({ ...prev, rosterSyncedAt: new Date().toISOString() }))
+  setShowRosterUpdate(false)
+}
+
   return (
   <div>
     <div className="page-header">
@@ -163,7 +191,7 @@ const handleSaveTitle = async () => {
     </div>
   ) : (
     <div className="title-display-row">
-      <h1 className="page-title">{task.title}</h1>
+      <h1 className="page-title bold">{task.title}</h1>
       <span className={`type-badge type-${task.type}`}>{task.type}</span>
       <button
         className="edit-title-btn"
@@ -183,8 +211,8 @@ const handleSaveTitle = async () => {
     className={`summary-card ${filter === 'total' ? 'summary-card-active' : ''}`}
     onClick={() => setFilter('total')}
   >
-    <p className="summary-label">Total</p>
-    <p className="summary-number">{total}</p>
+    <p className="summary-label light-bold">Total</p>
+    <p className="summary-number bold">{total}</p>
   </div>
 
   {isPayment ? (
@@ -193,22 +221,22 @@ const handleSaveTitle = async () => {
         className={`summary-card ${filter === 'paid' ? 'summary-card-active' : ''}`}
         onClick={() => setFilter('paid')}
       >
-        <p className="summary-label">Paid</p>
-        <p className="summary-number success">{submittedCount}</p>
+        <p className="summary-label light-bold">Paid</p>
+        <p className="summary-number success bold">{submittedCount}</p>
       </div>
       <div
         className={`summary-card ${filter === 'part_paid' ? 'summary-card-active' : ''}`}
         onClick={() => setFilter('part_paid')}
       >
-        <p className="summary-label">Part paid</p>
-        <p className="summary-number warning">{partPaidCount}</p>
+        <p className="summary-label light-bold">Part paid</p>
+        <p className="summary-number warning bold">{partPaidCount}</p>
       </div>
       <div
         className={`summary-card ${filter === 'not_paid' ? 'summary-card-active' : ''}`}
         onClick={() => setFilter('not_paid')}
       >
-        <p className="summary-label">Not paid</p>
-        <p className="summary-number danger">{pendingCount}</p>
+        <p className="summary-label light-bold">Not paid</p>
+        <p className="summary-number danger bold">{pendingCount}</p>
       </div>
     </>
   ) : (
@@ -230,7 +258,34 @@ const handleSaveTitle = async () => {
     </>
   )}
 </div>
-
+    {showRosterUpdate && (
+  <div className="roster-update-banner">
+    <div className="roster-update-text">
+      <p className="roster-update-title">Class list updated</p>
+      <p className="roster-update-subtitle">
+        New students were added to your roster since this task was created.
+        Would you like to load them into this task?
+      </p>
+    </div>
+    <div className="roster-update-actions">
+      <button
+        className="btn-primary"
+        style={{ fontSize: '13px', padding: '8px 14px' }}
+        onClick={handleRosterSync}
+        disabled={populating}
+      >
+        {populating ? 'Loading...' : 'Load new students'}
+      </button>
+      <button
+        className="btn-secondary"
+        style={{ fontSize: '13px', padding: '8px 14px' }}
+        onClick={handleDismissRosterUpdate}
+      >
+        Dismiss
+      </button>
+    </div>
+  </div>
+)}
     <div className="toolbar">
   <input
     className="form-input"
@@ -282,6 +337,7 @@ const handleSaveTitle = async () => {
   </div>
 ) : (
     <div className="entry-list">
+      
       {filteredEntries.map(entry => (
         <div key={entry.id} className="entry-row-wrapper">
   <div className="entry-row">
@@ -355,6 +411,7 @@ const handleSaveTitle = async () => {
       ))}
     </div>
   )}
+
 </div>
   </div>
 )
