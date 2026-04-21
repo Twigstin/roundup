@@ -15,6 +15,8 @@ function Roster() {
   const [showImportWarning, setShowImportWarning] = useState(false)
   const [pendingFile, setPendingFile] = useState(null)
   const [showClearWarning, setShowClearWarning] = useState(false)
+  const [showDeleteWarning, setShowDeleteWarning] = useState(false)
+  const [studentToDelete, setStudentToDelete] = useState(null)
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -120,6 +122,23 @@ const handleClearAll = async () => {
   await clearAllStudents()
   setStudents([])
   setShowClearWarning(false)
+}
+
+const handleDeleteClick = (studentId) => {
+  setStudentToDelete(studentId)
+  setShowDeleteWarning(true)
+}
+
+const handleConfirmDelete = async () => {
+  await deleteStudent(studentToDelete)
+  setStudents(prev => prev.filter(s => s.id !== studentToDelete))
+  setShowDeleteWarning(false)
+  setStudentToDelete(null)
+}
+
+const handleCancelDelete = () => {
+  setShowDeleteWarning(false)
+  setStudentToDelete(null)
 }
 
   const filteredStudents = students.filter(s =>
@@ -259,7 +278,7 @@ const handleClearAll = async () => {
                 <div className='remove-name-btn'>
                 <button
                   className="btn-danger"
-                  onClick={() => handleRemove(student.id)}
+                  onClick={() => handleDeleteClick(student.id)}
                 >
                   Remove
                 </button>
@@ -281,6 +300,13 @@ const handleClearAll = async () => {
     message="This will permanently delete all students from your roster. This action cannot be undone. Do you want to continue?"
     onConfirm={handleClearAll}
     onCancel={() => setShowClearWarning(false)}
+  />
+)}
+{showDeleteWarning && (
+  <ConfirmModal
+    message="Are you sure you want to remove this student from the class list? This won't affect existing task entries."
+    onConfirm={handleConfirmDelete}
+    onCancel={handleCancelDelete}
   />
 )}
     </div>

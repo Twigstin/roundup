@@ -43,7 +43,7 @@ export const createStudent = async (student) => {
   const students = readDB(STUDENTS_KEY)
   students.push(student)
   writeDB(STUDENTS_KEY, students)
-  setRosterUpdatedAt()
+  setRosterUpdatedAt('added')
   return student
 }
 
@@ -78,7 +78,7 @@ export const deleteStudent = async (studentId) => {
   await delay(300)
   const students = readDB(STUDENTS_KEY).filter(s => s.id !== studentId)
   writeDB(STUDENTS_KEY, students)
-  setRosterUpdatedAt()
+  setRosterUpdatedAt('removed')
 }
 
 //create function to manage bulk imports
@@ -87,7 +87,7 @@ export const bulkCreateStudents = async (newStudents) => {
   const existing = readDB(STUDENTS_KEY)
   const merged = [...existing, ...newStudents]
   writeDB(STUDENTS_KEY, merged)
-  setRosterUpdatedAt()
+  setRosterUpdatedAt('added')
   return newStudents
 }
 
@@ -104,7 +104,7 @@ export const bulkCreateEntries = async (newEntries) => {
 export const clearAllStudents = async () => {
   await delay(100)
   writeDB(STUDENTS_KEY, [])
-  setRosterUpdatedAt()
+  setRosterUpdatedAt('removed')
 }
 
 export const populateTaskEntries = async (taskId, taskType, students) => {

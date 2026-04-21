@@ -33,15 +33,16 @@ function TaskDetail() {
   setStudents(allStudents)
 
   if (
-    foundTask &&
-    meta.updatedAt &&
-    foundTask.rosterSyncedAt &&
-    new Date(meta.updatedAt) > new Date(foundTask.rosterSyncedAt)
-  ) {
-    const existingStudentIds = allEntries.map(e => e.studentId)
-    const hasNewStudents = allStudents.some(s => !existingStudentIds.includes(s.id))
-    if (hasNewStudents) setShowRosterUpdate(true)
-  }
+  foundTask &&
+  meta.updatedAt &&
+  foundTask.rosterSyncedAt &&
+  new Date(meta.updatedAt) > new Date(foundTask.rosterSyncedAt) &&
+  meta.changeType === 'added'
+) {
+  const existingStudentIds = allEntries.map(e => e.studentId)
+  const hasNewStudents = allStudents.some(s => !existingStudentIds.includes(s.id))
+  if (hasNewStudents) setShowRosterUpdate(true)
+}
 
   setLoading(false)
 }

@@ -21,8 +21,9 @@ export const getRosterMeta = () => {
   return meta ? JSON.parse(meta) : { updatedAt: null }
 }
 
-export const setRosterUpdatedAt = () => {
+export const setRosterUpdatedAt = (changeType = 'added') => {
   localStorage.setItem(ROSTER_META_KEY, JSON.stringify({
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    changeType
   }))
 }
