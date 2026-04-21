@@ -251,6 +251,17 @@ body {
   box-sizing: border-box;
 }
 
+.form-input-search {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #111;
+  background: #fff;
+  width: 85%;
+  box-sizing: border-box;
+}
+
 .form-input:focus {
   outline: none;
   border-color: #111;
@@ -300,7 +311,17 @@ body {
   cursor: pointer;
 }
 
-.btn-danger:hover {
+.btn-danger-clear-all {
+  background: #fff;
+  color: #c0392b;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  border: 1px solid #f5c6c2;
+  cursor: pointer;
+}
+
+.btn-danger:hover, .btn-danger-clear-all:hover {
   background: #fdf0ef;
 }
 
@@ -616,6 +637,10 @@ body {
   background: #a93226;
 }
 
+#btn-danger-all-clear {
+  display: none;
+}
+
 .student-reg.first {
     display: none;
   }
@@ -631,6 +656,17 @@ body {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+  }
+  #btn-danger-all-clear {
+    display: flex;
+  }
+
+  .form-input-search {
+    width: 100%;
+  }
+
+  #btn-danger-clear-all {
+    display: none;
   }
 
   #student-list-header {
@@ -792,3 +828,9 @@ body {
   color: rgb(100, 100, 100);
 }
 
+#manage-class-list {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}

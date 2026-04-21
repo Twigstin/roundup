@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { getStudents, createStudent, deleteStudent, bulkCreateStudents } from '../api/index'
+import { getStudents, createStudent, deleteStudent, bulkCreateStudents, clearAllStudents } from '../api/index'
 import ConfirmModal from '../components/ConfirmModal'
 import Spinner from '../components/Spinner'
 
@@ -14,6 +14,7 @@ function Roster() {
   const [importing, setImporting] = useState(false)
   const [showImportWarning, setShowImportWarning] = useState(false)
   const [pendingFile, setPendingFile] = useState(null)
+  const [showClearWarning, setShowClearWarning] = useState(false)
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -115,6 +116,12 @@ const handleCancelImport = () => {
   fileInputRef.current.value = ''
 }
 
+const handleClearAll = async () => {
+  await clearAllStudents()
+  setStudents([])
+  setShowClearWarning(false)
+}
+
   const filteredStudents = students.filter(s =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
     s.regNumber.toLowerCase().includes(search.toLowerCase())
@@ -186,20 +193,42 @@ const handleCancelImport = () => {
             style={{ display: 'none' }}
             onChange={handleCSVImport}
           />
+
+          {students.length > 0 && (
+  <button
+    className="btn-danger-clear-all"
+    id="btn-danger-all-clear"
+    onClick={() => setShowClearWarning(true)}
+    disabled={importing}
+  >
+    Clear all
+  </button>
+)}
       </div>
 
       <div className="form-card">
         <div className="class-list-title">
           <p>Class List</p>
         </div>
+        <div id="manage-class-list">
         <input
-          className="form-input"
+          className="form-input-search"
           type="text"
           placeholder="Search by name or reg number…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ marginBottom: '16px' }}
         />
+        {students.length > 0 && (
+  <button
+    className="btn-danger-clear-all"
+    id="btn-danger-clear-all"
+    onClick={() => setShowClearWarning(true)}
+    disabled={importing}
+  >
+    Clear all
+  </button>
+)}
+        </div>
 
         
         {filteredStudents.length === 0 ? (
@@ -245,6 +274,13 @@ const handleCancelImport = () => {
     message="Students already exist in your roster. Uploading this file will add to the existing list. Do you want to continue?"
     onConfirm={handleConfirmImport}
     onCancel={handleCancelImport}
+  />
+)}
+{showClearWarning && (
+  <ConfirmModal
+    message="This will permanently delete all students from your roster. This action cannot be undone. Do you want to continue?"
+    onConfirm={handleClearAll}
+    onCancel={() => setShowClearWarning(false)}
   />
 )}
     </div>

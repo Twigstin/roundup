@@ -92,3 +92,8 @@ export const bulkCreateEntries = async (newEntries) => {
   writeDB(ENTRIES_KEY, merged)
   return newEntries
 }
+
+export const clearAllStudents = async () => {
+  await delay(100)
+  writeDB(STUDENTS_KEY, [])
+}
