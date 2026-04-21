@@ -172,7 +172,7 @@ const handleSaveTitle = async () => {
           setEditingTitle(true)
         }}
       >
-        Edit
+        Edit Name
       </button>
     </div>
   )}
