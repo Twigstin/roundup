@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { createTask } from '../api/index'
-import { getStudents, createEntry } from '../api/index'
+import { getStudents, createEntry, bulkCreateEntries } from '../api/index'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
 
@@ -44,16 +44,16 @@ function NewTask() {
 
     const defaultStatus = type === 'payment' ? 'not_paid' : 'pending'
 
-    for (const student of students) {
-      await createEntry({
-        id: crypto.randomUUID(),
-        taskId: newTask.id,
-        studentId: student.id,
-        status: defaultStatus,
-        note: '',
-        updatedAt: new Date().toISOString()
-      })
-    }
+    const newEntries = students.map(student => ({
+  id: crypto.randomUUID(),
+  taskId: newTask.id,
+  studentId: student.id,
+  status: defaultStatus,
+  note: '',
+  updatedAt: new Date().toISOString()
+}))
+
+await bulkCreateEntries(newEntries)
 
     navigate('/')
   }

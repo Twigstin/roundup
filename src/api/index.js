@@ -82,3 +82,13 @@ export const bulkCreateStudents = async (newStudents) => {
   writeDB(STUDENTS_KEY, merged)
   return newStudents
 }
+
+
+//create function to manage creation of task withbulk entries
+export const bulkCreateEntries = async (newEntries) => {
+  await delay(100)
+  const existing = readDB(ENTRIES_KEY)
+  const merged = [...existing, ...newEntries]
+  writeDB(ENTRIES_KEY, merged)
+  return newEntries
+}
