@@ -97,3 +97,30 @@ export const clearAllStudents = async () => {
   await delay(100)
   writeDB(STUDENTS_KEY, [])
 }
+
+export const populateTaskEntries = async (taskId, taskType, students) => {
+  await delay(100)
+  const existing = readDB(ENTRIES_KEY)
+  const existingStudentIds = existing
+    .filter(e => e.taskId === taskId)
+    .map(e => e.studentId)
+
+  const defaultStatus = taskType === 'payment' ? 'not_paid' : 'pending'
+
+  const newEntries = students
+    .filter(s => !existingStudentIds.includes(s.id))
+    .map(s => ({
+      id: crypto.randomUUID(),
+      taskId,
+      studentId: s.id,
+      status: defaultStatus,
+      note: '',
+      updatedAt: new Date().toISOString()
+    }))
+
+  if (newEntries.length === 0) return []
+
+  const merged = [...existing, ...newEntries]
+  writeDB(ENTRIES_KEY, merged)
+  return newEntries
+}

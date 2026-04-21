@@ -1,7 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { createTask } from '../api/index'
-import { getStudents, createEntry, bulkCreateEntries } from '../api/index'
+import { createTask, getStudents, bulkCreateEntries } from '../api/index'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
 
@@ -11,6 +10,15 @@ function NewTask() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
+  const [rosterEmpty, setRosterEmpty] = useState(false)
+
+  useEffect(() => {
+  const checkRoster = async () => {
+    const students = await getStudents()
+    if (students.length === 0) setRosterEmpty(true)
+  }
+  checkRoster()
+}, [])
 
   const handleSubmit = async () => {
 
@@ -60,6 +68,17 @@ await bulkCreateEntries(newEntries)
 
   return (
     <div>
+      {rosterEmpty && (
+  <div className="roster-warning">
+    <p className="roster-warning-text">
+      Your class list is empty. Add your roster first so students are automatically tracked when you create a task.
+    </p>
+    <Link to="/roster" className="roster-warning-link">
+      Add class list →
+    </Link>
+  </div>
+)}
+
       <div className="page-header">
         <Link to="/" className="back-link"><FontAwesomeIcon icon={faChevronLeft}/> Back</Link>
       </div>

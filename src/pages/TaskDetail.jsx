@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { getTasks, getEntries, getStudents, updateEntry } from '../api/index'
+import { getTasks, getEntries, getStudents, updateEntry, populateTaskEntries } from '../api/index'
 import Spinner from '../components/Spinner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
@@ -15,6 +15,7 @@ function TaskDetail() {
   const [filter, setFilter] = useState('total')
   const [editingNoteId, setEditingNoteId] = useState(null)
   const [noteText, setNoteText] = useState('')
+  const [populating, setPopulating] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -117,6 +118,13 @@ const handleSaveNote = async (entryId) => {
   setNoteText('')
 }
 
+const handlePopulateFromRoster = async () => {
+  setPopulating(true)
+  const newEntries = await populateTaskEntries(task.id, task.type, students)
+  setEntries(prev => [...prev, ...newEntries])
+  setPopulating(false)
+}
+
   return (
   <div>
     <div className="page-header">
@@ -193,18 +201,44 @@ const handleSaveNote = async (entryId) => {
 
     <div className="form-card">
   {filteredEntries.length === 0 ? (
-    <div className="empty-state" style={{ border: 'none', padding: '24px' }}>
-      <p className="empty-title">
-        {enrichedEntries.length === 0 ? 'No entries yet' : 'No results found'}
-      </p>
-      <p className="empty-subtitle">
-        {enrichedEntries.length === 0
-          ? 'Create a new task after adding students to your roster'
-          : 'Try a different search or filter'
-        }
-      </p>
-    </div>
-  ) : (
+  <div className="empty-state" style={{ border: 'none', padding: '24px' }}>
+    {enrichedEntries.length === 0 ? (
+      students.length === 0 ? (
+        <>
+          <p className="empty-title">No class list added yet</p>
+          <p className="empty-subtitle">
+            You need to add your class list to the roster before tracking can begin.
+            Once added, your full list will appear here automatically.
+          </p>
+          <Link to="/roster" className="btn-primary" style={{ display: 'inline-block', marginTop: '16px' }}>
+            Go to roster →
+          </Link>
+        </>
+      ) : (
+        <>
+          <p className="empty-title">Your class list isn't loaded into this task yet</p>
+          <p className="empty-subtitle">
+            You added your roster after creating this task.
+            Click below to load your full class list into this task instantly.
+          </p>
+          <button
+            className="btn-primary"
+            style={{ marginTop: '16px' }}
+            onClick={handlePopulateFromRoster}
+            disabled={populating}
+          >
+            {populating ? 'Loading...' : 'Load class list into this task →'}
+          </button>
+        </>
+      )
+    ) : (
+      <>
+        <p className="empty-title">No results found</p>
+        <p className="empty-subtitle">Try a different search or filter</p>
+      </>
+    )}
+  </div>
+) : (
     <div className="entry-list">
       {filteredEntries.map(entry => (
         <div key={entry.id} className="entry-row-wrapper">
