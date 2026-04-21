@@ -864,3 +864,38 @@ body {
 .roster-warning-link:hover {
   text-decoration: underline;
 }
+
+.title-display-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.edit-title-btn {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #888;
+  cursor: pointer;
+}
+
+.edit-title-btn:hover {
+  color: #333;
+  border-color: #bbb;
+}
+
+.title-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.title-edit-input {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 500;
+}

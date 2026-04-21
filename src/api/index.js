@@ -124,3 +124,12 @@ export const populateTaskEntries = async (taskId, taskType, students) => {
   writeDB(ENTRIES_KEY, merged)
   return newEntries
 }
+
+export const updateTask = async (taskId, updates) => {
+  await delay(100)
+  const tasks = readDB(TASKS_KEY)
+  const index = tasks.findIndex(t => t.id === taskId)
+  tasks[index] = { ...tasks[index], ...updates }
+  writeDB(TASKS_KEY, tasks)
+  return tasks[index]
+}

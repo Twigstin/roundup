@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { getTasks, getEntries, getStudents, updateEntry, populateTaskEntries } from '../api/index'
+import { getTasks, getEntries, getStudents, updateEntry, populateTaskEntries, updateTask } from '../api/index'
 import Spinner from '../components/Spinner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
@@ -16,6 +16,8 @@ function TaskDetail() {
   const [editingNoteId, setEditingNoteId] = useState(null)
   const [noteText, setNoteText] = useState('')
   const [populating, setPopulating] = useState(false)
+  const [editingTitle, setEditingTitle] = useState(false)
+  const [titleText, setTitleText] = useState('')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -125,6 +127,13 @@ const handlePopulateFromRoster = async () => {
   setPopulating(false)
 }
 
+const handleSaveTitle = async () => {
+  if (!titleText.trim()) return
+  await updateTask(task.id, { title: titleText.trim() })
+  setTask(prev => ({ ...prev, title: titleText.trim() }))
+  setEditingTitle(false)
+}
+
   return (
   <div>
     <div className="page-header">
@@ -132,9 +141,42 @@ const handlePopulateFromRoster = async () => {
     </div>
 
     <div className="task-detail-header">
-      <h1 className="page-title bold">{task.title}</h1>
-      <span className={`type-badge type-${task.type}`}>{task.type}</span>
+  {editingTitle ? (
+    <div className="title-edit-row">
+      <input
+        className="form-input title-edit-input"
+        type="text"
+        value={titleText}
+        onChange={(e) => setTitleText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') handleSaveTitle()
+          if (e.key === 'Escape') setEditingTitle(false)
+        }}
+        autoFocus
+      />
+      <button className="btn-primary" style={{ padding: '8px 14px', fontSize: '13px' }} onClick={handleSaveTitle}>
+        Save
+      </button>
+      <button className="btn-secondary" style={{ padding: '8px 14px', fontSize: '13px' }} onClick={() => setEditingTitle(false)}>
+        Cancel
+      </button>
     </div>
+  ) : (
+    <div className="title-display-row">
+      <h1 className="page-title">{task.title}</h1>
+      <span className={`type-badge type-${task.type}`}>{task.type}</span>
+      <button
+        className="edit-title-btn"
+        onClick={() => {
+          setTitleText(task.title)
+          setEditingTitle(true)
+        }}
+      >
+        Edit
+      </button>
+    </div>
+  )}
+</div>
 
     <div className={`summary-grid ${isPayment ? 'summary-grid-4' : 'summary-grid-3'}`}>
   <div
