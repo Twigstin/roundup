@@ -117,15 +117,17 @@ export const populateTaskEntries = async (taskId, taskType, students) => {
   const defaultStatus = taskType === 'payment' ? 'not_paid' : 'pending'
 
   const newEntries = students
-    .filter(s => !existingStudentIds.includes(s.id))
-    .map(s => ({
-      id: crypto.randomUUID(),
-      taskId,
-      studentId: s.id,
-      status: defaultStatus,
-      note: '',
-      updatedAt: new Date().toISOString()
-    }))
+  .filter(s => !existingStudentIds.includes(s.id))
+  .map(s => ({
+    id: crypto.randomUUID(),
+    taskId,
+    studentId: s.id,
+    studentName: s.name,
+    studentRegNumber: s.regNumber,
+    status: defaultStatus,
+    note: '',
+    updatedAt: new Date().toISOString()
+  }))
 
   if (newEntries.length > 0) {
     const merged = [...existing, ...newEntries]

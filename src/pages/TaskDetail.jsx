@@ -73,15 +73,21 @@ const partPaidCount = isPayment
   ? entries.filter(e => e.status === 'part_paid').length
   : 0
 
-  const enrichedEntries = entries.map(entry => {
-  const student = students.find(s => s.id === entry.studentId)
-  return { ...entry, student }
-})
+  const enrichedEntries = entries.map(entry => ({
+  ...entry,
+  student: {
+    name: entry.studentName,
+    regNumber: entry.studentRegNumber
+  }
+}))
 
 const filteredEntries = enrichedEntries.filter(entry => {
+  const name = entry.student?.name || ''
+  const regNumber = entry.student?.regNumber || ''
+
   const matchesSearch =
-    entry.student?.name.toLowerCase().includes(search.toLowerCase()) ||
-    entry.student?.regNumber.toLowerCase().includes(search.toLowerCase())
+    name.toLowerCase().includes(search.toLowerCase()) ||
+    regNumber.toLowerCase().includes(search.toLowerCase())
 
   const matchesFilter =
     filter === 'total' ||

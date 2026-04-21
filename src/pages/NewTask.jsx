@@ -56,6 +56,8 @@ function NewTask() {
   id: crypto.randomUUID(),
   taskId: newTask.id,
   studentId: student.id,
+  studentName: student.name,
+  studentRegNumber: student.regNumber,
   status: defaultStatus,
   note: '',
   updatedAt: new Date().toISOString()
