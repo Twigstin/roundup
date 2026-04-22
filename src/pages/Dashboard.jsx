@@ -56,17 +56,33 @@ const handleCancelDelete = () => {
     const total = taskEntries.length
     const isPayment = taskType === 'payment'
 
-    const doneCount = isPayment
+    /*const doneCount = isPayment
       ? taskEntries.filter(e => e.status === 'paid').length
       : taskEntries.filter(e => e.status === 'submitted').length
 
     const pendingCount = isPayment
       ? taskEntries.filter(e => e.status === 'not_paid').length
-      : taskEntries.filter(e => e.status === 'pending').length
+      : taskEntries.filter(e => e.status === 'pending').length*/
+
+
+      const doneCount = isPayment
+  ? taskEntries.filter(e => e.status === 'paid').length
+  : taskType === 'attendance'
+  ? taskEntries.filter(e => e.status === 'present').length
+  : taskEntries.filter(e => e.status === 'submitted').length
+
+const pendingCount = isPayment
+  ? taskEntries.filter(e => e.status === 'not_paid').length
+  : taskType === 'attendance'
+  ? taskEntries.filter(e => e.status === 'absent').length
+  : taskEntries.filter(e => e.status === 'pending').length
+
 
     const partPaidCount = isPayment
       ? taskEntries.filter(e => e.status === 'part_paid').length
       : 0
+
+  
 
     return { total, doneCount, pendingCount, partPaidCount, isPayment }
   }
@@ -169,30 +185,31 @@ const handleCancelDelete = () => {
                     {isPayment ? (
                       <>
                         <div className="task-stat">
-                          <span className="task-stat-num success">{doneCount}</span>
-                          <span className="task-stat-label">paid</span>
-                        </div>
-                        <div className="task-stat-divider" />
-                        <div className="task-stat">
-                          <span className="task-stat-num warning">{partPaidCount}</span>
-                          <span className="task-stat-label">part paid</span>
-                        </div>
-                        <div className="task-stat-divider" />
-                        <div className="task-stat">
-                          <span className="task-stat-num danger">{pendingCount}</span>
-                          <span className="task-stat-label">not paid</span>
-                        </div>
+  <span className="task-stat-num success">{doneCount}</span>
+  <span className="task-stat-label">paid</span>
+</div>
+<div className="task-stat-divider" />
+
+<div className="task-stat">
+  <span className="task-stat-num warning">{partPaidCount}</span>
+  <span className="task-stat-label">part paid</span>
+</div>
+
+<div className="task-stat">
+  <span className="task-stat-num warning">{pendingCount}</span>
+  <span className="task-stat-label">not paid</span>
+</div>
                       </>
                     ) : (
                       <>
                         <div className="task-stat">
                           <span className="task-stat-num success">{doneCount}</span>
-                          <span className="task-stat-label">submitted</span>
+                          <span className="task-stat-label">{task.type === 'attendance' ? 'present' : 'submitted'}</span>
                         </div>
                         <div className="task-stat-divider" />
                         <div className="task-stat">
                           <span className="task-stat-num warning">{pendingCount}</span>
-                          <span className="task-stat-label">pending</span>
+                          <span className="task-stat-label">{task.type === 'attendance' ? 'absent' : 'pending'}</span>
                         </div>
                       </>
                     )}

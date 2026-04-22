@@ -50,7 +50,7 @@ function NewTask() {
 
     const students = await getStudents()
 
-    const defaultStatus = type === 'payment' ? 'not_paid' : 'pending'
+    const defaultStatus = type === 'payment' ? 'not_paid' : type === 'attendance' ? 'absent' : 'pending'
 
     const newEntries = students.map(student => ({
   id: crypto.randomUUID(),

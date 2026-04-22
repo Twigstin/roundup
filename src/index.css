@@ -957,3 +957,12 @@ button {
   gap: 10px;
   margin-bottom: 16px;
 }
+
+.status-present {
+  background: #EAF3DE;
+  color: #27500A;
+}
+.status-absent  {
+  background: #FCEBEB;
+  color: #791F1F;
+}

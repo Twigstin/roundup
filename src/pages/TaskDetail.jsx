@@ -59,15 +59,20 @@ function TaskDetail() {
   }
 
   const isPayment = task?.type === 'payment'
+  const isAttendance = task?.type === 'attendance'
 
 const total = entries.length
 
 const submittedCount = isPayment
   ? entries.filter(e => e.status === 'paid').length
+  : isAttendance
+  ? entries.filter(e => e.status === 'present').length
   : entries.filter(e => e.status === 'submitted').length
 
 const pendingCount = isPayment
   ? entries.filter(e => e.status === 'not_paid').length
+  : isAttendance
+  ? entries.filter(e => e.status === 'absent').length
   : entries.filter(e => e.status === 'pending').length
 
 const partPaidCount = isPayment
@@ -94,6 +99,8 @@ const filteredEntries = enrichedEntries.filter(entry => {
     filter === 'total' ||
     (filter === 'submitted' && entry.status === 'submitted') ||
     (filter === 'pending' && entry.status === 'pending') ||
+    (filter === 'present' && entry.status === 'present') ||
+    (filter === 'absent' && entry.status === 'absent') ||
     (filter === 'paid' && entry.status === 'paid') ||
     (filter === 'part_paid' && entry.status === 'part_paid') ||
     (filter === 'not_paid' && entry.status === 'not_paid')
@@ -112,6 +119,8 @@ const handleStatusUpdate = async (entryId, currentStatus) => {
     if (currentStatus === 'not_paid') newStatus = 'part_paid'
     else if (currentStatus === 'part_paid') newStatus = 'paid'
     else newStatus = 'not_paid'
+  } else if (isAttendance) {
+    newStatus = currentStatus === 'absent' ? 'present' : 'absent'
   } else {
     newStatus = currentStatus === 'pending' ? 'submitted' : 'pending'
   }
@@ -249,19 +258,19 @@ const handleDismissRosterUpdate = async () => {
   ) : (
     <>
       <div
-        className={`summary-card ${filter === 'submitted' ? 'summary-card-active' : ''}`}
-        onClick={() => setFilter('submitted')}
-      >
-        <p className="summary-label">Submitted</p>
-        <p className="summary-number success">{submittedCount}</p>
-      </div>
-      <div
-        className={`summary-card ${filter === 'pending' ? 'summary-card-active' : ''}`}
-        onClick={() => setFilter('pending')}
-      >
-        <p className="summary-label">Pending</p>
-        <p className="summary-number warning">{pendingCount}</p>
-      </div>
+  className={`summary-card ${filter === (isAttendance ? 'present' : 'submitted') ? 'summary-card-active' : ''}`}
+  onClick={() => setFilter(isAttendance ? 'present' : 'submitted')}
+>
+  <p className="summary-label">{isAttendance ? 'Present' : 'Submitted'}</p>
+  <p className="summary-number success">{submittedCount}</p>
+</div>
+<div
+  className={`summary-card ${filter === (isAttendance ? 'absent' : 'pending') ? 'summary-card-active' : ''}`}
+  onClick={() => setFilter(isAttendance ? 'absent' : 'pending')}
+>
+  <p className="summary-label">{isAttendance ? 'Absent' : 'Pending'}</p>
+  <p className="summary-number warning">{pendingCount}</p>
+</div>
     </>
   )}
 </div>
@@ -364,7 +373,9 @@ const handleDismissRosterUpdate = async () => {
           ? entry.status === 'not_paid' ? 'Mark part paid'
             : entry.status === 'part_paid' ? 'Mark paid'
             : 'Mark not paid'
-          : entry.status === 'pending' ? 'Mark submitted' : 'Mark pending'
+          : isAttendance
+  ? entry.status === 'absent' ? 'Mark present' : 'Mark absent'
+  : entry.status === 'pending' ? 'Mark submitted' : 'Mark pending'
         }
       </button>
     </div>
