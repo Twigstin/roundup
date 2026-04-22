@@ -951,3 +951,10 @@ button {
   align-items: center;
   flex-shrink: 0;
 }
+
+.dashboard-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}

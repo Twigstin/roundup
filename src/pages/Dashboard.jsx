@@ -6,6 +6,7 @@ import ConfirmModal from '../components/ConfirmModal'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Spinner from '../components/Spinner'
 
+
 function Dashboard() {
   const [tasks, setTasks] = useState([])
   const [allEntries, setAllEntries] = useState([])
@@ -13,6 +14,8 @@ function Dashboard() {
   const navigate = useNavigate()
   const [modalOpen, setModalOpen] = useState(false)
   const [taskToDelete, setTaskToDelete] = useState(null)
+  const [search, setSearch] = useState('')
+  const [typeFilter, setTypeFilter] = useState('all')
 
   const handleDeleteClick = (e, taskId) => {
   e.stopPropagation()
@@ -68,6 +71,17 @@ const handleCancelDelete = () => {
     return { total, doneCount, pendingCount, partPaidCount, isPayment }
   }
 
+  const filteredTasks = tasks.filter(task => {
+  const matchesSearch = task.title
+    .toLowerCase()
+    .includes(search.toLowerCase())
+
+  const matchesType =
+    typeFilter === 'all' || task.type === typeFilter
+
+  return matchesSearch && matchesType
+})
+
   if (loading) {
     return (
     <div className="loading-container">
@@ -83,14 +97,57 @@ const handleCancelDelete = () => {
         <Link to="/tasks/new" className="btn-primary">+ New task</Link>
       </div>
 
+      {tasks.length > 0 && (
+  <div className="dashboard-toolbar">
+    <input
+      className="form-input"
+      type="text"
+      placeholder="Search tasks…"
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+    />
+    <div className="filter-tabs">
+      <button
+        className={`filter-tab ${typeFilter === 'all' ? 'active' : ''}`}
+        onClick={() => setTypeFilter('all')}
+      >
+        All
+      </button>
+      <button
+        className={`filter-tab ${typeFilter === 'submission' ? 'active' : ''}`}
+        onClick={() => setTypeFilter('submission')}
+      >
+        Submission
+      </button>
+      <button
+        className={`filter-tab ${typeFilter === 'payment' ? 'active' : ''}`}
+        onClick={() => setTypeFilter('payment')}
+      >
+        Payment
+      </button>
+      <button
+        className={`filter-tab ${typeFilter === 'attendance' ? 'active' : ''}`}
+        onClick={() => setTypeFilter('attendance')}
+      >
+        Attendance
+      </button>
+    </div>
+  </div>
+)}
+
       {tasks.length === 0 ? (
-        <div className="empty-state">
-          <p className="empty-title">No tasks yet</p>
-          <p className="empty-subtitle">Create your first task to start tracking</p>
-        </div>
-      ) : (
+  <div className="empty-state">
+    <p className="empty-title">No tasks yet</p>
+    <p className="empty-subtitle">Create your first task to start tracking</p>
+  </div>
+) : filteredTasks.length === 0 ? (
+  <div className="empty-state">
+    <p className="empty-title">No tasks found</p>
+    <p className="empty-subtitle">Try a different search or filter</p>
+  </div>
+) : (
         <div className="task-list">
-          {tasks.map(task => {
+          {filteredTasks.map(task => {
             const { total, doneCount, pendingCount, partPaidCount, isPayment } = getTaskStats(task.id, task.type)
 
             return (
