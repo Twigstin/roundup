@@ -56,12 +56,20 @@ export const getEntries = async (taskId) => {
 
 //create function to update entries
 export const updateEntry = async (entryId, updates) => {
-    await delay(300)
-    const entries = readDB(ENTRIES_KEY)
-    const index = entries.findIndex(e => e.id === entryId)
-    entries[index] = { ...entries[index], ...updates }
-    writeDB(ENTRIES_KEY, entries)
-    return entries[index]
+  await delay(100)
+  const entries = readDB(ENTRIES_KEY)
+  const index = entries.findIndex(e => e.id === entryId)
+  entries[index] = { ...entries[index], ...updates }
+  writeDB(ENTRIES_KEY, entries)
+
+  const tasks = readDB(TASKS_KEY)
+  const taskIndex = tasks.findIndex(t => t.id === entries[index].taskId)
+  if (taskIndex !== -1) {
+    tasks[taskIndex] = { ...tasks[taskIndex], updatedAt: new Date().toISOString() }
+    writeDB(TASKS_KEY, tasks)
+  }
+
+  return entries[index]
 }
 
 //create function to create entry

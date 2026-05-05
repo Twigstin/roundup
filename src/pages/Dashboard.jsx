@@ -44,7 +44,11 @@ const handleCancelDelete = () => {
       const data = await getTasks()
       //const students = await getStudents()
       const entries = readDB('roundup_entries')
-      setTasks(data)
+      setTasks(data.sort((a, b) => {
+  const dateA = new Date(a.updatedAt || a.createdAt)
+  const dateB = new Date(b.updatedAt || b.createdAt)
+  return dateB - dateA
+}))
       setAllEntries(entries)
       setLoading(false)
     }

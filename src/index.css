@@ -662,6 +662,14 @@ button {
     gap: 12px;
   }
 
+  .auth-main-ctn > div {
+    width: 90%;
+  }
+
+  .signin-btn button, .auth-form-submit-btn button {
+    padding: 1rem;
+  }
+
   .roster-update-banner {
   background: #E6F1FB;
   border: 1px solid #85B7EB;
@@ -965,4 +973,72 @@ button {
 .status-absent  {
   background: #FCEBEB;
   color: #791F1F;
+}
+
+.auth-main-ctn {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.auth-main-ctn > div > h2 {
+  font-family: 'montserrat-bold', sans-serif;
+  margin-bottom: 40px;
+}
+
+.auth-main-ctn > div {
+  max-width: 600px;
+  background: rgb(250, 250, 250);
+  margin: 0 auto;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.06),
+    0 8px 20px rgba(0, 0, 0, 0.04);
+}
+
+.signin-btn, .auth-form-submit-btn {
+  width: 100%;
+}
+
+.auth-form-submit-btn {
+  margin-bottom: 20px;
+  margin-top: 30px;
+}
+
+.signin-btn button, .auth-form-submit-btn button {
+  width: 100%;
+  font-size: 1rem;
+  font-family: 'montserrat-bold', sans-serif;
+  border: none;
+  border-radius: 10px;
+  padding: 15px;
+  background-color: #111;
+  color: white;
+}
+
+.auth-form > input {
+  font-size: 1rem;
+  font-family: 'inter', sans-serif;
+  border: 1px solid rgb(100, 100, 100);
+  border-radius: 10px;
+  padding: 20px;
+  padding: 15px;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 15px;
+}
+
+.bttn:hover {
+  background: #333;
+}
+
+.bttn {
+  transition: transform 0.15s ease;
+}
+
+.bttn:active {
+  transform: scale(0.96);
 }

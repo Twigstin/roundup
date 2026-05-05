@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard'
 import NewTask from './pages/NewTask'
 import TaskDetail from './pages/TaskDetail'
 import Roster from './pages/Roster'
+import { Auth } from './pages/Auth'
 
 function App() {
   return (
