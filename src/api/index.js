@@ -64,7 +64,7 @@ export const getRosterMeta = async () => {
 
 export const setRosterUpdatedAt = async (changeType = 'added') => {
   const userId = await getUserId()
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('roster_meta')
     .upsert({
       user_id: userId,
