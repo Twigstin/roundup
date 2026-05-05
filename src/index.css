@@ -1056,7 +1056,7 @@ button {
 }
 
 button {
-  transition: transform 0.15s ease;
+  transition: transform 0.13s ease;
 }
 
 button:active {
@@ -1080,11 +1080,11 @@ button:active {
   padding: 4px 10px;
   border-radius: 6px;
   border: 1px solid #791F1F;
-  color: #791F1F;
   cursor: pointer;
   white-space: nowrap;
   margin-right: 10px;
-  background: #EAF3DE;
+  background: #FCEBEB;
+  color: #791F1F;
 }
 
 .collected-active {
