@@ -48,6 +48,37 @@ export const deleteTask = async (taskId) => {
   if (error) throw error
 }
 
+
+//Roster Meta
+
+export const getRosterMeta = async () => {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('roster_meta')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle()
+  if (error && error.code !== 'PGRST116') throw error
+  return data || { updated_at: null, change_type: null }
+}
+
+export const setRosterUpdatedAt = async (changeType = 'added') => {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('roster_meta')
+    .upsert({
+      user_id: userId,
+      updated_at: new Date().toISOString(),
+      change_type: changeType
+    }, { onConflict: 'user_id' })
+    .select()
+  if (error) throw error
+}
+
+
+
+
+
 //Students
 
 export const getStudents = async () => {
@@ -67,6 +98,7 @@ export const createStudent = async (student) => {
     .select()
     .single()
   if (error) throw error
+  await setRosterUpdatedAt('added')
   return data
 }
 
@@ -78,6 +110,7 @@ export const bulkCreateStudents = async (newStudents) => {
     .insert(studentsWithUser)
     .select()
   if (error) throw error
+  await setRosterUpdatedAt('added')
   return data
 }
 
@@ -87,6 +120,7 @@ export const deleteStudent = async (studentId) => {
     .delete()
     .eq('id', studentId)
   if (error) throw error
+  await setRosterUpdatedAt('removed')
 }
 
 export const clearAllStudents = async () => {
@@ -96,6 +130,7 @@ export const clearAllStudents = async () => {
     .delete()
     .eq('user_id', userId)
   if (error) throw error
+  await setRosterUpdatedAt('removed')
 }
 
 //Entries
@@ -189,31 +224,6 @@ export const syncTaskRoster = async (taskId) => {
     .from('tasks')
     .update({ roster_synced_at: new Date().toISOString() })
     .eq('id', taskId)
-  if (error) throw error
-}
-
-//Roster Meta
-
-export const getRosterMeta = async () => {
-  const userId = await getUserId()
-  const { data, error } = await supabase
-    .from('roster_meta')
-    .select('*')
-    .eq('user_id', userId)
-    .maybeSingle()
-  if (error && error.code !== 'PGRST116') throw error
-  return data || { updated_at: null, change_type: null }
-}
-
-export const setRosterUpdatedAt = async (changeType = 'added') => {
-  const userId = await getUserId()
-  const { error } = await supabase
-    .from('roster_meta')
-    .upsert({
-      user_id: userId,
-      updated_at: new Date().toISOString(),
-      change_type: changeType
-    }, { onConflict: 'user_id' })
   if (error) throw error
 }
 

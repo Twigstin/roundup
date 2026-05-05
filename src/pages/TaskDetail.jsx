@@ -27,6 +27,14 @@ function TaskDetail() {
   const allEntries = await getEntries(id)
   const allStudents = await getStudents()
   const meta = await getRosterMeta()
+  
+
+console.log('meta:', meta)
+console.log('foundTask.roster_synced_at:', foundTask?.roster_synced_at)
+console.log('condition 1 - foundTask:', !!foundTask)
+console.log('condition 2 - meta.updated_at:', !!meta?.updated_at)
+console.log('condition 3 - change_type:', meta?.change_type)
+console.log('condition 4 - no sync or newer:', !foundTask?.roster_synced_at || new Date(meta?.updated_at) > new Date(foundTask?.roster_synced_at))
 
   setTask(foundTask)
   setEntries(allEntries)
@@ -35,9 +43,9 @@ function TaskDetail() {
   if (
   foundTask &&
   meta.updated_at &&
-  foundTask.roster_synced_at &&
-  new Date(meta.updated_at) > new Date(foundTask.roster_synced_at) &&
-  meta.change_type === 'added'
+  meta.change_type === 'added' &&
+  (!foundTask.roster_synced_at || 
+    new Date(meta.updated_at) > new Date(foundTask.roster_synced_at))
 ) {
   const existingStudentIds = allEntries.map(e => e.student_id)
   const hasNewStudents = allStudents.some(s => !existingStudentIds.includes(s.id))

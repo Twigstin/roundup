@@ -27,7 +27,7 @@ function Dashboard() {
 const handleConfirmDelete = async () => {
   await deleteTask(taskToDelete)
   setTasks(prev => prev.filter(t => t.id !== taskToDelete))
-  setAllEntries(prev => prev.filter(e => e.taskId !== taskToDelete))
+  setAllEntries(prev => prev.filter(e => e.task_id !== taskToDelete))
   setModalOpen(false)
   setTaskToDelete(null)
 }
@@ -42,10 +42,16 @@ const handleCancelDelete = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+  const { data: { session } } = await supabase.auth.getSession()
+  const userId = session?.user?.id
+
   const data = await getTasks()
   const { data: entriesData } = await supabase
     .from('entries')
     .select('*')
+    .eq('user_id', userId)
+    .limit(5000)
+
   setTasks(data)
   setAllEntries(entriesData || [])
   setLoading(false)
@@ -57,6 +63,8 @@ const handleCancelDelete = () => {
 
   const getTaskStats = (taskId, taskType) => {
     const taskEntries = allEntries.filter(e => e.task_id === taskId)
+
+    
     const total = taskEntries.length
     
     const isPayment = taskType === 'payment'

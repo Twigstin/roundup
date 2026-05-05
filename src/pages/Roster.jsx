@@ -17,6 +17,7 @@ function Roster() {
   const [showClearWarning, setShowClearWarning] = useState(false)
   const [showDeleteWarning, setShowDeleteWarning] = useState(false)
   const [studentToDelete, setStudentToDelete] = useState(null)
+  const [addingStudent, setAddingStudent] = useState(false)
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -28,20 +29,26 @@ function Roster() {
   }, [])
 
   const handleAddStudent = async () => {
-    if (!name.trim() || !regNumber.trim()) {
-      setError('Both name and reg number are required')
-      return
-    }
-
-    const newStudent = {
-      id: crypto.randomUUID(),
-      name: name.trim(),
-      reg_number: regNumber.trim()
-    }
-
-    const saved = await createStudent(newStudent)
-setStudents(prev => [...prev, saved])
+  if (!name.trim() || !regNumber.trim()) {
+    setError('Both name and reg number are required')
+    return
   }
+
+  setAddingStudent(true)
+
+  const newStudent = {
+    id: crypto.randomUUID(),
+    name: name.trim(),
+    reg_number: regNumber.trim()
+  }
+
+  const saved = await createStudent(newStudent)
+  setStudents(prev => [...prev, saved])
+  setName('')
+  setRegNumber('')
+  setError('')
+  setAddingStudent(false)
+}
 
   const handleRemove = async (studentId) => {
     await deleteStudent(studentId)
@@ -184,10 +191,20 @@ const handleCancelDelete = () => {
           <button
   className="btn-primary"
   onClick={handleAddStudent}
-  disabled={importing}
-  style={{ opacity: importing ? 0.6 : 1 }}
+  disabled={addingStudent || importing}
+  style={{ 
+    opacity: addingStudent || importing ? 0.6 : 1,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  }}
 >
-  Add student
+  {addingStudent ? (
+    <>
+      <Spinner size={14} />
+      Adding...
+    </>
+  ) : 'Add student'}
 </button>
           <button
   className="btn-secondary"
