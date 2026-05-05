@@ -1,14 +1,20 @@
 import { Link, useLocation } from 'react-router-dom'
 import { Outlet } from 'react-router-dom'
+import { supabase } from '../api/supabase'
 
 function Layout() {
-    const location = useLocation()
-    const isActive = (path) => location.pathname === path
+  const location = useLocation()
 
-    return (
-        <div className="app-shell">
+  const isActive = (path) => location.pathname === path
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+  }
+
+  return (
+    <div className="app-shell">
       <nav className="top-nav">
-        <span className="app-name bold">Roundup</span>
+        <span className="app-name">Roundup</span>
         <div className="nav-links">
           <Link
             to="/"
@@ -22,13 +28,19 @@ function Layout() {
           >
             Roster
           </Link>
+          <button
+            className="nav-logout-btn"
+            onClick={handleLogout}
+          >
+            Log out
+          </button>
         </div>
       </nav>
       <main className="page-content">
         <Outlet />
       </main>
     </div>
-    )
+  )
 }
 
 export default Layout

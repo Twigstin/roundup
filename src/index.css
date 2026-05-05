@@ -1063,15 +1063,20 @@ button:active {
   transform: scale(0.96);
 }
 
+.nav-logout-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  background: transparent;
+  border: 1px solid #e5e5e5;
+  color: #555;
+  cursor: pointer;
+}
 
-
-
-
-
-
-
-
-
+.nav-logout-btn:hover {
+  background: #f0f0f0;
+  color: #111;
+}
 
 
 
