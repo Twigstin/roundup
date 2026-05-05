@@ -133,6 +133,7 @@ export const populateTaskEntries = async (taskId, taskType, students) => {
     studentName: s.name,
     studentRegNumber: s.regNumber,
     status: defaultStatus,
+    collected: false,
     note: '',
     updatedAt: new Date().toISOString()
   }))

@@ -149,6 +149,19 @@ const handleSaveNote = async (entryId) => {
   setNoteText('')
 }
 
+const handleCollectedToggle = async (entryId, currentCollected) => {
+  const newCollected = !currentCollected
+
+  await updateEntry(entryId, {
+    collected: newCollected,
+    updatedAt: new Date().toISOString()
+  })
+
+  setEntries(prev =>
+    prev.map(e => e.id === entryId ? { ...e, collected: newCollected } : e)
+  )
+}
+
 const handlePopulateFromRoster = async () => {
   setPopulating(true)
   const newEntries = await populateTaskEntries(task.id, task.type, students)
@@ -369,6 +382,7 @@ const handleDismissRosterUpdate = async () => {
         className="toggle-btn"
         onClick={() => handleStatusUpdate(entry.id, entry.status)}
       >
+        
         {isPayment
           ? entry.status === 'not_paid' ? 'Mark part paid'
             : entry.status === 'part_paid' ? 'Mark paid'
@@ -378,6 +392,14 @@ const handleDismissRosterUpdate = async () => {
   : entry.status === 'pending' ? 'Mark submitted' : 'Mark pending'
         }
       </button>
+      {isPayment && (
+  <button
+    className={`collected-btn ${entry.collected ? 'collected-active' : ''}`}
+    onClick={() => handleCollectedToggle(entry.id, entry.collected)}
+  >
+    {entry.collected ? '✓ Collected' : 'Not collected'}
+  </button>
+)}
     </div>
   </div>
 

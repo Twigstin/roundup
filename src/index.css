@@ -1035,10 +1035,40 @@ button {
   background: #333;
 }
 
-.bttn {
+button {
   transition: transform 0.15s ease;
 }
 
-.bttn:active {
+button:active {
   transform: scale(0.96);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+.collected-btn {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #791F1F;
+  color: #791F1F;
+  cursor: pointer;
+  white-space: nowrap;
+  margin-right: 10px;
+  background: #EAF3DE;
+}
+
+.collected-active {
+  background: #EAF3DE;
+  color: #27500A;
+  border-color: #27500A;
 }

@@ -59,6 +59,7 @@ function NewTask() {
   studentName: student.name,
   studentRegNumber: student.regNumber,
   status: defaultStatus,
+  collected: false,
   note: '',
   updatedAt: new Date().toISOString()
 }))
