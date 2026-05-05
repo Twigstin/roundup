@@ -86,9 +86,11 @@ const pendingCount = isPayment
       ? taskEntries.filter(e => e.status === 'part_paid').length
       : 0
 
-  
+      const collectedCount = isPayment
+      ? taskEntries.filter(e => e.collected === true).length
+      : 0
 
-    return { total, doneCount, pendingCount, partPaidCount, isPayment }
+    return { total, doneCount, pendingCount, partPaidCount, collectedCount, isPayment }
   }
 
   const filteredTasks = tasks.filter(task => {
@@ -168,7 +170,7 @@ const pendingCount = isPayment
 ) : (
         <div className="task-list">
           {filteredTasks.map(task => {
-            const { total, doneCount, pendingCount, partPaidCount, isPayment } = getTaskStats(task.id, task.type)
+            const { total, doneCount, pendingCount, partPaidCount, collectedCount, isPayment } = getTaskStats(task.id, task.type)
 
             return (
               <div
@@ -184,6 +186,7 @@ const pendingCount = isPayment
                   <p className="task-card-meta">{total} students</p>
                 </div>
 
+                <div className='task-card-right'>
                 {total > 0 && (
                   <div className="task-card-stats">
                     {isPayment ? (
@@ -199,9 +202,16 @@ const pendingCount = isPayment
   <span className="task-stat-label">part paid</span>
 </div>
 
+<div className="task-stat-divider" />
 <div className="task-stat">
   <span className="task-stat-num warning">{pendingCount}</span>
   <span className="task-stat-label">not paid</span>
+</div>
+
+<div className="task-stat-divider" />
+<div className="task-stat">
+  <span className="task-stat-num" style={{ color: '#27500A' }}>{collectedCount}</span>
+  <span className="task-stat-label">collected</span>
 </div>
                       </>
                     ) : (
@@ -217,23 +227,28 @@ const pendingCount = isPayment
                         </div>
                       </>
                     )}
-                    <button
-  className="btn-danger"
-  onClick={(e) => handleDeleteClick(e, task.id)}
->
-  Delete Task
-</button>
-<span className="task-card-chevron">›</span>
                   </div>
                 )}
 
-                {total === 0 && (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                </div>
+
+                <div className="task-card-actions">
     <button
-      className="btn-danger"
+      className="btn-danger delete-btn"
       onClick={(e) => handleDeleteClick(e, task.id)}
     >
-      Delete Task
+      Delete
+    </button>
+    <span className="task-card-chevron">›</span>
+  </div>
+
+                {total === 0 && (
+  <div className="task-card-actions">
+    <button
+      className="btn-danger delete-btn"
+      onClick={(e) => handleDeleteClick(e, task.id)}
+    >
+      Delete
     </button>
     <span className="task-card-chevron">›</span>
   </div>

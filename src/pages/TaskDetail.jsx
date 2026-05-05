@@ -79,6 +79,10 @@ const partPaidCount = isPayment
   ? entries.filter(e => e.status === 'part_paid').length
   : 0
 
+  const collectedCount = isPayment
+  ? entries.filter(e => e.collected === true).length
+  : 0
+
   const enrichedEntries = entries.map(entry => ({
   ...entry,
   student: {
@@ -103,7 +107,8 @@ const filteredEntries = enrichedEntries.filter(entry => {
     (filter === 'absent' && entry.status === 'absent') ||
     (filter === 'paid' && entry.status === 'paid') ||
     (filter === 'part_paid' && entry.status === 'part_paid') ||
-    (filter === 'not_paid' && entry.status === 'not_paid')
+    (filter === 'not_paid' && entry.status === 'not_paid') ||
+    (filter === 'collected' && entry.collected === true)
 
   return matchesSearch && matchesFilter
 })
@@ -267,6 +272,13 @@ const handleDismissRosterUpdate = async () => {
         <p className="summary-label light-bold">Not paid</p>
         <p className="summary-number danger bold">{pendingCount}</p>
       </div>
+      <div
+        className={`summary-card ${filter === 'collected' ? 'summary-card-active' : ''}`}
+        onClick={() => setFilter('collected')}
+      >
+        <p className="summary-label">Collected</p>
+        <p className="summary-number" style={{ color: '#27500A' }}>{collectedCount}</p>
+</div>
     </>
   ) : (
     <>
@@ -392,7 +404,7 @@ const handleDismissRosterUpdate = async () => {
   : entry.status === 'pending' ? 'Mark submitted' : 'Mark pending'
         }
       </button>
-      {isPayment && (
+      {((isPayment && entry.status === "paid") || (isPayment && entry.status === "part_paid")) && (
   <button
     className={`collected-btn ${entry.collected ? 'collected-active' : ''}`}
     onClick={() => handleCollectedToggle(entry.id, entry.collected)}
