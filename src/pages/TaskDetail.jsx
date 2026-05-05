@@ -26,7 +26,7 @@ function TaskDetail() {
   const foundTask = allTasks.find(t => t.id === id)
   const allEntries = await getEntries(id)
   const allStudents = await getStudents()
-  const meta = getRosterMeta()
+  const meta = await getRosterMeta()
 
   setTask(foundTask)
   setEntries(allEntries)
@@ -34,12 +34,12 @@ function TaskDetail() {
 
   if (
   foundTask &&
-  meta.updatedAt &&
-  foundTask.rosterSyncedAt &&
-  new Date(meta.updatedAt) > new Date(foundTask.rosterSyncedAt) &&
-  meta.changeType === 'added'
+  meta.updated_at &&
+  foundTask.roster_synced_at &&
+  new Date(meta.updated_at) > new Date(foundTask.roster_synced_at) &&
+  meta.change_type === 'added'
 ) {
-  const existingStudentIds = allEntries.map(e => e.studentId)
+  const existingStudentIds = allEntries.map(e => e.student_id)
   const hasNewStudents = allStudents.some(s => !existingStudentIds.includes(s.id))
   if (hasNewStudents) setShowRosterUpdate(true)
 }
@@ -86,14 +86,14 @@ const partPaidCount = isPayment
   const enrichedEntries = entries.map(entry => ({
   ...entry,
   student: {
-    name: entry.studentName,
-    regNumber: entry.studentRegNumber
+    name: entry.student_name,
+    regNumber: entry.student_reg_number
   }
 }))
 
 const filteredEntries = enrichedEntries.filter(entry => {
-  const name = entry.student?.name || ''
-  const regNumber = entry.student?.regNumber || ''
+  const name = entry.student.name || ''
+  const regNumber = entry.student_reg_number || ''
 
   const matchesSearch =
     name.toLowerCase().includes(search.toLowerCase()) ||
@@ -132,7 +132,7 @@ const handleStatusUpdate = async (entryId, currentStatus) => {
 
   await updateEntry(entryId, {
     status: newStatus,
-    updatedAt: new Date().toISOString()
+    updated_at: new Date().toISOString()
   })
 
   setEntries(prev =>
@@ -143,7 +143,7 @@ const handleStatusUpdate = async (entryId, currentStatus) => {
 const handleSaveNote = async (entryId) => {
   await updateEntry(entryId, {
     note: noteText,
-    updatedAt: new Date().toISOString()
+    updated_at: new Date().toISOString()
   })
 
   setEntries(prev =>
@@ -159,7 +159,7 @@ const handleCollectedToggle = async (entryId, currentCollected) => {
 
   await updateEntry(entryId, {
     collected: newCollected,
-    updatedAt: new Date().toISOString()
+    updated_at: new Date().toISOString()
   })
 
   setEntries(prev =>
@@ -186,13 +186,13 @@ const handleRosterSync = async () => {
   setPopulating(true)
   const newEntries = await populateTaskEntries(task.id, task.type, students)
   setEntries(prev => [...prev, ...newEntries])
-  setTask(prev => ({ ...prev, rosterSyncedAt: new Date().toISOString() }))
+  setTask(prev => ({ ...prev, roster_synced_at: new Date().toISOString() }))
   setPopulating(false)
 }
 
 const handleDismissRosterUpdate = async () => {
   await syncTaskRoster(task.id)
-  setTask(prev => ({ ...prev, rosterSyncedAt: new Date().toISOString() }))
+  setTask(prev => ({ ...prev, roster_synced_at: new Date().toISOString() }))
   setShowRosterUpdate(false)
 }
 
@@ -383,8 +383,8 @@ const handleDismissRosterUpdate = async () => {
         <div key={entry.id} className="entry-row-wrapper">
   <div className="entry-row">
     <div className="entry-student">
-      <p className="entry-name">{entry.student?.name}</p>
-      <p className="entry-reg">{entry.student?.regNumber}</p>
+      <p className="entry-name">{entry.student.name}</p>
+      <p className="entry-reg">{entry.student.regNumber}</p>
     </div>
     <div className="entry-right">
       <span className={`status-badge status-${entry.status}`}>

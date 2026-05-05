@@ -60,6 +60,7 @@ body {
 .app-name {
   font-size: 16px;
   font-weight: 600;
+  font-family: "montserrat-bold", sans-serif;
   color: #111;
 }
 

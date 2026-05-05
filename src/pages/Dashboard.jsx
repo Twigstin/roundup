@@ -5,6 +5,7 @@ import { readDB } from '../api/db'
 import ConfirmModal from '../components/ConfirmModal'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Spinner from '../components/Spinner'
+import { supabase } from '../api/supabase'
 
 
 function Dashboard() {
@@ -41,32 +42,24 @@ const handleCancelDelete = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await getTasks()
-      //const students = await getStudents()
-      const entries = readDB('roundup_entries')
-      setTasks(data.sort((a, b) => {
-  const dateA = new Date(a.updatedAt || a.createdAt)
-  const dateB = new Date(b.updatedAt || b.createdAt)
-  return dateB - dateA
-}))
-      setAllEntries(entries)
-      setLoading(false)
-    }
+  const data = await getTasks()
+  const { data: entriesData } = await supabase
+    .from('entries')
+    .select('*')
+  setTasks(data)
+  setAllEntries(entriesData || [])
+  setLoading(false)
+}
     fetchData()
   }, [])
 
+
+
   const getTaskStats = (taskId, taskType) => {
-    const taskEntries = allEntries.filter(e => e.taskId === taskId)
+    const taskEntries = allEntries.filter(e => e.task_id === taskId)
     const total = taskEntries.length
+    
     const isPayment = taskType === 'payment'
-
-    /*const doneCount = isPayment
-      ? taskEntries.filter(e => e.status === 'paid').length
-      : taskEntries.filter(e => e.status === 'submitted').length
-
-    const pendingCount = isPayment
-      ? taskEntries.filter(e => e.status === 'not_paid').length
-      : taskEntries.filter(e => e.status === 'pending').length*/
 
 
       const doneCount = isPayment
@@ -89,6 +82,7 @@ const pendingCount = isPayment
       const collectedCount = isPayment
       ? taskEntries.filter(e => e.collected === true).length
       : 0
+      
 
     return { total, doneCount, pendingCount, partPaidCount, collectedCount, isPayment }
   }
@@ -103,6 +97,7 @@ const pendingCount = isPayment
 
   return matchesSearch && matchesType
 })
+
 
   if (loading) {
     return (
@@ -242,7 +237,7 @@ const pendingCount = isPayment
     <span className="task-card-chevron">›</span>
   </div>
 
-                {total === 0 && (
+                {/*total === 0 && (
   <div className="task-card-actions">
     <button
       className="btn-danger delete-btn"
@@ -252,7 +247,7 @@ const pendingCount = isPayment
     </button>
     <span className="task-card-chevron">›</span>
   </div>
-)}
+)*/}
               </div>
             )
           })}

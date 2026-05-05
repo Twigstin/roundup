@@ -1,179 +1,219 @@
-import { delay, readDB, writeDB, setRosterUpdatedAt, getRosterMeta } from './db.js';
+import { supabase } from './supabase'
 
-const TASKS_KEY = "roundup_tasks";
-const STUDENTS_KEY = "roundup_students";
-const ENTRIES_KEY = "roundup_entries";
+//const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
-//create function to fetch tasks from database
+const getUserId = async () => {
+  const { data: { session } } = await supabase.auth.getSession()
+  return session?.user?.id
+}
+
+//Tasks
+
 export const getTasks = async () => {
-    await delay(300)
-    return readDB(TASKS_KEY)
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .order('updated_at', { ascending: false, nullsFirst: false })
+  if (error) throw error
+  return data
 }
 
-//create function to create and add new task to database
 export const createTask = async (task) => {
-  await delay(300)
-  const tasks = readDB(TASKS_KEY)
-  const meta = getRosterMeta()
-  const taskWithSync = {
-    ...task,
-    rosterSyncedAt: meta.updatedAt || new Date().toISOString()
-  }
-  tasks.push(taskWithSync)
-  writeDB(TASKS_KEY, tasks)
-  return taskWithSync
-}
-
-//create function to delete task
-export const deleteTask = async (taskId) => {
-    await delay(300)
-    const tasks = readDB(TASKS_KEY).filter(task => task.id !== taskId);
-    writeDB(TASKS_KEY, tasks)
-}
-
-//create function to fetch students from database
-export const getStudents = async () => {
-    await delay(300)
-    return readDB(STUDENTS_KEY)
-}
-
-//create function add new student to task
-export const createStudent = async (student) => {
-  await delay(300)
-  const students = readDB(STUDENTS_KEY)
-  students.push(student)
-  writeDB(STUDENTS_KEY, students)
-  setRosterUpdatedAt('added')
-  return student
-}
-
-//create function to fetch entries from database
-export const getEntries = async (taskId) => {
-    await delay(300)
-    const entries = readDB(ENTRIES_KEY)
-    return entries.filter(e => e.taskId === taskId)
-}
-
-//create function to update entries
-export const updateEntry = async (entryId, updates) => {
-  await delay(100)
-  const entries = readDB(ENTRIES_KEY)
-  const index = entries.findIndex(e => e.id === entryId)
-  entries[index] = { ...entries[index], ...updates }
-  writeDB(ENTRIES_KEY, entries)
-
-  const tasks = readDB(TASKS_KEY)
-  const taskIndex = tasks.findIndex(t => t.id === entries[index].taskId)
-  if (taskIndex !== -1) {
-    tasks[taskIndex] = { ...tasks[taskIndex], updatedAt: new Date().toISOString() }
-    writeDB(TASKS_KEY, tasks)
-  }
-
-  return entries[index]
-}
-
-//create function to create entry
-export const createEntry = async (entry) => {
-    await delay(300)
-    const entries = readDB(ENTRIES_KEY)
-    entries.push(entry)
-    writeDB(ENTRIES_KEY, entries);
-    return entry
-}
-
-//create function to delete student
-export const deleteStudent = async (studentId) => {
-  await delay(300)
-  const students = readDB(STUDENTS_KEY).filter(s => s.id !== studentId)
-  writeDB(STUDENTS_KEY, students)
-  setRosterUpdatedAt('removed')
-}
-
-//create function to manage bulk imports
-export const bulkCreateStudents = async (newStudents) => {
-  await delay(100)
-  const existing = readDB(STUDENTS_KEY)
-  const merged = [...existing, ...newStudents]
-  writeDB(STUDENTS_KEY, merged)
-  setRosterUpdatedAt('added')
-  return newStudents
-}
-
-
-//create function to manage creation of task withbulk entries
-export const bulkCreateEntries = async (newEntries) => {
-  await delay(100)
-  const existing = readDB(ENTRIES_KEY)
-  const merged = [...existing, ...newEntries]
-  writeDB(ENTRIES_KEY, merged)
-  return newEntries
-}
-
-export const clearAllStudents = async () => {
-  await delay(100)
-  writeDB(STUDENTS_KEY, [])
-  setRosterUpdatedAt('removed')
-}
-
-export const populateTaskEntries = async (taskId, taskType, students) => {
-  await delay(100)
-  const existing = readDB(ENTRIES_KEY)
-  const existingStudentIds = existing
-    .filter(e => e.taskId === taskId)
-    .map(e => e.studentId)
-
-  const defaultStatus = taskType === 'payment' ? 'not_paid' : taskType === 'attendance' ? 'absent' : 'pending'
-
-  const newEntries = students
-  .filter(s => !existingStudentIds.includes(s.id))
-  .map(s => ({
-    id: crypto.randomUUID(),
-    taskId,
-    studentId: s.id,
-    studentName: s.name,
-    studentRegNumber: s.regNumber,
-    status: defaultStatus,
-    collected: false,
-    note: '',
-    updatedAt: new Date().toISOString()
-  }))
-
-  if (newEntries.length > 0) {
-    const merged = [...existing, ...newEntries]
-    writeDB(ENTRIES_KEY, merged)
-  }
-
-  const meta = getRosterMeta()
-  const tasks = readDB(TASKS_KEY)
-  const index = tasks.findIndex(t => t.id === taskId)
-  tasks[index] = {
-    ...tasks[index],
-    rosterSyncedAt: meta.updatedAt || new Date().toISOString()
-  }
-  writeDB(TASKS_KEY, tasks)
-
-  return newEntries
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('tasks')
+    .insert([{ ...task, user_id: userId }])
+    .select()
+    .single()
+  if (error) throw error
+  return data
 }
 
 export const updateTask = async (taskId, updates) => {
-  await delay(100)
-  const tasks = readDB(TASKS_KEY)
-  const index = tasks.findIndex(t => t.id === taskId)
-  tasks[index] = { ...tasks[index], ...updates }
-  writeDB(TASKS_KEY, tasks)
-  return tasks[index]
+  const { data, error } = await supabase
+    .from('tasks')
+    .update(updates)
+    .eq('id', taskId)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export const deleteTask = async (taskId) => {
+  const { error } = await supabase
+    .from('tasks')
+    .delete()
+    .eq('id', taskId)
+  if (error) throw error
+}
+
+//Students
+
+export const getStudents = async () => {
+  const { data, error } = await supabase
+    .from('students')
+    .select('*')
+    .order('name', { ascending: true })
+  if (error) throw error
+  return data
+}
+
+export const createStudent = async (student) => {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('students')
+    .insert([{ ...student, user_id: userId }])
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export const bulkCreateStudents = async (newStudents) => {
+  const userId = await getUserId()
+  const studentsWithUser = newStudents.map(s => ({ ...s, user_id: userId }))
+  const { data, error } = await supabase
+    .from('students')
+    .insert(studentsWithUser)
+    .select()
+  if (error) throw error
+  return data
+}
+
+export const deleteStudent = async (studentId) => {
+  const { error } = await supabase
+    .from('students')
+    .delete()
+    .eq('id', studentId)
+  if (error) throw error
+}
+
+export const clearAllStudents = async () => {
+  const userId = await getUserId()
+  const { error } = await supabase
+    .from('students')
+    .delete()
+    .eq('user_id', userId)
+  if (error) throw error
+}
+
+//Entries
+
+export const getEntries = async (taskId) => {
+  const { data, error } = await supabase
+    .from('entries')
+    .select('*')
+    .eq('task_id', taskId)
+  if (error) throw error
+  return data
+}
+
+export const createEntry = async (entry) => {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('entries')
+    .insert([{ ...entry, user_id: userId }])
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export const bulkCreateEntries = async (newEntries) => {
+  const userId = await getUserId()
+  const entriesWithUser = newEntries.map(e => ({ ...e, user_id: userId }))
+  const { data, error } = await supabase
+    .from('entries')
+    .insert(entriesWithUser)
+    .select()
+  if (error) throw error
+  return data
+}
+
+export const updateEntry = async (entryId, updates) => {
+  const { data, error } = await supabase
+    .from('entries')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', entryId)
+    .select()
+    .single()
+  if (error) throw error
+
+  if (data?.task_id) {
+    await supabase
+      .from('tasks')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', data.task_id)
+  }
+
+  return data
+}
+
+export const populateTaskEntries = async (taskId, taskType, students) => {
+  const existingEntries = await getEntries(taskId)
+  const existingStudentIds = existingEntries.map(e => e.student_id)
+
+  const defaultStatus = taskType === 'payment' ? 'not_paid'
+    : taskType === 'attendance' ? 'absent'
+    : 'pending'
+
+  const newStudents = students.filter(s => !existingStudentIds.includes(s.id))
+
+  if (newStudents.length === 0) return []
+
+  const newEntries = newStudents.map(s => ({
+    id: crypto.randomUUID(),
+    task_id: taskId,
+    student_id: s.id,
+    student_name: s.name,
+    student_reg_number: s.reg_number,
+    status: defaultStatus,
+    collected: false,
+    note: '',
+    updated_at: new Date().toISOString()
+  }))
+
+  const result = await bulkCreateEntries(newEntries)
+
+  await supabase
+    .from('tasks')
+    .update({ roster_synced_at: new Date().toISOString() })
+    .eq('id', taskId)
+
+  return result
 }
 
 export const syncTaskRoster = async (taskId) => {
-  await delay(100)
-  const meta = getRosterMeta()
-  const tasks = readDB(TASKS_KEY)
-  const index = tasks.findIndex(t => t.id === taskId)
-  tasks[index] = {
-    ...tasks[index],
-    rosterSyncedAt: meta.updatedAt || new Date().toISOString()
-  }
-  writeDB(TASKS_KEY, tasks)
+  const { error } = await supabase
+    .from('tasks')
+    .update({ roster_synced_at: new Date().toISOString() })
+    .eq('id', taskId)
+  if (error) throw error
 }
 
-export { getRosterMeta }
+//Roster Meta
+
+export const getRosterMeta = async () => {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('roster_meta')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle()
+  if (error && error.code !== 'PGRST116') throw error
+  return data || { updated_at: null, change_type: null }
+}
+
+export const setRosterUpdatedAt = async (changeType = 'added') => {
+  const userId = await getUserId()
+  const { error } = await supabase
+    .from('roster_meta')
+    .upsert({
+      user_id: userId,
+      updated_at: new Date().toISOString(),
+      change_type: changeType
+    }, { onConflict: 'user_id' })
+  if (error) throw error
+}
+

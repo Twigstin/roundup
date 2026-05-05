@@ -40,11 +40,12 @@ function NewTask() {
     setLoading(true)
 
     const newTask = {
-      id: crypto.randomUUID(),
-      title: title.trim(),
-      type,
-      createdAt: new Date().toISOString()
-    }
+  id: crypto.randomUUID(),
+  title: title.trim(),
+  type,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString()
+}
 
     await createTask(newTask)
 
@@ -54,16 +55,15 @@ function NewTask() {
 
     const newEntries = students.map(student => ({
   id: crypto.randomUUID(),
-  taskId: newTask.id,
-  studentId: student.id,
-  studentName: student.name,
-  studentRegNumber: student.regNumber,
+  task_id: newTask.id,
+  student_id: student.id,
+  student_name: student.name,
+  student_reg_number: student.reg_number,
   status: defaultStatus,
   collected: false,
   note: '',
-  updatedAt: new Date().toISOString()
+  updated_at: new Date().toISOString()
 }))
-
 await bulkCreateEntries(newEntries)
 
     navigate('/')

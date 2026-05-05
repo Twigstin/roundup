@@ -36,14 +36,11 @@ function Roster() {
     const newStudent = {
       id: crypto.randomUUID(),
       name: name.trim(),
-      regNumber: regNumber.trim()
+      reg_number: regNumber.trim()
     }
 
-    await createStudent(newStudent)
-    setStudents(prev => [...prev, newStudent])
-    setName('')
-    setRegNumber('')
-    setError('')
+    const saved = await createStudent(newStudent)
+setStudents(prev => [...prev, saved])
   }
 
   const handleRemove = async (studentId) => {
@@ -93,7 +90,7 @@ const processCSV = (file) => {
       newStudents.push({
         id: crypto.randomUUID(),
         name: cols[nameIndex],
-        regNumber: cols[regIndex]
+        reg_number: cols[regIndex]
       })
     }
 
@@ -143,7 +140,7 @@ const handleCancelDelete = () => {
 
   const filteredStudents = students.filter(s =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
-    s.regNumber.toLowerCase().includes(search.toLowerCase())
+    s.reg_number.toLowerCase().includes(search.toLowerCase())
   )
 
   if (loading) {
@@ -270,10 +267,10 @@ const handleCancelDelete = () => {
               <div key={student.id} className="student-row">
                 <div id='student-row-arr'>
                 <span className="student-name">{student.name}</span>
-                <span className="student-reg first">{student.regNumber}</span>
+                <span className="student-reg first">{student.reg_number}</span>
                 </div>
 
-                <span className="student-reg mid">{student.regNumber}</span>
+                <span className="student-reg mid">{student.reg_number}</span>
 
                 <div className='remove-name-btn'>
                 <button
