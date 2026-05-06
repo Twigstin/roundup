@@ -228,14 +228,16 @@ const handleCancelDelete = () => {
           />
 
           {students.length > 0 && (
+            <div
+            className="btn-danger-clear-all"
+    id="btn-danger-all-clear">
   <button
-    className="btn-danger-clear-all"
-    id="btn-danger-all-clear"
     onClick={() => setShowClearWarning(true)}
     disabled={importing}
   >
     Clear all
   </button>
+  </div>
 )}
       </div>
 
@@ -253,7 +255,7 @@ const handleCancelDelete = () => {
         />
         {students.length > 0 && (
   <button
-    className="btn-danger-clear-all"
+    className="btn-danger-clear-my-all"
     id="btn-danger-clear-all"
     onClick={() => setShowClearWarning(true)}
     disabled={importing}

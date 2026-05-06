@@ -316,7 +316,7 @@ button {
   cursor: pointer;
 }
 
-.btn-danger-clear-all {
+.btn-danger-clear-all > button {
   background: #fff;
   color: #c0392b;
   padding: 10px;
@@ -324,7 +324,36 @@ button {
   font-size: 12px;
   border: 1px solid #f5c6c2;
   cursor: pointer;
+  text-align: center;
 }
+
+@media (max-width: 410px) {
+  .btn-danger-clear-all > button {
+    width: 100%;
+  }
+
+  .form-card > div > .btn-danger-clear-all {
+  width: 100%;
+}
+
+.form-card > div {
+  flex-wrap: wrap;
+}
+}
+
+
+.btn-danger-clear-my-all {
+  background: #fff;
+  color: #c0392b;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  border: 1px solid #f5c6c2;
+  cursor: pointer;
+  text-align: center;
+}
+
+
 
 .btn-danger:hover, .btn-danger-clear-all:hover {
   background: #fdf0ef;
@@ -659,6 +688,40 @@ button {
 
 
 @media (max-width: 600px) {
+  .top-nav {
+  padding: 0 12px;
+  gap: 8px;
+}
+
+
+
+.nav-link {
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.nav-logout-btn {
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.app-name {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.nav-links {
+  gap: 4px;
+}
+
+
+
+
+
+
+
+
+
   .task-card {
     flex-direction: column;
     align-items: flex-start;
