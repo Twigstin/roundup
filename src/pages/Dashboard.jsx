@@ -38,6 +38,28 @@ const handleCancelDelete = () => {
 }
 
 
+  const fetchAllEntries = async (userId) => {
+  let allEntries = []
+  let page = 0
+  const pageSize = 1000
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('entries')
+      .select('*')
+      .eq('user_id', userId)
+      .range(page * pageSize, (page + 1) * pageSize - 1)
+
+    if (error) throw error
+    if (!data || data.length === 0) break
+
+    allEntries = [...allEntries, ...data]
+    if (data.length < pageSize) break
+    page++
+  }
+
+  return allEntries
+}
 
 
   useEffect(() => {
@@ -46,14 +68,10 @@ const handleCancelDelete = () => {
   const userId = session?.user?.id
 
   const data = await getTasks()
-  const { data: entriesData } = await supabase
-    .from('entries')
-    .select('*')
-    .eq('user_id', userId)
-    .limit(5000)
+  const entriesData = await fetchAllEntries(userId)
 
-  setTasks(data)
-  setAllEntries(entriesData || [])
+setTasks(data)
+setAllEntries(entriesData)
   setLoading(false)
 }
     fetchData()
