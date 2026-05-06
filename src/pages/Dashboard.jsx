@@ -63,19 +63,52 @@ const handleCancelDelete = () => {
 
 
   useEffect(() => {
-    const fetchData = async () => {
-  const { data: { session } } = await supabase.auth.getSession()
-  const userId = session?.user?.id
+  const fetchData = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    const userId = session?.user?.id
+    const data = await getTasks()
+    const entriesData = await fetchAllEntries(userId)
+    setTasks(data)
+    setAllEntries(entriesData)
+    setLoading(false)
+  }
+  fetchData()
 
-  const data = await getTasks()
-  const entriesData = await fetchAllEntries(userId)
+  const tasksSub = supabase
+    .channel('tasks-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, (payload) => {
+      if (payload.eventType === 'INSERT') {
+        setTasks(prev => [payload.new, ...prev])
+      }
+      if (payload.eventType === 'DELETE') {
+        setTasks(prev => prev.filter(t => t.id !== payload.old.id))
+      }
+      if (payload.eventType === 'UPDATE') {
+        setTasks(prev => prev.map(t => t.id === payload.new.id ? payload.new : t))
+      }
+    })
+    .subscribe()
 
-setTasks(data)
-setAllEntries(entriesData)
-  setLoading(false)
-}
-    fetchData()
-  }, [])
+  const entriesSub = supabase
+    .channel('entries-changes-dashboard')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'entries' }, (payload) => {
+      if (payload.eventType === 'INSERT') {
+        setAllEntries(prev => [...prev, payload.new])
+      }
+      if (payload.eventType === 'UPDATE') {
+        setAllEntries(prev => prev.map(e => e.id === payload.new.id ? payload.new : e))
+      }
+      if (payload.eventType === 'DELETE') {
+        setAllEntries(prev => prev.filter(e => e.id !== payload.old.id))
+      }
+    })
+    .subscribe()
+
+  return () => {
+    supabase.removeChannel(tasksSub)
+    supabase.removeChannel(entriesSub)
+  }
+}, [])
 
 
 

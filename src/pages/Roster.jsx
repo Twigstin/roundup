@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { getStudents, createStudent, deleteStudent, bulkCreateStudents, clearAllStudents } from '../api/index'
 import ConfirmModal from '../components/ConfirmModal'
 import Spinner from '../components/Spinner'
+import { supabase } from '../api/supabase'
 
 function Roster() {
   const [students, setStudents] = useState([])
@@ -26,6 +27,25 @@ function Roster() {
       setLoading(false)
     }
     fetchStudents()
+
+    const studentsSub = supabase
+      .channel('students-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setStudents(prev => [...prev, payload.new])
+        }
+        if (payload.eventType === 'UPDATE') {
+          setStudents(prev => prev.map(s => s.id === payload.new.id ? payload.new : s))
+        }
+        if (payload.eventType === 'DELETE') {
+          setStudents(prev => prev.filter(s => s.id !== payload.old.id))
+        }
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(studentsSub)
+    }
   }, [])
 
   const handleAddStudent = async () => {
@@ -50,10 +70,6 @@ function Roster() {
   setAddingStudent(false)
 }
 
-  const handleRemove = async (studentId) => {
-    await deleteStudent(studentId)
-    setStudents(prev => prev.filter(s => s.id !== studentId))
-  }
 
   const handleCSVImport = async (e) => {
   const file = e.target.files[0]

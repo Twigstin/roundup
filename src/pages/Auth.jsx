@@ -20,7 +20,7 @@ export const Auth = () => {
       if (error) {
         setError(error.message);
       } else {
-        setMessage("Account created! Please check your email to confirm your account.");
+        setMessage("Account created! You can now login to your new account with your login credentials.");
       }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });

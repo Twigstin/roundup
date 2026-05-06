@@ -4,6 +4,7 @@ import { getTasks, getEntries, getStudents, updateEntry, populateTaskEntries, up
 import Spinner from '../components/Spinner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
+import { supabase } from '../api/supabase'
 
 function TaskDetail() {
   const { id } = useParams()
@@ -22,40 +23,58 @@ function TaskDetail() {
 
   useEffect(() => {
     const fetchData = async () => {
-  const allTasks = await getTasks()
-  const foundTask = allTasks.find(t => t.id === id)
-  const allEntries = await getEntries(id)
-  const allStudents = await getStudents()
-  const meta = await getRosterMeta()
-  
+      const allTasks = await getTasks()
+      const foundTask = allTasks.find(t => t.id === id)
+      const allEntries = await getEntries(id)
+      const allStudents = await getStudents()
+      const meta = await getRosterMeta()
 
-console.log('meta:', meta)
-console.log('foundTask.roster_synced_at:', foundTask?.roster_synced_at)
-console.log('condition 1 - foundTask:', !!foundTask)
-console.log('condition 2 - meta.updated_at:', !!meta?.updated_at)
-console.log('condition 3 - change_type:', meta?.change_type)
-console.log('condition 4 - no sync or newer:', !foundTask?.roster_synced_at || new Date(meta?.updated_at) > new Date(foundTask?.roster_synced_at))
+      setTask(foundTask)
+      setEntries(allEntries)
+      setStudents(allStudents)
 
-  setTask(foundTask)
-  setEntries(allEntries)
-  setStudents(allStudents)
+      if (
+        foundTask &&
+        meta.updated_at &&
+        meta.change_type === 'added' &&
+        (!foundTask.roster_synced_at ||
+          new Date(meta.updated_at) > new Date(foundTask.roster_synced_at))
+      ) {
+        const existingStudentIds = allEntries.map(e => e.student_id)
+        const hasNewStudents = allStudents.some(s => !existingStudentIds.includes(s.id))
+        if (hasNewStudents) setShowRosterUpdate(true)
+      }
 
-  if (
-  foundTask &&
-  meta.updated_at &&
-  meta.change_type === 'added' &&
-  (!foundTask.roster_synced_at || 
-    new Date(meta.updated_at) > new Date(foundTask.roster_synced_at))
-) {
-  const existingStudentIds = allEntries.map(e => e.student_id)
-  const hasNewStudents = allStudents.some(s => !existingStudentIds.includes(s.id))
-  if (hasNewStudents) setShowRosterUpdate(true)
-}
-
-  setLoading(false)
-}
-
+      setLoading(false)
+    }
     fetchData()
+
+    const entriesSub = supabase
+      .channel(`entries-changes-${id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'entries', filter: `task_id=eq.${id}` }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setEntries(prev => [...prev, payload.new])
+        }
+        if (payload.eventType === 'UPDATE') {
+          setEntries(prev => prev.map(e => e.id === payload.new.id ? payload.new : e))
+        }
+        if (payload.eventType === 'DELETE') {
+          setEntries(prev => prev.filter(e => e.id !== payload.old.id))
+        }
+      })
+      .subscribe()
+
+    const taskSub = supabase
+      .channel(`task-changes-${id}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tasks', filter: `id=eq.${id}` }, (payload) => {
+        setTask(payload.new)
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(entriesSub)
+      supabase.removeChannel(taskSub)
+    }
   }, [id])
 
   if (loading) {
