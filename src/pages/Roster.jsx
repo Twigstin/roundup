@@ -3,6 +3,7 @@ import { getStudents, createStudent, deleteStudent, bulkCreateStudents, clearAll
 import ConfirmModal from '../components/ConfirmModal'
 import Spinner from '../components/Spinner'
 import { supabase } from '../api/supabase'
+import * as XLSX from 'xlsx'
 
 function Roster() {
   const [students, setStudents] = useState([])
@@ -71,7 +72,7 @@ function Roster() {
 }
 
 
-  const handleCSVImport = async (e) => {
+  const handleFileImport = async (e) => {
   const file = e.target.files[0]
   if (!file) return
 
@@ -82,7 +83,69 @@ function Roster() {
     return
   }
 
-  processCSV(file)
+  processFile(file)
+}
+
+const processFile = (file) => {
+  const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls')
+  if (isExcel) {
+    processExcel(file)
+  } else {
+    processCSV(file)
+  }
+}
+
+const processExcel = (file) => {
+  setImporting(true)
+  setError('')
+
+  const reader = new FileReader()
+  reader.onload = async (event) => {
+    const data = new Uint8Array(event.target.result)
+    const workbook = XLSX.read(data, { type: 'array' })
+    const sheet = workbook.Sheets[workbook.SheetNames[0]]
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 })
+
+    if (rows.length < 2) {
+      setError('File appears to be empty')
+      setImporting(false)
+      return
+    }
+
+    const headers = rows[0].map(h => h?.toString().toLowerCase().trim().replace(/\s+/g, ''))
+
+    const nameIndex = headers.findIndex(h =>
+      ['name', 'fullname', 'studentname', 'full name', 'student name'].includes(h)
+    )
+    const regIndex = headers.findIndex(h =>
+      ['regnumber', 'reg number', 'reg_number', 'matric', 'matricnumber',
+       'matric number', 'matric_number', 'registration number', 'registrationnumber'].includes(h)
+    )
+
+    if (nameIndex === -1 || regIndex === -1) {
+      setError('File must have a name column and a reg/matric number column')
+      setImporting(false)
+      return
+    }
+
+    const newStudents = []
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i]
+      if (!row[nameIndex] || !row[regIndex]) continue
+      newStudents.push({
+        id: crypto.randomUUID(),
+        name: row[nameIndex].toString().trim(),
+        reg_number: row[regIndex].toString().trim()
+      })
+    }
+
+    await bulkCreateStudents(newStudents)
+    setStudents(prev => [...prev, ...newStudents])
+    setImporting(false)
+    setError('')
+  }
+
+  reader.readAsArrayBuffer(file)
 }
 
 const processCSV = (file) => {
@@ -93,23 +156,26 @@ const processCSV = (file) => {
   reader.onload = async (event) => {
     const text = event.target.result
     const lines = text.trim().split('\n')
-    const headers = lines[0].toLowerCase().split(',').map(h => h.trim())
+    const headers = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/\s+/g, ''))
 
-    const nameIndex = headers.indexOf('name')
-    const regIndex = headers.indexOf('regnumber')
+    const nameIndex = headers.findIndex(h =>
+      ['name', 'names', 'full name', 'student name', 'fullname', 'studentname'].includes(h)
+    )
+    const regIndex = headers.findIndex(h =>
+      ['reg number', 'regnumber', 'reg_number', 'matric', 'matricnumber',
+      'matric number', 'matriculationnumber','matriculation number', 'matricnumber', 'matric_number', 'registrationnumber', 'registration number'].includes(h)
+    )
 
     if (nameIndex === -1 || regIndex === -1) {
-      setError('CSV must have columns: name, regNumber')
+      setError('CSV must have a name column and a reg/matric number column')
       setImporting(false)
       return
     }
 
     const newStudents = []
-
     for (let i = 1; i < lines.length; i++) {
       const cols = lines[i].split(',').map(c => c.trim())
       if (!cols[nameIndex] || !cols[regIndex]) continue
-
       newStudents.push({
         id: crypto.randomUUID(),
         name: cols[nameIndex],
@@ -128,7 +194,7 @@ const processCSV = (file) => {
 
 const handleConfirmImport = () => {
   setShowImportWarning(false)
-  processCSV(pendingFile)
+  processFile(pendingFile)
   setPendingFile(null)
 }
 
@@ -233,14 +299,14 @@ const handleCancelDelete = () => {
       <Spinner size={14} />
       Importing...
     </>
-  ) : 'Import CSV'}
+  ) : 'Import list'}
 </button>
           <input
             ref={fileInputRef}
-            accept=".csv"
+            accept=".csv, .xlsx, .xls"
             type="file"
             style={{ display: 'none' }}
-            onChange={handleCSVImport}
+            onChange={handleFileImport}
           />
 
           {students.length > 0 && (
