@@ -57,14 +57,13 @@ function Roster() {
 
   setAddingStudent(true)
 
-  const newStudent = {
+  /*const newStudent = {
     id: crypto.randomUUID(),
     name: name.trim(),
     reg_number: regNumber.trim()
-  }
+  }*/
 
-  const saved = await createStudent(newStudent)
-  setStudents(prev => [...prev, saved])
+  //const saved = await createStudent(newStudent)
   setName('')
   setRegNumber('')
   setError('')
@@ -140,7 +139,6 @@ const processExcel = (file) => {
     }
 
     await bulkCreateStudents(newStudents)
-    setStudents(prev => [...prev, ...newStudents])
     setImporting(false)
     setError('')
   }
@@ -184,7 +182,6 @@ const processCSV = (file) => {
     }
 
     await bulkCreateStudents(newStudents)
-    setStudents(prev => [...prev, ...newStudents])
     setImporting(false)
     setError('')
   }
@@ -206,7 +203,6 @@ const handleCancelImport = () => {
 
 const handleClearAll = async () => {
   await clearAllStudents()
-  setStudents([])
   setShowClearWarning(false)
 }
 
@@ -217,7 +213,6 @@ const handleDeleteClick = (studentId) => {
 
 const handleConfirmDelete = async () => {
   await deleteStudent(studentToDelete)
-  setStudents(prev => prev.filter(s => s.id !== studentToDelete))
   setShowDeleteWarning(false)
   setStudentToDelete(null)
 }
