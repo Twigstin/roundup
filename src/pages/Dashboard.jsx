@@ -141,9 +141,13 @@ const pendingCount = isPayment
       const collectedCount = isPayment
       ? taskEntries.filter(e => e.collected === true).length
       : 0
+
+      const notCollectedCount = isPayment
+      ? taskEntries.filter(e => ((e.collected === false) && (e.status !== 'not_paid'))).length
+      : 0
       
 
-    return { total, doneCount, pendingCount, partPaidCount, collectedCount, isPayment }
+    return { total, doneCount, pendingCount, partPaidCount, collectedCount, notCollectedCount, isPayment }
   }
 
   const filteredTasks = tasks.filter(task => {
@@ -224,7 +228,7 @@ const pendingCount = isPayment
 ) : (
         <div className="task-list">
           {filteredTasks.map(task => {
-            const { total, doneCount, pendingCount, partPaidCount, collectedCount, isPayment } = getTaskStats(task.id, task.type)
+            const { total, doneCount, pendingCount, partPaidCount, collectedCount, notCollectedCount, isPayment } = getTaskStats(task.id, task.type)
 
             return (
               <div
@@ -267,6 +271,13 @@ const pendingCount = isPayment
   <span className="task-stat-num" style={{ color: '#27500A' }}>{collectedCount}</span>
   <span className="task-stat-label">collected</span>
 </div>
+
+<div className="task-stat-divider" />
+<div className="task-stat" id="not-collected">
+  <span className="task-stat-num warning">{notCollectedCount}</span>
+  <span className="task-stat-label">not collected</span>
+</div>
+
                       </>
                     ) : (
                       <>

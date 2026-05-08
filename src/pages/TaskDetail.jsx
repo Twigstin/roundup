@@ -109,6 +109,10 @@ const partPaidCount = isPayment
   const collectedCount = isPayment
   ? entries.filter(e => e.collected === true).length
   : 0
+  
+  const notCollectedCount = isPayment
+  ? entries.filter(e => ((e.collected === false) && (e.status !== 'not_paid'))).length
+  : 0
 
   const enrichedEntries = entries.map(entry => ({
   ...entry,
@@ -135,7 +139,8 @@ const filteredEntries = enrichedEntries.filter(entry => {
     (filter === 'paid' && entry.status === 'paid') ||
     (filter === 'part_paid' && entry.status === 'part_paid') ||
     (filter === 'not_paid' && entry.status === 'not_paid') ||
-    (filter === 'collected' && entry.collected === true)
+    (filter === 'collected' && entry.collected === true) ||
+    (filter === 'not_collected' && (entry.collected === false && entry.status !== 'not_paid'))
 
   return matchesSearch && matchesFilter
 })
@@ -305,7 +310,14 @@ const handleDismissRosterUpdate = async () => {
       >
         <p className="summary-label">Collected</p>
         <p className="summary-number" style={{ color: '#27500A' }}>{collectedCount}</p>
-</div>
+      </div>
+      <div
+        className={`summary-card ${filter === 'not_collected' ? 'summary-card-active' : ''}`}
+        onClick={() => setFilter('not_collected')}
+      >
+        <p className="summary-label light-bold">Not collected</p>
+        <p className="summary-number danger bold">{notCollectedCount}</p>
+      </div>
     </>
   ) : (
     <>

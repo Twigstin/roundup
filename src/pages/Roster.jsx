@@ -33,7 +33,11 @@ function Roster() {
       .channel('students-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, (payload) => {
         if (payload.eventType === 'INSERT') {
-          setStudents(prev => [...prev, payload.new])
+          setStudents(prev => {
+          const alreadyExists = prev.some(s => s.id === payload.new.id)
+          if (alreadyExists) return prev
+            return [...prev, payload.new]
+          })
         }
         if (payload.eventType === 'UPDATE') {
           setStudents(prev => prev.map(s => s.id === payload.new.id ? payload.new : s))
@@ -49,7 +53,7 @@ function Roster() {
     }
   }, [])
 
-  const handleAddStudent = async () => {
+const handleAddStudent = async () => {
   if (!name.trim() || !regNumber.trim()) {
     setError('Both name and reg number are required')
     return
@@ -57,13 +61,15 @@ function Roster() {
 
   setAddingStudent(true)
 
-  /*const newStudent = {
+  const newStudent = {
     id: crypto.randomUUID(),
     name: name.trim(),
     reg_number: regNumber.trim()
-  }*/
+  }
 
-  //const saved = await createStudent(newStudent)
+  await createStudent(newStudent)
+  const updated = await getStudents()
+  setStudents(updated)
   setName('')
   setRegNumber('')
   setError('')
@@ -211,8 +217,10 @@ const handleDeleteClick = (studentId) => {
   setShowDeleteWarning(true)
 }
 
+
 const handleConfirmDelete = async () => {
   await deleteStudent(studentToDelete)
+  setStudents(prev => prev.filter(s => s.id !== studentToDelete))
   setShowDeleteWarning(false)
   setStudentToDelete(null)
 }
