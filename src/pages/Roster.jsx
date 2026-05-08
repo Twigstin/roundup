@@ -120,11 +120,10 @@ const processExcel = (file) => {
     const headers = rows[0].map(h => h?.toString().toLowerCase().trim().replace(/\s+/g, ''))
 
     const nameIndex = headers.findIndex(h =>
-      ['name', 'fullname', 'studentname', 'full name', 'student name'].includes(h)
+      ['name', 'names', 'fullname', 'studentname', 'studentsname', 'candidatename', 'candidatesname',].includes(h.toLowerCase().replace(/[^a-z0-9]/g, ""))
     )
     const regIndex = headers.findIndex(h =>
-      ['regnumber', 'reg number', 'reg_number', 'matric', 'matricnumber',
-       'matric number', 'matric_number', 'registration number', 'registrationnumber'].includes(h)
+      ['regnumber', 'regno', 'regnum', 'matric', 'matricnumber', 'matricno', 'registrationnumber'].includes(h.toLowerCase().replace(/[^a-z0-9]/g, ""))
     )
 
     if (nameIndex === -1 || regIndex === -1) {
