@@ -48,6 +48,14 @@ export const deleteTask = async (taskId) => {
   if (error) throw error
 }
 
+export const getDashboardStats = async () => {
+  const { data, error } = await supabase
+    .from('entries')
+    .select('task_id, status, collected')
+  if (error) throw error
+  return data
+}
+
 
 //Roster Meta
 

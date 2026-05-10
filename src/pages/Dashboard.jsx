@@ -39,39 +39,42 @@ const handleCancelDelete = () => {
 
 
   const fetchAllEntries = async (userId) => {
-  let allEntries = []
-  let page = 0
+  const countResult = await supabase
+    .from('entries')
+    .select('task_id, status, collected', { count: 'exact', head: true })
+    .eq('user_id', userId)
+
+  const total = countResult.count
   const pageSize = 1000
+  const pages = Math.ceil(total / pageSize)
 
-  while (true) {
-    const { data, error } = await supabase
+  const requests = Array.from({ length: pages }, (_, i) =>
+    supabase
       .from('entries')
-      .select('*')
+      .select('task_id, status, collected')
       .eq('user_id', userId)
-      .range(page * pageSize, (page + 1) * pageSize - 1)
+      .range(i * pageSize, (i + 1) * pageSize - 1)
+  )
 
-    if (error) throw error
-    if (!data || data.length === 0) break
-
-    allEntries = [...allEntries, ...data]
-    if (data.length < pageSize) break
-    page++
-  }
-
-  return allEntries
+  const results = await Promise.all(requests)
+  return results.flatMap(r => r.data || [])
 }
 
 
   useEffect(() => {
   const fetchData = async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    const userId = session?.user?.id
-    const data = await getTasks()
-    const entriesData = await fetchAllEntries(userId)
-    setTasks(data)
-    setAllEntries(entriesData)
-    setLoading(false)
-  }
+  const { data: { session } } = await supabase.auth.getSession()
+  const userId = session?.user?.id
+
+  const [tasks, entriesData] = await Promise.all([
+    getTasks(),
+    fetchAllEntries(userId)
+  ])
+
+  setTasks(tasks)
+  setAllEntries(entriesData)
+  setLoading(false)
+}
   fetchData()
 
   const tasksSub = supabase
