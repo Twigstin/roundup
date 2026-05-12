@@ -1186,3 +1186,28 @@ button:active {
   align-items: center;
   gap: 10px;
 }
+
+
+.task-limit-banner {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 40px 24px;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.task-limit-title {
+  font-size: 16px;
+  font-family: 'montserrat-bold', sans-serif;
+  color: #111;
+  margin-bottom: 8px;
+}
+
+.task-limit-subtitle {
+  font-size: 14px;
+  color: #888;
+  line-height: 1.6;
+  max-width: 320px;
+  margin: 0 auto;
+}

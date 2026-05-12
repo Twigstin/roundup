@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { createTask, getStudents, bulkCreateEntries } from '../api/index'
+import { createTask, getTasks, getStudents, bulkCreateEntries } from '../api/index'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
 
@@ -11,13 +11,18 @@ function NewTask() {
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const [rosterEmpty, setRosterEmpty] = useState(false)
+  const [taskLimitReached, setTaskLimitReached] = useState(false);
 
   useEffect(() => {
-  const checkRoster = async () => {
-    const students = await getStudents()
+  const checkLimits = async () => {
+    const [students, tasks] = await Promise.all([
+      getStudents(),
+      getTasks()
+    ])
     if (students.length === 0) setRosterEmpty(true)
+    if (tasks.length >= 15) setTaskLimitReached(true)
   }
-  checkRoster()
+  checkLimits()
 }, [])
 
   const handleSubmit = async () => {
@@ -71,6 +76,7 @@ await bulkCreateEntries(newEntries)
 
   return (
     <div>
+      
       {rosterEmpty && (
   <div className="roster-warning">
     <p className="roster-warning-text">
@@ -86,7 +92,21 @@ await bulkCreateEntries(newEntries)
         <Link to="/" className="back-link"><FontAwesomeIcon icon={faChevronLeft}/> Back</Link>
       </div>
 
-      <div className="form-card">
+      {taskLimitReached && (
+  <div className="task-limit-banner">
+    <p className="task-limit-title">Task limit reached</p>
+    <p className="task-limit-subtitle">
+      You've reached the 15 task limit. To create a new task, 
+      go back and delete tasks you no longer need.
+    </p>
+    <Link to="/" className="btn-primary" style={{ display: 'inline-block', marginTop: '16px' }}>
+      ← Back to tasks
+    </Link>
+  </div>
+)}
+
+      {!taskLimitReached && (
+  <div className="form-card">
         <h1 className="page-title bold" style={{ marginBottom: '24px' }}>New task</h1>
 
         {error && <p className="form-error">{error}</p>}
@@ -126,6 +146,7 @@ await bulkCreateEntries(newEntries)
           {loading ? 'Creating...' : 'Create task'}
         </button>
       </div>
+)}
     </div>
   )
 }
