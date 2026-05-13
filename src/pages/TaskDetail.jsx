@@ -57,7 +57,11 @@ function TaskDetail() {
       .channel(`entries-changes-${id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'entries', filter: `task_id=eq.${id}` }, (payload) => {
         if (payload.eventType === 'INSERT') {
-          setEntries(prev => [...prev, payload.new])
+          setEntries(prev => {
+            const alreadyExists = prev.some(e => e.id === payload.new.id)
+            if (alreadyExists) return prev
+              return [...prev, payload.new]
+          })
         }
         if (payload.eventType === 'UPDATE') {
           setEntries(prev => prev.map(e => e.id === payload.new.id ? payload.new : e))
