@@ -877,7 +877,7 @@ button {
     padding: 5px 10px;
   }
 
-  #form-input-ctn {
+  #form-input-ctn, #form-input-ctn-two {
     flex-direction: column;
   }
   .form-input-ctn input {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { getTasks, getEntries, getStudents, updateEntry, populateTaskEntries, updateTask, getRosterMeta, syncTaskRoster } from '../api/index'
+import { getTasks, getEntries, getStudents, createEntry, updateEntry, populateTaskEntries, updateTask, getRosterMeta, syncTaskRoster } from '../api/index'
 import Spinner from '../components/Spinner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
@@ -20,6 +20,10 @@ function TaskDetail() {
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleText, setTitleText] = useState('')
   const [showRosterUpdate, setShowRosterUpdate] = useState(false)
+  const [showAddStudent, setShowAddStudent] = useState(false)
+  const [newStudentName, setNewStudentName] = useState('')
+  const [newStudentReg, setNewStudentReg] = useState('')
+  const [addingStudent, setAddingStudent] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -228,6 +232,35 @@ const handleDismissRosterUpdate = async () => {
   setShowRosterUpdate(false)
 }
 
+
+
+const handleAddStudentToTask = async () => {
+  if (!newStudentName.trim() || !newStudentReg.trim()) return
+
+  setAddingStudent(true)
+
+  const newEntry = {
+    id: crypto.randomUUID(),
+    task_id: task.id,
+    student_id: crypto.randomUUID(),
+    student_name: newStudentName.trim(),
+    student_reg_number: newStudentReg.trim(),
+    status: isPayment ? 'not_paid' : isAttendance ? 'absent' : 'pending',
+    collected: false,
+    note: '',
+    updated_at: new Date().toISOString()
+  }
+
+  const saved = await createEntry(newEntry)
+  setEntries(prev => [...prev, saved])
+  setNewStudentName('')
+  setNewStudentReg('')
+  setShowAddStudent(false)
+  setAddingStudent(false)
+}
+
+
+
   return (
   <div>
     <div className="page-header">
@@ -374,7 +407,59 @@ const handleDismissRosterUpdate = async () => {
     value={search}
     onChange={(e) => setSearch(e.target.value)}
   />
+  <button
+    className="btn-secondary"
+    style={{ alignSelf: 'flex-start', fontSize: '13px', padding: '8px 14px' }}
+    onClick={() => setShowAddStudent(prev => !prev)}
+  >
+    {showAddStudent ? 'Cancel' : '+ Add student'}
+  </button>
 </div>
+
+{showAddStudent && (
+  <div className="form-card" style={{ marginBottom: '12px' }}>
+    <p className="form-label" style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '500' }}>
+      Add student to this task only
+    </p>
+    <p style={{ fontSize: '12px', color: '#888', marginBottom: '12px' }}>
+      This student will only appear in this task, not in your general roster.
+    </p>
+    <div id='form-input-ctn-two' className="form-input-ctn">
+      <input
+        className="form-input"
+        type="text"
+        placeholder="Full name"
+        value={newStudentName}
+        onChange={(e) => setNewStudentName(e.target.value)}
+      />
+      <input
+        className="form-input"
+        type="text"
+        placeholder="Reg number"
+        value={newStudentReg}
+        onChange={(e) => setNewStudentReg(e.target.value)}
+      />
+    </div>
+    <button
+      className="btn-primary"
+      onClick={handleAddStudentToTask}
+      disabled={addingStudent}
+      style={{
+        opacity: addingStudent ? 0.6 : 1,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px'
+      }}
+    >
+      {addingStudent ? (
+        <>
+          <Spinner size={14} />
+          Adding...
+        </>
+      ) : 'Add to this task'}
+    </button>
+  </div>
+)}
 
     <div className="form-card">
   {filteredEntries.length === 0 ? (
