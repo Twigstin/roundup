@@ -153,8 +153,8 @@ const handleStatusUpdate = async (entryId, currentStatus) => {
   let newStatus
 
   if (isPayment) {
-    if (currentStatus === 'not_paid') newStatus = 'part_paid'
-    else if (currentStatus === 'part_paid') newStatus = 'paid'
+    if (currentStatus === 'not_paid') newStatus = 'paid'
+    else if (currentStatus === 'paid') newStatus = 'part_paid'
     else newStatus = 'not_paid'
   } else if (isAttendance) {
     newStatus = currentStatus === 'absent' ? 'present' : 'absent'
@@ -435,8 +435,8 @@ const handleDismissRosterUpdate = async () => {
       >
         
         {isPayment
-          ? entry.status === 'not_paid' ? 'Mark part paid'
-            : entry.status === 'part_paid' ? 'Mark paid'
+          ? entry.status === 'not_paid' ? 'Mark paid'
+            : entry.status === 'paid' ? 'Mark part paid'
             : 'Mark not paid'
           : isAttendance
   ? entry.status === 'absent' ? 'Mark present' : 'Mark absent'
