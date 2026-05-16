@@ -1336,3 +1336,22 @@ button:active {
 .student-row {
   grid-template-columns: 40px 1fr 1fr auto;
 }
+
+
+.roster-align {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.formy-input {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #111;
+  background: #fff;
+  width: 100%;
+  box-sizing: border-box;
+}

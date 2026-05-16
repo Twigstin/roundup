@@ -141,9 +141,9 @@ function Roster() {
           Create new list
         </p>
         {error && <p className="form-error">{error}</p>}
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div className="roster-align">
           <input
-            className="form-input"
+            className="formy-input"
             type="text"
             placeholder="e.g. CSC 301 List, Main Class List…"
             value={newListName}
