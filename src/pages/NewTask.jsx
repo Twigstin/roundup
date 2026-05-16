@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { createTask, getTasks, getStudents, getStudentsByClassList, bulkCreateEntries, getClassLists } from '../api/index'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
+import Spinner from '../components/Spinner'
 
 function NewTask() {
   const [title, setTitle] = useState('')
@@ -178,7 +179,11 @@ function NewTask() {
           onClick={handleSubmit}
           disabled={loading}
         >
-          {loading ? 'Creating...' : 'Create task'}
+          {loading ? (
+                  <>
+                    <Spinner size={14} /><span style={{ marginLeft: '10px' }}>Creating...</span>
+                  </>
+                ) : 'Create task'}
         </button>
       </div>
 )}

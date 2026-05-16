@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { getTasks, getEntries, getStudents, createEntry, updateEntry, populateTaskEntries, updateTask, getRosterMeta, syncTaskRoster } from '../api/index'
+import { getTasks, getEntries, getStudents, getStudentsByClassList, createEntry, updateEntry, populateTaskEntries, updateTask, getRosterMeta, syncTaskRoster } from '../api/index'
 import Spinner from '../components/Spinner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
@@ -27,11 +27,17 @@ function TaskDetail() {
 
   useEffect(() => {
     const fetchData = async () => {
+
       const allTasks = await getTasks()
-      const foundTask = allTasks.find(t => t.id === id)
-      const allEntries = await getEntries(id)
-      const allStudents = await getStudents()
-      const meta = await getRosterMeta()
+  const foundTask = allTasks.find(t => t.id === id)
+  
+  const [allEntries, allStudents, meta] = await Promise.all([
+    getEntries(id),
+    foundTask?.class_list_id 
+      ? getStudentsByClassList(foundTask.class_list_id)
+      : getStudents(),
+    getRosterMeta()
+  ])
 
       setTask(foundTask)
       setEntries(allEntries)
@@ -59,12 +65,12 @@ function TaskDetail() {
       .channel(`entries-changes-${id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'entries', filter: `task_id=eq.${id}` }, (payload) => {
         if (payload.eventType === 'INSERT') {
-          setEntries(prev => {
-            const alreadyExists = prev.some(e => e.id === payload.new.id)
-            if (alreadyExists) return prev
-              return [...prev, payload.new]
-          })
-        }
+  setEntries(prev => {
+    const alreadyExists = prev.some(e => e.id === payload.new.id)
+    if (alreadyExists) return prev
+    return [...prev, payload.new]
+  })
+}
         if (payload.eventType === 'UPDATE') {
           setEntries(prev => prev.map(e => e.id === payload.new.id ? payload.new : e))
         }
@@ -230,8 +236,6 @@ const handleCollectedToggle = async (entryId, currentCollected) => {
 const handlePopulateFromRoster = async () => {
   setPopulating(true)
   await populateTaskEntries(task.id, task.type, students)
-  const updated = await getEntries(task.id)
-  setEntries(updated)
   setPopulating(false)
 }
 
@@ -246,8 +250,6 @@ const handleRosterSync = async () => {
   setShowRosterUpdate(false)
   setPopulating(true)
   await populateTaskEntries(task.id, task.type, students)
-  const updated = await getEntries(task.id)
-  setEntries(updated)
   setTask(prev => ({ ...prev, roster_synced_at: new Date().toISOString() }))
   setPopulating(false)
 }
