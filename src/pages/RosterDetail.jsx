@@ -28,6 +28,8 @@ function RosterDetail() {
   const [showDeleteWarning, setShowDeleteWarning] = useState(false)
   const [studentToDelete, setStudentToDelete] = useState(null)
   const [addingStudent, setAddingStudent] = useState(false)
+  const [clearingStudents, setClearingStudents] = useState(false)
+  const [removingStudent, setRemovingStudent] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -232,10 +234,12 @@ function RosterDetail() {
   }
 
   const handleClearAll = async () => {
+    setClearingStudents(true)
     const userId = (await supabase.auth.getSession()).data.session?.user?.id
     await supabase.from('students').delete().eq('class_list_id', id).eq('user_id', userId)
     setStudents([])
     setShowClearWarning(false)
+    setClearingStudents(false)
   }
 
   const handleDeleteClick = (studentId) => {
@@ -244,10 +248,12 @@ function RosterDetail() {
   }
 
   const handleConfirmDelete = async () => {
+    setRemovingStudent(true)
     await deleteStudent(studentToDelete)
     setStudents(prev => prev.filter(s => s.id !== studentToDelete))
     setShowDeleteWarning(false)
     setStudentToDelete(null)
+    setRemovingStudent(false)
   }
 
   const sortedStudents = [...students].sort((a, b) => {
@@ -444,7 +450,11 @@ function RosterDetail() {
         <ConfirmModal
           message="This will permanently delete all students from this list. This action cannot be undone."
           onConfirm={handleClearAll}
-          onCancel={() => setShowClearWarning(false)}
+          onCancel={() => {
+            setShowClearWarning(false)
+            setClearingStudents(false)
+          }}
+          loading={clearingStudents}
         />
       )}
       {showDeleteWarning && (
@@ -454,7 +464,9 @@ function RosterDetail() {
           onCancel={() => {
             setShowDeleteWarning(false)
             setStudentToDelete(null)
+            setRemovingStudent(false)
           }}
+          loading={removingStudent}
         />
       )}
     </div>

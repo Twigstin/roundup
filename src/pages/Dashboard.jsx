@@ -17,6 +17,7 @@ function Dashboard() {
   const [taskToDelete, setTaskToDelete] = useState(null)
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
+  const [deletingTask, setDeletingTask] = useState(false)
 
   const handleDeleteClick = (e, taskId) => {
   e.stopPropagation()
@@ -25,14 +26,17 @@ function Dashboard() {
 }
 
 const handleConfirmDelete = async () => {
+  setDeletingTask(true)
   await deleteTask(taskToDelete)
   setTasks(prev => prev.filter(t => t.id !== taskToDelete))
   setAllEntries(prev => prev.filter(e => e.task_id !== taskToDelete))
   setModalOpen(false)
   setTaskToDelete(null)
+  setDeletingTask(false)
 }
 
 const handleCancelDelete = () => {
+  setDeletingTask(false)
   setModalOpen(false)
   setTaskToDelete(null)
 }
@@ -330,6 +334,7 @@ const pendingCount = isPayment
     message="Are you sure you want to delete this task? This action cannot be undone."
     onConfirm={handleConfirmDelete}
     onCancel={handleCancelDelete}
+    loading={deletingTask}
   />
 )}
     </div>

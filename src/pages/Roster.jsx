@@ -15,7 +15,16 @@ function Roster() {
   const [editingName, setEditingName] = useState('')
   const [showDeleteWarning, setShowDeleteWarning] = useState(false)
   const [listToDelete, setListToDelete] = useState(null)
+  const [renamingId, setRenamingId] = useState(null)
+  const [deletingList, setDeletingList] = useState(false)
+  
   const navigate = useNavigate()
+
+
+  const sortByUpdated = (lists) => 
+  [...lists].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+
+
 
   useEffect(() => {
     const fetchClassLists = async () => {
@@ -48,8 +57,18 @@ function Roster() {
           })
         }
         if (payload.eventType === 'UPDATE') {
-          setClassLists(prev => prev.map(l => l.id === payload.new.id ? payload.new : l))
-        }
+  const { count } = supabase
+    .from('students')
+    .select('*', { count: 'exact', head: true })
+    .eq('class_list_id', payload.new.id)
+    
+  setClassLists(prev => sortByUpdated(
+    prev.map(l => l.id === payload.new.id 
+      ? { ...payload.new, studentCount: count || 0 } 
+      : l
+    )
+  ))
+}
         if (payload.eventType === 'DELETE') {
           setClassLists(prev => prev.filter(l => l.id !== payload.old.id))
         }
@@ -68,19 +87,25 @@ function Roster() {
     }
     setCreating(true)
     const saved = await createClassList(newListName.trim())
-    setClassLists(prev => [...prev, saved])
+    setClassLists(prev => sortByUpdated([...prev, { ...saved, studentCount: 0 }]))
     setNewListName('')
     setError('')
     setCreating(false)
   }
 
   const handleRenameList = async (listId) => {
-    if (!editingName.trim()) return
-    const updated = await updateClassList(listId, editingName.trim())
-    setClassLists(prev => prev.map(l => l.id === listId ? updated : l))
-    setEditingId(null)
-    setEditingName('')
-  }
+  if (!editingName.trim()) return
+  setRenamingId(listId)
+  const updated = await updateClassList(listId, editingName.trim())
+  setClassLists(prev => sortByUpdated(prev.map(l =>
+    l.id === listId
+      ? { ...updated, studentCount: l.studentCount }
+      : l
+  )))
+  setEditingId(null)
+  setEditingName('')
+  setRenamingId(null)
+}
 
   const handleDeleteClick = (listId) => {
     setListToDelete(listId)
@@ -88,10 +113,12 @@ function Roster() {
   }
 
   const handleConfirmDelete = async () => {
+    setDeletingList(true)
     await deleteClassList(listToDelete)
     setClassLists(prev => prev.filter(l => l.id !== listToDelete))
     setShowDeleteWarning(false)
     setListToDelete(null)
+    setDeletingList(false)
   }
 
   if (loading) {
@@ -129,7 +156,11 @@ function Roster() {
             disabled={creating}
             style={{ opacity: creating ? 0.6 : 1, whiteSpace: 'nowrap' }}
           >
-            {creating ? 'Creating...' : '+ Create list'}
+            {creating ? (
+                  <>
+                    <Spinner size={14} /><span style={{ marginLeft: '10px' }}>Creating...</span>
+                  </>
+                ) : '+ Create list'}
           </button>
         </div>
       </div>
@@ -165,7 +196,11 @@ function Roster() {
                       style={{ padding: '8px 14px', fontSize: '13px' }}
                       onClick={() => handleRenameList(list.id)}
                     >
-                      Save
+                      {renamingId === list.id ? (
+                  <>
+                    <Spinner size={14} /><span style={{ marginLeft: '10px' }}>Saving...</span>
+                  </>
+                ) : 'Save'}
                     </button>
                     <button
                       className="btn-secondary"
@@ -215,15 +250,16 @@ function Roster() {
       )}
 
       {showDeleteWarning && (
-        <ConfirmModal
-          message="This will permanently delete this class list and all students in it. Tasks that used this list will not be affected. This action cannot be undone."
-          onConfirm={handleConfirmDelete}
-          onCancel={() => {
-            setShowDeleteWarning(false)
-            setListToDelete(null)
-          }}
-        />
-      )}
+  <ConfirmModal
+    message="This will permanently delete this class list and all students in it. Tasks that used this list will not be affected. This action cannot be undone."
+    onConfirm={handleConfirmDelete}
+    onCancel={() => {
+      setShowDeleteWarning(false)
+      setListToDelete(null)
+    }}
+    loading={deletingList}
+  />
+)}
     </div>
   )
 }

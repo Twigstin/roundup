@@ -249,7 +249,7 @@ export const getClassLists = async () => {
     .from('class_lists')
     .select('*')
     .eq('user_id', userId)
-    .order('created_at', { ascending: true })
+    .order('updated_at', { ascending: false, nullsFirst: false })
   if (error) throw error
   return data
 }
