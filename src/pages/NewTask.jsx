@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { createTask, getTasks, getStudents, bulkCreateEntries } from '../api/index'
+import { createTask, getTasks, getStudents, getStudentsByClassList, bulkCreateEntries, getClassLists } from '../api/index'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
 
@@ -12,78 +12,90 @@ function NewTask() {
   const navigate = useNavigate()
   const [rosterEmpty, setRosterEmpty] = useState(false)
   const [taskLimitReached, setTaskLimitReached] = useState(false);
+  const [classLists, setClassLists] = useState([])
+  const [selectedClassListId, setSelectedClassListId] = useState('')
 
-  useEffect(() => {
+ useEffect(() => {
   const checkLimits = async () => {
-    const [students, tasks] = await Promise.all([
+    const [students, tasks, lists] = await Promise.all([
       getStudents(),
-      getTasks()
+      getTasks(),
+      getClassLists()
     ])
     if (students.length === 0) setRosterEmpty(true)
     if (tasks.length >= 15) setTaskLimitReached(true)
+    setClassLists(lists)
   }
   checkLimits()
 }, [])
 
   const handleSubmit = async () => {
-
-    if ((!title.trim()) && (type === '')) {
-      setError('Please enter a task name and select a task type')
-      return
-    }
-    
-    if (!title.trim()) {
-      setError('Please enter a task name')
-      return
-    }
-
-    if (type === '') {
-      setError('Please select task type')
-      return
-    }
-
-    setLoading(true)
-
-    const newTask = {
-  id: crypto.randomUUID(),
-  title: title.trim(),
-  type,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString()
-}
-
-    await createTask(newTask)
-
-    const students = await getStudents()
-
-    const defaultStatus = type === 'payment' ? 'not_paid' : type === 'attendance' ? 'absent' : 'pending'
-
-    const newEntries = students.map(student => ({
-  id: crypto.randomUUID(),
-  task_id: newTask.id,
-  student_id: student.id,
-  student_name: student.name,
-  student_reg_number: student.reg_number,
-  status: defaultStatus,
-  collected: false,
-  note: '',
-  updated_at: new Date().toISOString()
-}))
-await bulkCreateEntries(newEntries)
-
-    navigate('/')
+  if ((!title.trim()) && (type === '')) {
+    setError('Please enter a task name and select a task type')
+    return
   }
+
+  if (!title.trim()) {
+    setError('Please enter a task name')
+    return
+  }
+
+  if (type === '') {
+    setError('Please select task type')
+    return
+  }
+
+  if (!selectedClassListId) {
+    setError('Please select a class list')
+    return
+  }
+
+  setLoading(true)
+
+  const newTask = {
+    id: crypto.randomUUID(),
+    title: title.trim(),
+    type,
+    class_list_id: selectedClassListId,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }
+
+  await createTask(newTask)
+
+  const students = await getStudentsByClassList(selectedClassListId)
+
+  const defaultStatus = type === 'payment' ? 'not_paid' : type === 'attendance' ? 'absent' : 'pending'
+
+  const newEntries = students.map(student => ({
+    id: crypto.randomUUID(),
+    task_id: newTask.id,
+    student_id: student.id,
+    student_name: student.name,
+    student_reg_number: student.reg_number,
+    status: defaultStatus,
+    collected: false,
+    note: '',
+    updated_at: new Date().toISOString()
+  }))
+
+  if (newEntries.length > 0) {
+    await bulkCreateEntries(newEntries)
+  }
+
+  navigate('/')
+}
 
   return (
     <div>
       
-      {rosterEmpty && (
+      {classLists.length === 0 && (
   <div className="roster-warning">
     <p className="roster-warning-text">
-      Your class list is empty. Add your roster first so students are automatically tracked when you create a task.
+      You have no class lists yet. Create a class list first so students are automatically tracked when you create a task.
     </p>
     <Link to="/roster" className="roster-warning-link">
-      Add class list →
+      Create class list →
     </Link>
   </div>
 )}
@@ -136,6 +148,29 @@ await bulkCreateEntries(newEntries)
           </select>
           <span className="form-hint">This helps categorize and color-code the task</span>
         </div>
+
+        <div className="form-field">
+  <label className="form-label">Class list</label>
+  {classLists.length === 0 ? (
+    <p style={{ fontSize: '13px', color: '#888' }}>
+      No class lists found. <Link to="/roster">Create one first →</Link>
+    </p>
+  ) : (
+    <select
+      className="form-input"
+      value={selectedClassListId}
+      onChange={(e) => setSelectedClassListId(e.target.value)}
+    >
+      <option value="">Select a class list</option>
+      {classLists.map(list => (
+        <option key={list.id} value={list.id}>{list.name}</option>
+      ))}
+    </select>
+  )}
+  {classLists.length === 0 ? "" : (
+    <span className="form-hint">Choose which class list to track for this task</span>
+  )}  
+</div>
 
         <button
           className="btn-primary"
