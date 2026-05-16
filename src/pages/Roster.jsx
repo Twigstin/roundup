@@ -19,10 +19,22 @@ function Roster() {
 
   useEffect(() => {
     const fetchClassLists = async () => {
-      const data = await getClassLists()
-      setClassLists(data)
-      setLoading(false)
-    }
+  const lists = await getClassLists()
+  
+  const listsWithCounts = await Promise.all(
+    lists.map(async (list) => {
+      const { count } = await supabase
+        .from('students')
+        .select('*', { count: 'exact', head: true })
+        .eq('class_list_id', list.id)
+      return { ...list, studentCount: count || 0 }
+    })
+  )
+  
+  setClassLists(listsWithCounts)
+  setLoading(false)
+}
+    
     fetchClassLists()
 
     const classListsSub = supabase
@@ -168,6 +180,10 @@ function Roster() {
                     <span className="task-card-title light-bold">{list.name}</span>
                   </div>
                 )}
+
+                <p className="task-card-meta">
+                  {list.studentCount} student{list.studentCount <= 1 ? '' : 's'}
+                </p>
               </div>
 
               <div className="task-card-actions">

@@ -774,7 +774,11 @@ button {
   
 
   .auth-main-ctn > div {
-    width: 90%;
+    width: 100%;
+    background-color: #f5f5f5 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    border: none !important;
   }
 
   .signin-btn button, .auth-form-submit-btn button {
@@ -1087,7 +1091,7 @@ button {
   height: 100vh;
 }
 
-.auth-main-ctn > div > h2 {
+.auth-main-ctn > div > h3 {
   font-family: 'montserrat-bold', sans-serif;
   margin-bottom: 40px;
 }

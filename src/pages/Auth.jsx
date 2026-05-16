@@ -35,9 +35,9 @@ export const Auth = () => {
   return (
     <div className="auth-main-ctn">
       <div>
-        <h2 style={{ textAlign: "center" }}>
+        <h3 style={{ textAlign: "center" }}>
           {isSignUp ? "Create a new account" : "Log In to Roundup"}
-        </h2>
+        </h3>
 
         {error && (
           <p style={{

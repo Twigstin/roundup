@@ -38,16 +38,18 @@ function TaskDetail() {
       setStudents(allStudents)
 
       if (
-        foundTask &&
-        meta.updated_at &&
-        meta.change_type === 'added' &&
-        (!foundTask.roster_synced_at ||
-          new Date(meta.updated_at) > new Date(foundTask.roster_synced_at))
-      ) {
-        const existingStudentIds = allEntries.map(e => e.student_id)
-        const hasNewStudents = allStudents.some(s => !existingStudentIds.includes(s.id))
-        if (hasNewStudents) setShowRosterUpdate(true)
-      }
+  foundTask &&
+  foundTask.class_list_id &&
+  meta.updated_at &&
+  meta.change_type === 'added' &&
+  meta.class_list_id === foundTask.class_list_id &&
+  (!foundTask.roster_synced_at ||
+    new Date(meta.updated_at) > new Date(foundTask.roster_synced_at))
+) {
+  const existingStudentIds = allEntries.map(e => e.student_id)
+  const hasNewStudents = allStudents.some(s => !existingStudentIds.includes(s.id))
+  if (hasNewStudents) setShowRosterUpdate(true)
+}
 
       setLoading(false)
     }
@@ -161,8 +163,8 @@ const handleStatusUpdate = async (entryId, currentStatus) => {
   let newStatus
 
   if (isPayment) {
-    if (currentStatus === 'not_paid') newStatus = 'paid'
-    else if (currentStatus === 'paid') newStatus = 'part_paid'
+    if (currentStatus === 'not_paid') newStatus = 'part_paid'
+    else if (currentStatus === 'part_paid') newStatus = 'paid'
     else newStatus = 'not_paid'
   } else if (isAttendance) {
     newStatus = currentStatus === 'absent' ? 'present' : 'absent'
@@ -170,14 +172,23 @@ const handleStatusUpdate = async (entryId, currentStatus) => {
     newStatus = currentStatus === 'pending' ? 'submitted' : 'pending'
   }
 
-  await updateEntry(entryId, {
-    status: newStatus,
-    updated_at: new Date().toISOString()
-  })
-
+  // Update state immediately for instant feedback
   setEntries(prev =>
     prev.map(e => e.id === entryId ? { ...e, status: newStatus } : e)
   )
+
+  try {
+    await updateEntry(entryId, {
+      status: newStatus,
+      updated_at: new Date().toISOString()
+    })
+  } catch (error) {
+    // Roll back state if database call fails
+    setEntries(prev =>
+      prev.map(e => e.id === entryId ? { ...e, status: currentStatus } : e)
+    )
+    console.error('Failed to update status:', error)
+  }
 }
 
 const handleSaveNote = async (entryId) => {
@@ -197,20 +208,30 @@ const handleSaveNote = async (entryId) => {
 const handleCollectedToggle = async (entryId, currentCollected) => {
   const newCollected = !currentCollected
 
-  await updateEntry(entryId, {
-    collected: newCollected,
-    updated_at: new Date().toISOString()
-  })
-
+  // Update state immediately
   setEntries(prev =>
     prev.map(e => e.id === entryId ? { ...e, collected: newCollected } : e)
   )
+
+  try {
+    await updateEntry(entryId, {
+      collected: newCollected,
+      updated_at: new Date().toISOString()
+    })
+  } catch (error) {
+    // Roll back on failure
+    setEntries(prev =>
+      prev.map(e => e.id === entryId ? { ...e, collected: currentCollected } : e)
+    )
+    console.error('Failed to update collected status:', error)
+  }
 }
 
 const handlePopulateFromRoster = async () => {
   setPopulating(true)
-  const newEntries = await populateTaskEntries(task.id, task.type, students)
-  setEntries(prev => [...prev, ...newEntries])
+  await populateTaskEntries(task.id, task.type, students)
+  const updated = await getEntries(task.id)
+  setEntries(updated)
   setPopulating(false)
 }
 
@@ -224,11 +245,13 @@ const handleSaveTitle = async () => {
 const handleRosterSync = async () => {
   setShowRosterUpdate(false)
   setPopulating(true)
-  const newEntries = await populateTaskEntries(task.id, task.type, students)
-  setEntries(prev => [...prev, ...newEntries])
+  await populateTaskEntries(task.id, task.type, students)
+  const updated = await getEntries(task.id)
+  setEntries(updated)
   setTask(prev => ({ ...prev, roster_synced_at: new Date().toISOString() }))
   setPopulating(false)
 }
+
 
 const handleDismissRosterUpdate = async () => {
   await syncTaskRoster(task.id)

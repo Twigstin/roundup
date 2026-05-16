@@ -70,14 +70,15 @@ export const getRosterMeta = async () => {
   return data || { updated_at: null, change_type: null }
 }
 
-export const setRosterUpdatedAt = async (changeType = 'added') => {
+export const setRosterUpdatedAt = async (changeType = 'added', classListId = null) => {
   const userId = await getUserId()
   const { error } = await supabase
     .from('roster_meta')
     .upsert({
       user_id: userId,
       updated_at: new Date().toISOString(),
-      change_type: changeType
+      change_type: changeType,
+      class_list_id: classListId
     }, { onConflict: 'user_id' })
     .select()
   if (error) throw error
@@ -106,14 +107,14 @@ export const createStudent = async (student, classListId) => {
     .select()
     .single()
   if (error) throw error
-  await setRosterUpdatedAt('added')
+  await setRosterUpdatedAt('added', classListId)
   return data
 }
 
 export const bulkCreateStudents = async (newStudents, classListId) => {
   const userId = await getUserId()
-  const studentsWithUser = newStudents.map(s => ({ 
-    ...s, 
+  const studentsWithUser = newStudents.map(s => ({
+    ...s,
     user_id: userId,
     class_list_id: classListId
   }))
@@ -122,17 +123,17 @@ export const bulkCreateStudents = async (newStudents, classListId) => {
     .insert(studentsWithUser)
     .select()
   if (error) throw error
-  await setRosterUpdatedAt('added')
+  await setRosterUpdatedAt('added', classListId)
   return data
 }
 
-export const deleteStudent = async (studentId) => {
+export const deleteStudent = async (studentId, classListId = null) => {
   const { error } = await supabase
     .from('students')
     .delete()
     .eq('id', studentId)
   if (error) throw error
-  await setRosterUpdatedAt('removed')
+  await setRosterUpdatedAt('removed', classListId)
 }
 
 export const clearAllStudents = async () => {

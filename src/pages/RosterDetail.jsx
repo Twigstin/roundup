@@ -71,28 +71,29 @@ function RosterDetail() {
   }, [id])
 
   const handleAddStudent = async () => {
-    if (!name.trim() || !regNumber.trim()) {
-      setError('Both name and reg number are required')
-      return
-    }
-
-    setAddingStudent(true)
-
-    const newStudent = {
-      id: crypto.randomUUID(),
-      name: name.trim(),
-      reg_number: regNumber.trim(),
-      serial_number: serialNumber.trim() || null
-    }
-
-    const saved = await createStudent(newStudent, id)
-    setStudents(prev => [...prev, saved])
-    setName('')
-    setRegNumber('')
-    setSerialNumber('')
-    setError('')
-    setAddingStudent(false)
+  if (!name.trim() || !regNumber.trim()) {
+    setError('Both name and reg number are required')
+    return
   }
+
+  setAddingStudent(true)
+
+  const newStudent = {
+    id: crypto.randomUUID(),
+    name: name.trim(),
+    reg_number: regNumber.trim(),
+    serial_number: serialNumber.trim() || null
+  }
+
+  await createStudent(newStudent, id)
+  const updated = await getStudentsByClassList(id)
+  setStudents(updated)
+  setName('')
+  setRegNumber('')
+  setSerialNumber('')
+  setError('')
+  setAddingStudent(false)
+}
 
   const handleFileImport = async (e) => {
     const file = e.target.files[0]
