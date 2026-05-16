@@ -163,8 +163,8 @@ const handleStatusUpdate = async (entryId, currentStatus) => {
   let newStatus
 
   if (isPayment) {
-    if (currentStatus === 'not_paid') newStatus = 'part_paid'
-    else if (currentStatus === 'part_paid') newStatus = 'paid'
+    if (currentStatus === 'not_paid') newStatus = 'paid'
+    else if (currentStatus === 'paid') newStatus = 'part_paid'
     else newStatus = 'not_paid'
   } else if (isAttendance) {
     newStatus = currentStatus === 'absent' ? 'present' : 'absent'
