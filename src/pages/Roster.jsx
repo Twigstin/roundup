@@ -1,416 +1,214 @@
-import { useState, useEffect, useRef } from 'react'
-import { getStudents, createStudent, deleteStudent, bulkCreateStudents, clearAllStudents } from '../api/index'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { getClassLists, createClassList, deleteClassList, updateClassList } from '../api/index'
 import ConfirmModal from '../components/ConfirmModal'
 import Spinner from '../components/Spinner'
 import { supabase } from '../api/supabase'
-import * as XLSX from 'xlsx'
 
 function Roster() {
-  const [students, setStudents] = useState([])
+  const [classLists, setClassLists] = useState([])
   const [loading, setLoading] = useState(true)
-  const [name, setName] = useState('')
-  const [regNumber, setRegNumber] = useState('')
+  const [newListName, setNewListName] = useState('')
+  const [creating, setCreating] = useState(false)
   const [error, setError] = useState('')
-  const [search, setSearch] = useState('')
-  const fileInputRef = useRef(null)
-  const [importing, setImporting] = useState(false)
-  const [showImportWarning, setShowImportWarning] = useState(false)
-  const [pendingFile, setPendingFile] = useState(null)
-  const [showClearWarning, setShowClearWarning] = useState(false)
+  const [editingId, setEditingId] = useState(null)
+  const [editingName, setEditingName] = useState('')
   const [showDeleteWarning, setShowDeleteWarning] = useState(false)
-  const [studentToDelete, setStudentToDelete] = useState(null)
-  const [addingStudent, setAddingStudent] = useState(false)
+  const [listToDelete, setListToDelete] = useState(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
-    const fetchStudents = async () => {
-      const data = await getStudents()
-      setStudents(data)
+    const fetchClassLists = async () => {
+      const data = await getClassLists()
+      setClassLists(data)
       setLoading(false)
     }
-    fetchStudents()
+    fetchClassLists()
 
-    const studentsSub = supabase
-      .channel('students-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, (payload) => {
+    const classListsSub = supabase
+      .channel('class-lists-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'class_lists' }, (payload) => {
         if (payload.eventType === 'INSERT') {
-          setStudents(prev => {
-          const alreadyExists = prev.some(s => s.id === payload.new.id)
-          if (alreadyExists) return prev
+          setClassLists(prev => {
+            const alreadyExists = prev.some(l => l.id === payload.new.id)
+            if (alreadyExists) return prev
             return [...prev, payload.new]
           })
         }
         if (payload.eventType === 'UPDATE') {
-          setStudents(prev => prev.map(s => s.id === payload.new.id ? payload.new : s))
+          setClassLists(prev => prev.map(l => l.id === payload.new.id ? payload.new : l))
         }
         if (payload.eventType === 'DELETE') {
-          setStudents(prev => prev.filter(s => s.id !== payload.old.id))
+          setClassLists(prev => prev.filter(l => l.id !== payload.old.id))
         }
       })
       .subscribe()
 
     return () => {
-      supabase.removeChannel(studentsSub)
+      supabase.removeChannel(classListsSub)
     }
   }, [])
 
-const handleAddStudent = async () => {
-  if (!name.trim() || !regNumber.trim()) {
-    setError('Both name and reg number are required')
-    return
-  }
-
-  setAddingStudent(true)
-
-  const newStudent = {
-    id: crypto.randomUUID(),
-    name: name.trim(),
-    reg_number: regNumber.trim()
-  }
-
-  await createStudent(newStudent)
-  const updated = await getStudents()
-  setStudents(updated)
-  setName('')
-  setRegNumber('')
-  setError('')
-  setAddingStudent(false)
-}
-
-
-  const handleFileImport = async (e) => {
-  const file = e.target.files[0]
-  if (!file) return
-
-  const currentStudents = await getStudents()
-  if (currentStudents.length > 0) {
-    setPendingFile(file)
-    setShowImportWarning(true)
-    return
-  }
-
-  processFile(file)
-}
-
-const processFile = (file) => {
-  const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls')
-  if (isExcel) {
-    processExcel(file)
-  } else {
-    processCSV(file)
-  }
-}
-
-const processExcel = (file) => {
-  setImporting(true)
-  setError('')
-
-  const reader = new FileReader()
-  reader.onload = async (event) => {
-    const data = new Uint8Array(event.target.result)
-    const workbook = XLSX.read(data, { type: 'array' })
-    const sheet = workbook.Sheets[workbook.SheetNames[0]]
-    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 })
-
-    if (rows.length < 2) {
-      setError('File appears to be empty')
-      setImporting(false)
+  const handleCreateList = async () => {
+    if (!newListName.trim()) {
+      setError('Please enter a list name')
       return
     }
-
-    const headers = rows[0].map(h => h?.toString().toLowerCase().trim().replace(/\s+/g, ''))
-
-    const nameIndex = headers.findIndex(h =>
-      ['name', 'names', 'fullname', 'studentname', 'studentsname', 'candidatename', 'candidatesname',].includes(h.toLowerCase().replace(/[^a-z0-9]/g, ""))
-    )
-    const regIndex = headers.findIndex(h =>
-      ['regnumber', 'regno', 'regnum', 'matric', 'matricnumber', 'matricno', 'registrationnumber'].includes(h.toLowerCase().replace(/[^a-z0-9]/g, ""))
-    )
-
-    if (nameIndex === -1 || regIndex === -1) {
-      setError('File must have a name column and a reg/matric number column')
-      setImporting(false)
-      return
-    }
-
-    const newStudents = []
-    for (let i = 1; i < rows.length; i++) {
-      const row = rows[i]
-      if (!row[nameIndex] || !row[regIndex]) continue
-      newStudents.push({
-        id: crypto.randomUUID(),
-        name: row[nameIndex].toString().trim(),
-        reg_number: row[regIndex].toString().trim()
-      })
-    }
-
-    await bulkCreateStudents(newStudents)
-    setImporting(false)
+    setCreating(true)
+    const saved = await createClassList(newListName.trim())
+    setClassLists(prev => [...prev, saved])
+    setNewListName('')
     setError('')
+    setCreating(false)
   }
 
-  reader.readAsArrayBuffer(file)
-}
-
-const processCSV = (file) => {
-  setImporting(true)
-  setError('')
-
-  const reader = new FileReader()
-  reader.onload = async (event) => {
-    const text = event.target.result
-    const lines = text.trim().split('\n')
-    const headers = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/\s+/g, ''))
-
-    const nameIndex = headers.findIndex(h =>
-      ['name', 'names', 'full name', 'student name', 'fullname', 'studentname'].includes(h)
-    )
-    const regIndex = headers.findIndex(h =>
-      ['reg number', 'regnumber', 'reg_number', 'matric', 'matricnumber',
-      'matric number', 'matriculationnumber','matriculation number', 'matricnumber', 'matric_number', 'registrationnumber', 'registration number'].includes(h)
-    )
-
-    if (nameIndex === -1 || regIndex === -1) {
-      setError('CSV must have a name column and a reg/matric number column')
-      setImporting(false)
-      return
-    }
-
-    const newStudents = []
-    for (let i = 1; i < lines.length; i++) {
-      const cols = lines[i].split(',').map(c => c.trim())
-      if (!cols[nameIndex] || !cols[regIndex]) continue
-      newStudents.push({
-        id: crypto.randomUUID(),
-        name: cols[nameIndex],
-        reg_number: cols[regIndex]
-      })
-    }
-
-    await bulkCreateStudents(newStudents)
-    setImporting(false)
-    setError('')
+  const handleRenameList = async (listId) => {
+    if (!editingName.trim()) return
+    const updated = await updateClassList(listId, editingName.trim())
+    setClassLists(prev => prev.map(l => l.id === listId ? updated : l))
+    setEditingId(null)
+    setEditingName('')
   }
 
-  reader.readAsText(file)
-}
+  const handleDeleteClick = (listId) => {
+    setListToDelete(listId)
+    setShowDeleteWarning(true)
+  }
 
-const handleConfirmImport = () => {
-  setShowImportWarning(false)
-  processFile(pendingFile)
-  setPendingFile(null)
-}
-
-const handleCancelImport = () => {
-  setShowImportWarning(false)
-  setPendingFile(null)
-  fileInputRef.current.value = ''
-}
-
-const handleClearAll = async () => {
-  await clearAllStudents()
-  setShowClearWarning(false)
-}
-
-const handleDeleteClick = (studentId) => {
-  setStudentToDelete(studentId)
-  setShowDeleteWarning(true)
-}
-
-
-const handleConfirmDelete = async () => {
-  await deleteStudent(studentToDelete)
-  setStudents(prev => prev.filter(s => s.id !== studentToDelete))
-  setShowDeleteWarning(false)
-  setStudentToDelete(null)
-}
-
-const handleCancelDelete = () => {
-  setShowDeleteWarning(false)
-  setStudentToDelete(null)
-}
-
-  const filteredStudents = students.filter(s =>
-    s.name.toLowerCase().includes(search.toLowerCase()) ||
-    s.reg_number.toLowerCase().includes(search.toLowerCase())
-  )
+  const handleConfirmDelete = async () => {
+    await deleteClassList(listToDelete)
+    setClassLists(prev => prev.filter(l => l.id !== listToDelete))
+    setShowDeleteWarning(false)
+    setListToDelete(null)
+  }
 
   if (loading) {
     return (
-    <div className="loading-container">
-      <Spinner size={24} />
-    </div>
-  )
+      <div className="loading-container">
+        <Spinner size={24} />
+      </div>
+    )
   }
 
   return (
     <div>
       <div className="page-header">
-        <h1 className="page-title bold">Student roster</h1>
-        <span className="roster-count">{students.length} student{students.length > 1 ? "s" : ""}</span>
+        <h1 className="page-title bold">Class lists</h1>
+        <span className="roster-count">{classLists.length} list{classLists.length !== 1 ? 's' : ''}</span>
       </div>
 
       <div className="form-card" style={{ marginBottom: '16px' }}>
-        <p className="form-label" style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '500' }}>Add student manually</p>
-
+        <p className="form-label" style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '500' }}>
+          Create new list
+        </p>
         {error && <p className="form-error">{error}</p>}
-
-        <div className='form-input-ctn' id="form-input-ctn">
-          <input
-            className="form-input"
-            type="text"
-            placeholder="Full name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <input
-            className="form-input"
-            type="text"
-            placeholder="Reg number"
-            value={regNumber}
-            onChange={(e) => setRegNumber(e.target.value)}
-          />
-        </div>
-
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button
-  className="btn-primary"
-  onClick={handleAddStudent}
-  disabled={addingStudent || importing}
-  style={{ 
-    opacity: addingStudent || importing ? 0.6 : 1,
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px'
-  }}
->
-  {addingStudent ? (
-    <>
-      <Spinner size={14} />
-      Adding...
-    </>
-  ) : 'Add student'}
-</button>
-          <button
-  className="btn-secondary"
-  onClick={() => !importing && fileInputRef.current.click()}
-  disabled={importing}
-  style={{ opacity: importing ? 0.6 : 1, display: 'flex', alignItems: 'center', gap: '8px' }}
->
-  {importing ? (
-    <>
-      <Spinner size={14} />
-      Importing...
-    </>
-  ) : 'Import list'}
-</button>
           <input
-            ref={fileInputRef}
-            accept=".csv, .xlsx, .xls"
-            type="file"
-            style={{ display: 'none' }}
-            onChange={handleFileImport}
+            className="form-input"
+            type="text"
+            placeholder="e.g. CSC 301 List, Main Class List…"
+            value={newListName}
+            onChange={(e) => setNewListName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleCreateList() }}
           />
-
-          {students.length > 0 && (
-            <div
-            className="btn-danger-clear-all"
-    id="btn-danger-all-clear">
-  <button
-    onClick={() => setShowClearWarning(true)}
-    disabled={importing}
-  >
-    Clear all
-  </button>
-  </div>
-)}
+          <button
+            className="btn-primary"
+            onClick={handleCreateList}
+            disabled={creating}
+            style={{ opacity: creating ? 0.6 : 1, whiteSpace: 'nowrap' }}
+          >
+            {creating ? 'Creating...' : '+ Create list'}
+          </button>
+        </div>
       </div>
 
-      <div className="form-card">
-        <div className="class-list-title">
-          <p>Class List</p>
+      {classLists.length === 0 ? (
+        <div className="empty-state">
+          <p className="empty-title">No class lists yet</p>
+          <p className="empty-subtitle">Create your first list to start managing students</p>
         </div>
-        <div id="manage-class-list">
-        <input
-          className="form-input-search"
-          type="text"
-          placeholder="Search by name or reg number…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        {students.length > 0 && (
-  <button
-    className="btn-danger-clear-my-all"
-    id="btn-danger-clear-all"
-    onClick={() => setShowClearWarning(true)}
-    disabled={importing}
-  >
-    Clear all
-  </button>
-)}
-        </div>
+      ) : (
+        <div className="task-list">
+          {classLists.map(list => (
+            <div key={list.id} className="task-card" onClick={() => navigate(`/roster/${list.id}`)}>
+              <div className="task-card-left">
+                {editingId === list.id ? (
+                  <div
+                    className="title-edit-row"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <input
+                      className="form-input title-edit-input"
+                      type="text"
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleRenameList(list.id)
+                        if (e.key === 'Escape') setEditingId(null)
+                      }}
+                      autoFocus
+                    />
+                    <button
+                      className="btn-primary"
+                      style={{ padding: '8px 14px', fontSize: '13px' }}
+                      onClick={() => handleRenameList(list.id)}
+                    >
+                      Save
+                    </button>
+                    <button
+                      className="btn-secondary"
+                      style={{ padding: '8px 14px', fontSize: '13px' }}
+                      onClick={() => setEditingId(null)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <div className="task-card-top">
+                    <span className="task-card-title light-bold">{list.name}</span>
+                  </div>
+                )}
+              </div>
 
-        
-        {filteredStudents.length === 0 ? (
-          <div className="empty-state" style={{ border: 'none', padding: '24px' }}>
-            <p className="empty-title">
-              {students.length === 0 ? 'No students yet' : 'No results found'}
-            </p>
-            <p className="empty-subtitle">
-              {students.length === 0 ? 'Add students manually or import a CSV' : 'Try a different search'}
-            </p>
-          </div>
-        ) : (
-          <div className="student-list">
-            <div className="student-list-header" id="student-list-header">
-              <span>Name</span>
-              <span>Reg number</span>
-              <span></span>
-            </div>
-            {filteredStudents.map(student => (
-              <div key={student.id} className="student-row">
-                <div id='student-row-arr'>
-                <span className="student-name">{student.name}</span>
-                <span className="student-reg first">{student.reg_number}</span>
-                </div>
-
-                <span className="student-reg mid">{student.reg_number}</span>
-
-                <div className='remove-name-btn'>
+              <div className="task-card-actions">
+                <button
+                  className="btn-secondary"
+                  style={{ fontSize: '12px', padding: '4px 10px' }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setEditingId(list.id)
+                    setEditingName(list.name)
+                  }}
+                >
+                  Rename
+                </button>
                 <button
                   className="btn-danger"
-                  onClick={() => handleDeleteClick(student.id)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDeleteClick(list.id)
+                  }}
                 >
-                  Remove
+                  Delete
                 </button>
-                </div>
+                <span className="task-card-chevron">›</span>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
-      {showImportWarning && (
-  <ConfirmModal
-    message="Students already exist in your roster. Uploading this file will add to the existing list. Do you want to continue?"
-    onConfirm={handleConfirmImport}
-    onCancel={handleCancelImport}
-  />
-)}
-{showClearWarning && (
-  <ConfirmModal
-    message="This will permanently delete all students from your roster. This action cannot be undone. Do you want to continue?"
-    onConfirm={handleClearAll}
-    onCancel={() => setShowClearWarning(false)}
-  />
-)}
-{showDeleteWarning && (
-  <ConfirmModal
-    message="Are you sure you want to remove this student from the class list? This won't affect existing task entries."
-    onConfirm={handleConfirmDelete}
-    onCancel={handleCancelDelete}
-  />
-)}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showDeleteWarning && (
+        <ConfirmModal
+          message="This will permanently delete this class list and all students in it. Tasks that used this list will not be affected. This action cannot be undone."
+          onConfirm={handleConfirmDelete}
+          onCancel={() => {
+            setShowDeleteWarning(false)
+            setListToDelete(null)
+          }}
+        />
+      )}
     </div>
-  </div>
   )
 }
 

@@ -98,11 +98,11 @@ export const getStudents = async () => {
   return data
 }
 
-export const createStudent = async (student) => {
+export const createStudent = async (student, classListId) => {
   const userId = await getUserId()
   const { data, error } = await supabase
     .from('students')
-    .insert([{ ...student, user_id: userId }])
+    .insert([{ ...student, user_id: userId, class_list_id: classListId }])
     .select()
     .single()
   if (error) throw error
@@ -110,9 +110,13 @@ export const createStudent = async (student) => {
   return data
 }
 
-export const bulkCreateStudents = async (newStudents) => {
+export const bulkCreateStudents = async (newStudents, classListId) => {
   const userId = await getUserId()
-  const studentsWithUser = newStudents.map(s => ({ ...s, user_id: userId }))
+  const studentsWithUser = newStudents.map(s => ({ 
+    ...s, 
+    user_id: userId,
+    class_list_id: classListId
+  }))
   const { data, error } = await supabase
     .from('students')
     .insert(studentsWithUser)
@@ -235,3 +239,56 @@ export const syncTaskRoster = async (taskId) => {
   if (error) throw error
 }
 
+
+//Class Lists
+
+export const getClassLists = async () => {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('class_lists')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return data
+}
+
+export const createClassList = async (name) => {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('class_lists')
+    .insert([{ user_id: userId, name }])
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export const updateClassList = async (classListId, name) => {
+  const { data, error } = await supabase
+    .from('class_lists')
+    .update({ name, updated_at: new Date().toISOString() })
+    .eq('id', classListId)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export const deleteClassList = async (classListId) => {
+  const { error } = await supabase
+    .from('class_lists')
+    .delete()
+    .eq('id', classListId)
+  if (error) throw error
+}
+
+export const getStudentsByClassList = async (classListId) => {
+  const { data, error } = await supabase
+    .from('students')
+    .select('*')
+    .eq('class_list_id', classListId)
+    .order('name', { ascending: true })
+  if (error) throw error
+  return data
+}
