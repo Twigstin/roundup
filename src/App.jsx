@@ -5,6 +5,8 @@ import NewTask from './pages/NewTask'
 import TaskDetail from './pages/TaskDetail'
 import Roster from './pages/Roster'
 import RosterDetail from './pages/RosterDetail'
+import Menu from './pages/Menu'
+import About from './pages/About'
 
 function App() {
   return (
@@ -15,6 +17,9 @@ function App() {
         <Route path="/tasks/:id" element={<TaskDetail />} />
         <Route path="/roster" element={<Roster />} />
         <Route path="/roster/:id" element={<RosterDetail />} />
+        <Route path="/menu" element={<Menu />} />
+        <Route path="/menu" element={<Menu />} />
+        <Route path="/about" element={<About />} />
       </Route>
     </Routes>
   )

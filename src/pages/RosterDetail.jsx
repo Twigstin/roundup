@@ -31,6 +31,8 @@ function RosterDetail() {
   const [clearingStudents, setClearingStudents] = useState(false)
   const [removingStudent, setRemovingStudent] = useState(false)
 
+  const channelId = useRef(`${Date.now()}-${Math.random()}`)
+
   useEffect(() => {
     const fetchData = async () => {
       const [studentsData, classListData] = await Promise.all([
@@ -44,7 +46,7 @@ function RosterDetail() {
     fetchData()
 
     const studentsSub = supabase
-      .channel(`students-changes-${id}`)
+      .channel(`students-changes-${channelId.current}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',

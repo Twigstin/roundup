@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getClassLists, createClassList, deleteClassList, updateClassList } from '../api/index'
 import ConfirmModal from '../components/ConfirmModal'
@@ -19,6 +19,8 @@ function Roster() {
   const [deletingList, setDeletingList] = useState(false)
   
   const navigate = useNavigate()
+
+  const channelId = useRef(`${Date.now()}-${Math.random()}`)
 
 
   const sortByUpdated = (lists) => 
@@ -47,7 +49,7 @@ function Roster() {
     fetchClassLists()
 
     const classListsSub = supabase
-      .channel('class-lists-changes')
+      .channel(`class-lists-changes-${channelId.current}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'class_lists' }, (payload) => {
         if (payload.eventType === 'INSERT') {
           setClassLists(prev => {

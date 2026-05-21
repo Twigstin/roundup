@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getTasks, getEntries, getStudents, getStudentsByClassList, createEntry, updateEntry, populateTaskEntries, updateTask, getRosterMeta, syncTaskRoster } from '../api/index'
 import Spinner from '../components/Spinner'
@@ -24,6 +24,8 @@ function TaskDetail() {
   const [newStudentName, setNewStudentName] = useState('')
   const [newStudentReg, setNewStudentReg] = useState('')
   const [addingStudent, setAddingStudent] = useState(false)
+
+  const channelId = useRef(`${Date.now()}-${Math.random()}`)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,7 +64,7 @@ function TaskDetail() {
     fetchData()
 
     const entriesSub = supabase
-      .channel(`entries-changes-${id}`)
+      .channel(`entries-changes-${channelId.current}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'entries', filter: `task_id=eq.${id}` }, (payload) => {
         if (payload.eventType === 'INSERT') {
   setEntries(prev => {
@@ -81,7 +83,7 @@ function TaskDetail() {
       .subscribe()
 
     const taskSub = supabase
-      .channel(`task-changes-${id}`)
+      .channel(`task-changes-${channelId.current}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tasks', filter: `id=eq.${id}` }, (payload) => {
         setTask(payload.new)
       })

@@ -1,5 +1,9 @@
 import { useState } from "react";
 import { supabase } from "../api/supabase";
+import Spinner from "../components/Spinner";
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faRightToBracket, faLock, faEnvelope, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 
 export const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -8,6 +12,7 @@ export const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,6 +40,9 @@ export const Auth = () => {
   return (
     <div className="auth-main-ctn">
       <div>
+        <div className="about-logo-circle" style={{ margin: 'auto', marginBottom: "20px" }}>
+          <span className="about-logo-letter bold"><FontAwesomeIcon icon={faRightToBracket} /></span>
+        </div>
         <h3 style={{ textAlign: "center" }}>
           {isSignUp ? "Create a new account" : "Log In to Roundup"}
         </h3>
@@ -66,23 +74,49 @@ export const Auth = () => {
         )}
 
         <form className="auth-form" onSubmit={handleSubmit}>
-          <input
-            type="email"
-            required
-            placeholder="Enter email address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <input
-            type="password"
+          <div className="inputs-container">
+          <div className="input-wrapper">
+        <FontAwesomeIcon
+          icon={faEnvelope}
+          className="input-icon"
+        />
+        <input
+          type="email"
+          required
+          placeholder="Enter email address"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="auth-input"
+        />
+      </div>
+
+      <div className="input-wrapper">
+        <FontAwesomeIcon
+          icon={faLock}
+          className="input-icon"
+        />
+        <input
+          type={showPassword ? 'text' : 'password'}
             required
             placeholder="Enter password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-          />
+          className="auth-input"
+        />
+        <FontAwesomeIcon
+    icon={showPassword ? faEyeSlash : faEye}
+    className="input-icon-right"
+    onClick={() => setShowPassword(!showPassword)}
+  />
+      </div>
+      </div>
           <div className="auth-form-submit-btn">
             <button className="bttn" type="submit" disabled={loading}>
-              {loading ? "Please wait..." : isSignUp ? "Create new account" : "Log In"}
+              {loading ? (
+                  <>
+                    <Spinner size={14} /><span style={{ marginLeft: '10px' }}>Please wait...</span>
+                  </>
+                ) : isSignUp ? "Create new account" : "Log In"}
             </button>
           </div>
         </form>

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { getTasks, deleteTask } from '../api/index'
-import { readDB } from '../api/db'
+import { getTasks, deleteTask, getClassLists } from '../api/index'
+//import { readDB } from '../api/db'
 import ConfirmModal from '../components/ConfirmModal'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Spinner from '../components/Spinner'
@@ -18,6 +18,11 @@ function Dashboard() {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [deletingTask, setDeletingTask] = useState(false)
+
+  const [isNewUser, setIsNewUser] = useState(false)
+  const [hasClassList, setHasClassList] = useState(false)
+
+  const channelId = useRef(`${Date.now()}-${Math.random()}`)
 
   const handleDeleteClick = (e, taskId) => {
   e.stopPropagation()
@@ -82,7 +87,7 @@ const handleCancelDelete = () => {
   fetchData()
 
   const tasksSub = supabase
-    .channel('tasks-changes')
+    .channel(`tasks-changes-${channelId.current}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, (payload) => {
       if (payload.eventType === 'INSERT') {
         setTasks(prev => [payload.new, ...prev])
@@ -97,7 +102,7 @@ const handleCancelDelete = () => {
     .subscribe()
 
   const entriesSub = supabase
-    .channel('entries-changes-dashboard')
+    .channel(`entries-changes-dashboard-${channelId.current}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'entries' }, (payload) => {
       if (payload.eventType === 'INSERT') {
         setAllEntries(prev => [...prev, payload.new])
@@ -110,6 +115,16 @@ const handleCancelDelete = () => {
       }
     })
     .subscribe()
+
+    const lists = getClassLists()
+if (tasks.length === 0 && lists.length === 0) {
+  setIsNewUser(true)
+  setHasClassList(false)
+}
+if (lists.length > 0 && tasks.length === 0) {
+  setIsNewUser(true)
+  setHasClassList(true)
+}
 
   return () => {
     supabase.removeChannel(tasksSub)
@@ -183,6 +198,56 @@ const pendingCount = isPayment
         <h1 className="page-title bold">Your tasks</h1>
         <Link to="/tasks/new" className="btn-primary">+ New task</Link>
       </div>
+
+      {isNewUser && (
+  <div className="onboarding-banner">
+    <div className="onboarding-steps">
+      <div className="onboarding-header">
+        <h2 className="onboarding-title bold">Welcome to Roundup 👋</h2>
+        <p className="onboarding-subtitle">
+          Get started in two steps. It takes less than 2 minutes.
+        </p>
+      </div>
+
+      <div className="onboarding-step">
+        <div className={`onboarding-step-number ${hasClassList ? 'onboarding-step-done' : ''}`}>
+          {hasClassList ? '✓' : '1'}
+        </div>
+        <div className="onboarding-step-content">
+          <p className="onboarding-step-title light-bold" style={{ color: hasClassList ? '#999' : '#111' }}>
+            Add your class list
+          </p>
+          <p className="onboarding-step-desc">
+            Import your student roster so Roundup can track them automatically.
+          </p>
+          {!hasClassList && (
+            <Link to="/roster" className="btn-primary" style={{ display: 'inline-block', marginTop: '10px', fontSize: '13px', padding: '8px 14px' }}>
+              Go to Roster →
+            </Link>
+          )}
+        </div>
+      </div>
+
+      <div className="onboarding-step">
+        <div className={`onboarding-step-number ${!hasClassList ? 'onboarding-step-number-muted' : ''}`}>2</div>
+        <div className="onboarding-step-content">
+          <p className="onboarding-step-title light-bold" style={{ color: hasClassList ? '#111' : '#999' }}>
+            Create your first task
+          </p>
+          <p className="onboarding-step-desc">
+            Track payments, submissions or attendance for your class.
+          </p>
+          {hasClassList && (
+            <Link to="/tasks/new" className="btn-primary" style={{ display: 'inline-block', marginTop: '10px', fontSize: '13px', padding: '8px 14px' }}>
+              Create task →
+            </Link>
+          )}
+        </div>
+      </div>
+
+    </div>
+  </div>
+)}
 
       {tasks.length > 0 && (
   <div className="dashboard-toolbar">
