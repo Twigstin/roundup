@@ -82,6 +82,12 @@ const handleCancelDelete = () => {
 
   setTasks(tasks)
   setAllEntries(entriesData)
+  const lists = await getClassLists()
+
+if (tasks.length === 0) {
+  setIsNewUser(true)
+  setHasClassList(lists.length > 0)
+}
   setLoading(false)
 }
   fetchData()
@@ -116,15 +122,7 @@ const handleCancelDelete = () => {
     })
     .subscribe()
 
-    const lists = getClassLists()
-if (tasks.length === 0 && lists.length === 0) {
-  setIsNewUser(true)
-  setHasClassList(false)
-}
-if (lists.length > 0 && tasks.length === 0) {
-  setIsNewUser(true)
-  setHasClassList(true)
-}
+    
 
   return () => {
     supabase.removeChannel(tasksSub)

@@ -33,8 +33,19 @@ if (accessToken && refreshToken) {
     if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
       setSession(session)
     }
+
+    /*
+    if (event === 'SIGNED_IN') {
+  setSession(session)
+  window.location.replace('/')
+}
+if (event === 'TOKEN_REFRESHED') {
+  setSession(session)
+}
+    */
     if (event === 'SIGNED_OUT') {
       setSession(null)
+      window.history.replaceState({}, '', '/')
     }
   })
 

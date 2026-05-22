@@ -16,6 +16,30 @@ function Layout() {
   const location = useLocation()
   const navigate = useNavigate()
 
+  const [avatarLetter, setAvatarLetter] = useState('')
+
+useEffect(() => {
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    const email = session?.user?.email || ''
+    setAvatarLetter(email.charAt(0).toUpperCase())
+  })
+}, [])
+/*
+useEffect(() => {
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN') {
+    setSession(session)
+  }
+  if (event === 'TOKEN_REFRESHED') {
+    setSession(session)
+  }
+  if (event === 'SIGNED_OUT') {
+    setSession(null)
+  }
+})
+}, [])
+*/
+
   const shallowRoutes = ['/', '/roster', '/menu']
   const isShallowRoute = shallowRoutes.includes(location.pathname)
 
@@ -76,6 +100,7 @@ function Layout() {
         </div>
 
         <div className="desktop-content">
+          
           <main className="page-content">
             <Outlet />
           </main>
@@ -84,6 +109,19 @@ function Layout() {
 
       {/* MOBILE LAYOUT */}
       <div className="mobile-layout">
+        {isShallowRoute && (
+  <div id="mobile-top-nav" className="mobile-top-nav">
+    <span className="app-name">Roundup</span>
+    <button
+      className="mobile-top-nav-avatar"
+      onClick={() => navigate('/menu')}
+    >
+      <span className="mobile-top-nav-letter">
+        {avatarLetter}
+      </span>
+    </button>
+  </div>
+)}
         <main className="page-content">
           <Outlet />
         </main>

@@ -667,8 +667,43 @@ button {
   }
 }
 
+.mobile-top-nav {
+  display: none;
+}
+
 
 @media (max-width: 800px) {
+  #mobile-top-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 52px;
+  background: #fff;
+  border-bottom: 1px solid #e5e5e5;
+  flex-shrink: 0;
+}
+
+.mobile-top-nav-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #111;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-top-nav-letter {
+  color: #fff;
+  font-size: 14px;
+  font-family: 'montserrat-bold', sans-serif;
+}
+
+
+
   .sidebar-collapsed ~ .desktop-content {
   margin-left: 64px;
 }
