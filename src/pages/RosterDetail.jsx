@@ -34,6 +34,12 @@ function RosterDetail() {
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
 
   useEffect(() => {
+  if (!error) return
+  const timer = setTimeout(() => setError(''), 4000)
+  return () => clearTimeout(timer)
+}, [error])
+
+  useEffect(() => {
     const fetchData = async () => {
       const [studentsData, classListData] = await Promise.all([
         getStudentsByClassList(id),

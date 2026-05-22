@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../api/supabase";
 import Spinner from "../components/Spinner";
 
@@ -13,6 +13,13 @@ export const Auth = () => {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false)
+  const [isForgotPassword, setIsForgotPassword] = useState(false)
+
+  useEffect(() => {
+  if (!error) return
+  const timer = setTimeout(() => setError(''), 4000)
+  return () => clearTimeout(timer)
+}, [error])
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -73,7 +80,70 @@ export const Auth = () => {
           </p>
         )}
 
-        <form className="auth-form" onSubmit={handleSubmit}>
+        {isForgotPassword ? (
+  <div>
+    {message && (
+      <p style={{
+        color: '#27500A', background: '#EAF3DE',
+        padding: '10px 12px', borderRadius: '8px',
+        fontSize: '13px', marginBottom: '16px'
+      }}>
+        {message}
+      </p>
+    )}
+    {error && (
+      <p style={{
+        color: '#c0392b', background: '#fdf0ef',
+        padding: '10px 12px', borderRadius: '8px',
+        fontSize: '13px', marginBottom: '16px'
+      }}>
+        {error}
+      </p>
+    )}
+    <div className="inputs-container" style={{ marginBottom: '12px' }}>
+      <div className="input-wrapper">
+        <FontAwesomeIcon icon={faEnvelope} className="input-icon" />
+        <input
+          type="email"
+          required
+          placeholder="Enter your email address"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="auth-input"
+        />
+      </div>
+    </div>
+    <div className="auth-form-submit-btn">
+      <button className="bttn" disabled={loading} onClick={async () => {
+        setLoading(true)
+        setError('')
+        setMessage('')
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin
+        })
+        setLoading(false)
+        if (error) {
+          setError(error.message)
+        } else {
+          setMessage('Check your email for a password reset link.')
+        }
+      }}>
+        {loading ? <><Spinner size={14} /><span style={{ marginLeft: '10px' }}>Sending...</span></> : 'Send reset link'}
+      </button>
+    </div>
+    <div className="signin-btn" style={{ marginTop: '12px' }}>
+      <button className="bttn" onClick={() => {
+        setIsForgotPassword(false)
+        setError('')
+        setMessage('')
+      }}>
+        Back to login
+      </button>
+    </div>
+  </div>
+) : (
+  <>
+  <form className="auth-form" onSubmit={handleSubmit}>
           <div className="inputs-container">
           <div className="input-wrapper">
         <FontAwesomeIcon
@@ -130,6 +200,21 @@ export const Auth = () => {
             {isSignUp ? "Switch to Log in" : "Switch to Sign Up"}
           </button>
         </div>
+        {!isSignUp && (
+  <p style={{ textAlign: 'right', marginTop: '6px' }}>
+    <button
+      type="button"
+      style={{ background: 'none', border: 'none', color: '#888', fontSize: '12px', cursor: 'pointer', padding: 0 }}
+      onClick={() => { setIsForgotPassword(true); setError(''); setMessage('') }}
+    >
+      Forgot password?
+    </button>
+  </p>
+)}
+        </>
+)}
+
+        
       </div>
     </div>
   );

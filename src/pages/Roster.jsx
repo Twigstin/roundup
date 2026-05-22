@@ -26,6 +26,12 @@ function Roster() {
   const sortByUpdated = (lists) => 
   [...lists].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
 
+  useEffect(() => {
+  if (!error) return
+  const timer = setTimeout(() => setError(''), 4000)
+  return () => clearTimeout(timer)
+}, [error])
+
 
 
   useEffect(() => {

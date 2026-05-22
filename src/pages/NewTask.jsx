@@ -16,6 +16,12 @@ function NewTask() {
   const [classLists, setClassLists] = useState([])
   const [selectedClassListId, setSelectedClassListId] = useState('')
 
+  useEffect(() => {
+  if (!error) return
+  const timer = setTimeout(() => setError(''), 4000)
+  return () => clearTimeout(timer)
+}, [error])
+
  useEffect(() => {
   const checkLimits = async () => {
     const [students, tasks, lists] = await Promise.all([
