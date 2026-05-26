@@ -32,12 +32,16 @@ export const Auth = () => {
       if (error) {
         setError(error.message);
       } else {
-        setMessage("Account created! You can now login to your new account with your login credentials.");
+        setMessage("Account created! Check your email to confirm your account before logging in.");
       }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        setError(error.message);
+        if (error.message === 'Email not confirmed') {
+          setError('Please confirm your email address before logging in. Check your inbox.')
+        } else {
+          setError(error.message)
+        }
       }
     }
 
@@ -53,32 +57,6 @@ export const Auth = () => {
         <h3 style={{ textAlign: "center" }}>
           {isSignUp ? "Create a new account" : "Log In to Roundup"}
         </h3>
-
-        {error && (
-          <p style={{
-            color: '#c0392b',
-            background: '#fdf0ef',
-            padding: '10px 12px',
-            borderRadius: '8px',
-            fontSize: '13px',
-            marginBottom: '16px'
-          }}>
-            {error}
-          </p>
-        )}
-
-        {message && (
-          <p style={{
-            color: '#27500A',
-            background: '#EAF3DE',
-            padding: '10px 12px',
-            borderRadius: '8px',
-            fontSize: '13px',
-            marginBottom: '16px'
-          }}>
-            {message}
-          </p>
-        )}
 
         {isForgotPassword ? (
   <div>
@@ -119,7 +97,7 @@ export const Auth = () => {
         setError('')
         setMessage('')
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin
+          redirectTo: 'https://getroundup.app'
         })
         setLoading(false)
         if (error) {
