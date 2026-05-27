@@ -30,8 +30,13 @@ function Root() {
       }
 
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        setSession(currentSession)
-      }
+        if (currentSession?.user?.email_confirmed_at) {
+          setSession(currentSession)
+        } else {
+        //Email not confirmed yet — sign them back out silently
+          supabase.auth.signOut()
+        }
+}
 
       if (event === 'SIGNED_OUT') {
         setSession(null)

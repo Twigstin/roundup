@@ -32,7 +32,7 @@ export const Auth = () => {
       if (error) {
         setError(error.message);
       } else {
-        setMessage("Account created! Check your email to confirm your account before logging in.");
+        setMessage("Account created! Check your email to confirm your account. Can't find it? Check your spam folder.");
       }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -121,6 +121,31 @@ export const Auth = () => {
   </div>
 ) : (
   <>
+  {message && (
+  <p style={{
+    color: '#27500A',
+    background: '#EAF3DE',
+    padding: '10px 12px',
+    borderRadius: '8px',
+    fontSize: '13px',
+    marginBottom: '16px'
+  }}>
+    {message}
+  </p>
+)}
+
+{error && (
+  <p style={{
+    color: '#c0392b',
+    background: '#fdf0ef',
+    padding: '10px 12px',
+    borderRadius: '8px',
+    fontSize: '13px',
+    marginBottom: '16px'
+  }}>
+    {error}
+  </p>
+)}
   <form className="auth-form" onSubmit={handleSubmit}>
           <div className="inputs-container">
           <div className="input-wrapper">

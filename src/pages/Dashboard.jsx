@@ -218,7 +218,7 @@ const pendingCount = isPayment
             Import your student roster so Roundup can track them automatically.
           </p>
           {!hasClassList && (
-            <Link to="/roster" className="btn-primary" style={{ display: 'inline-block', marginTop: '10px', fontSize: '13px', padding: '8px 14px' }}>
+            <Link to="/roster" className="btn-primary" style={{ display: 'inline-block', marginTop: '10px', textAlign: 'center', fontSize: '13px', padding: '8px 14px' }}>
               Go to Roster →
             </Link>
           )}
@@ -235,7 +235,7 @@ const pendingCount = isPayment
             Track payments, submissions or attendance for your class.
           </p>
           {hasClassList && (
-            <Link to="/tasks/new" className="btn-primary" style={{ display: 'inline-block', marginTop: '10px', fontSize: '13px', padding: '8px 14px' }}>
+            <Link to="/tasks/new" className="btn-primary" style={{ display: 'inline-block', marginTop: '10px',  textAlign: 'center', fontSize: '13px', padding: '8px 14px' }}>
               Create task →
             </Link>
           )}
