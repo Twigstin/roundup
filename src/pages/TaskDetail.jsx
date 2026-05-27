@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { getTasks, getEntries, getStudents, getStudentsByClassList, createEntry, updateEntry, populateTaskEntries, updateTask, getRosterMeta, syncTaskRoster } from '../api/index'
 import Spinner from '../components/Spinner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { supabase } from '../api/supabase'
 
 function TaskDetail() {
@@ -431,13 +431,29 @@ const handleAddStudentToTask = async () => {
   </div>
 )}
     <div className="toolbar">
-  <input
-    className="form-input"
-    type="text"
+
+      {/*
+      <div className="input-wrapper">
+                   <FontAwesomeIcon icon={faSearch} className="input-icon" />
+                   <input
+                     className="form-input search-icon"
+            type="text"
     placeholder="Search by name or reg number…"
     value={search}
     onChange={(e) => setSearch(e.target.value)}
-  />
+                   />
+                 </div>
+      */}
+  <div className="input-wrapper">
+                   <FontAwesomeIcon icon={faSearch} className="input-icon" />
+                   <input
+                     className="form-input search-icon"
+            type="text"
+    placeholder="Search by name or reg number…"
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+                   />
+                 </div>
   <button
     className="btn-secondary"
     style={{ alignSelf: 'flex-start', fontSize: '13px', padding: '8px 14px' }}
