@@ -47,8 +47,8 @@ export const Auth = () => {
   return (
     <div className="auth-main-ctn">
       <div>
-        <div className="about-logo-circle" style={{ margin: 'auto', marginBottom: "20px" }}>
-          <span className="about-logo-letter bold"><FontAwesomeIcon icon={faRightToBracket} /></span>
+        <div className="about-logo-circle" style={{ margin: 'auto', marginBottom: '20px' }}>
+          <span className="about-logo-letter bold">R</span>
         </div>
         <h3 style={{ textAlign: "center" }}>
           {isSignUp ? "Create a new account" : "Log In to Roundup"}

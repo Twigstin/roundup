@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { getTasks, deleteTask, getClassLists } from '../api/index'
-//import { readDB } from '../api/db'
 import ConfirmModal from '../components/ConfirmModal'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faLayerGroup, faBook, faSearch, faClipboardList, faBoxOpen, faBox, faXmark, faCircleHalfStroke, faHourglassHalf, faCloudArrowUp, faClock, faCircleCheck, faCircleQuestion, faTrashCan, faCreditCard, faFileCircleCheck, faUserCheck } from '@fortawesome/free-solid-svg-icons'
 import Spinner from '../components/Spinner'
 import { supabase } from '../api/supabase'
-
 
 function Dashboard() {
   const [tasks, setTasks] = useState([])
@@ -249,13 +248,29 @@ const pendingCount = isPayment
 
       {tasks.length > 0 && (
   <div className="dashboard-toolbar">
-    <input
-      className="form-input"
+
+    {/**
+     <div className="input-wrapper">
+             <FontAwesomeIcon icon={faEnvelope} className="input-icon" />
+             <input
+               className="form-input"
       type="text"
       placeholder="Search tasks…"
       value={search}
       onChange={(e) => setSearch(e.target.value)}
-    />
+             />
+           </div>
+     */}
+    <div className="input-wrapper">
+             <FontAwesomeIcon icon={faSearch} className="input-icon" />
+             <input
+               className="form-input search-icon"
+      type="text"
+      placeholder="Search tasks…"
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+             />
+           </div>
     <div className="filter-tabs">
       <button
         className={`filter-tab ${typeFilter === 'all' ? 'active' : ''}`}
@@ -308,8 +323,26 @@ const pendingCount = isPayment
               >
                 <div className="task-card-left">
                   <div className="task-card-top">
-                    <span className="task-card-title light-bold">{task.title}</span>
-                    <span className={`type-badge type-${task.type}`}>{task.type}</span>
+                    <span className="task-card-title light-bold">{task.type === "payment" ? (
+                      <FontAwesomeIcon icon={faBook} style={{ color: "#085041" }} />
+                    ) : task.type === "submission"
+                    ? (
+                      <FontAwesomeIcon icon={faLayerGroup} style={{ color: "#3C3489" }} />
+                    )
+                    : (
+                      <FontAwesomeIcon icon={faClipboardList} style={{ color: "#633806" }} />
+                    )
+                    } {task.title}</span>
+                    <span className={`type-badge type-${task.type}`}>{task.type === "payment" ? (
+                      <FontAwesomeIcon icon={faCreditCard} className="dashboard-icons" />
+                    ) : task.type === "submission"
+                    ? (
+                      <FontAwesomeIcon icon={faFileCircleCheck} className="dashboard-icons" />
+                    )
+                    : (
+                      <FontAwesomeIcon icon={faUserCheck} className="dashboard-icons" />
+                    )
+                    } {task.type}</span>
                   </div>
                   <p className="task-card-meta">{total} students</p>
                 </div>
@@ -320,31 +353,31 @@ const pendingCount = isPayment
                     {isPayment ? (
                       <>
                         <div className="task-stat">
-  <span className="task-stat-num success">{doneCount}</span>
+  <span className="task-stat-num success">{doneCount} <FontAwesomeIcon icon={faCircleCheck} /></span>
   <span className="task-stat-label">paid</span>
 </div>
 <div className="task-stat-divider" />
 
 <div className="task-stat">
-  <span className="task-stat-num warning">{partPaidCount}</span>
+  <span className="task-stat-num warning">{partPaidCount} <FontAwesomeIcon icon={faCircleHalfStroke} /></span>
   <span className="task-stat-label">part paid</span>
 </div>
 
 <div className="task-stat-divider" />
 <div className="task-stat">
-  <span className="task-stat-num warning">{pendingCount}</span>
+  <span className="task-stat-num warning">{pendingCount} <FontAwesomeIcon icon={faXmark} /></span>
   <span className="task-stat-label">not paid</span>
 </div>
 
 <div className="task-stat-divider" />
 <div className="task-stat">
-  <span className="task-stat-num" style={{ color: '#27500A' }}>{collectedCount}</span>
+  <span className="task-stat-num" style={{ color: '#27500A' }}>{collectedCount} <FontAwesomeIcon icon={faBox} /></span>
   <span className="task-stat-label">collected</span>
 </div>
 
 <div className="task-stat-divider" />
 <div className="task-stat" id="not-collected">
-  <span className="task-stat-num warning">{notCollectedCount}</span>
+  <span className="task-stat-num warning">{notCollectedCount} <FontAwesomeIcon icon={faBoxOpen} /></span>
   <span className="task-stat-label">not collected</span>
 </div>
 
@@ -352,13 +385,21 @@ const pendingCount = isPayment
                     ) : (
                       <>
                         <div className="task-stat">
-                          <span className="task-stat-num success">{doneCount}</span>
-                          <span className="task-stat-label">{task.type === 'attendance' ? 'present' : 'submitted'}</span>
+                          <span className="task-stat-num success">{doneCount} {task.type === 'attendance' ? (
+                            <span><FontAwesomeIcon icon={faCircleCheck} /></span>
+                          ) : (
+                            <FontAwesomeIcon icon={faCloudArrowUp} />
+                          )}</span>
+                          <span className="task-stat-label">{task.type === 'attendance' ? "present" : 'submitted'}</span>
                         </div>
                         <div className="task-stat-divider" />
                         <div className="task-stat">
-                          <span className="task-stat-num warning">{pendingCount}</span>
-                          <span className="task-stat-label">{task.type === 'attendance' ? 'absent' : 'pending'}</span>
+                          <span className="task-stat-num warning">{pendingCount} {task.type === 'attendance' ? (
+                            <span><FontAwesomeIcon icon={faCircleQuestion} /></span>
+                          ) : (                            
+                            <span><FontAwesomeIcon icon={faClock} /></span>                          
+                          )}</span>
+                          <span className="task-stat-label">{task.type === 'attendance' ? "absent" : 'pending'}</span>
                         </div>
                       </>
                     )}
@@ -372,22 +413,11 @@ const pendingCount = isPayment
       className="btn-danger delete-btn"
       onClick={(e) => handleDeleteClick(e, task.id)}
     >
-      Delete
+      Delete <FontAwesomeIcon icon={faTrashCan} />
     </button>
     <span className="task-card-chevron">›</span>
   </div>
 
-                {/*total === 0 && (
-  <div className="task-card-actions">
-    <button
-      className="btn-danger delete-btn"
-      onClick={(e) => handleDeleteClick(e, task.id)}
-    >
-      Delete
-    </button>
-    <span className="task-card-chevron">›</span>
-  </div>
-)*/}
               </div>
             )
           })}

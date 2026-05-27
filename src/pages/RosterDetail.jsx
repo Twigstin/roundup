@@ -6,7 +6,7 @@ import Spinner from '../components/Spinner'
 import { supabase } from '../api/supabase'
 import * as XLSX from 'xlsx'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faFilter } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faFilter, faSearch, faFileImport } from '@fortawesome/free-solid-svg-icons'
 
 
 function RosterDetail() {
@@ -340,15 +340,18 @@ function RosterDetail() {
               gap: '8px'
             }}
           >
-            {addingStudent ? <><Spinner size={14} />Adding...</> : 'Add student'}
+            {addingStudent ? <><Spinner size={14} />Adding...</> : '+ Add student'}
           </button>
           <button
             className="btn-secondary"
+            id='import-btn'
             onClick={() => !importing && fileInputRef.current.click()}
             disabled={importing}
             style={{ opacity: importing ? 0.6 : 1, display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            {importing ? <><Spinner size={14} />Importing...</> : 'Import list'}
+            {importing ? <><Spinner size={14} />Importing...</> : (
+              <span><FontAwesomeIcon icon={faFileImport} /> Import list</span>
+            )}
           </button>
           <input
             ref={fileInputRef}
@@ -380,13 +383,18 @@ function RosterDetail() {
 
         <div id="manage-class-list">
             <div id='list-row-align'>
-          <input
-            className="form-input-search"
+
+              
+           <div id="input-wrapper">
+                   <FontAwesomeIcon icon={faSearch} className="input-icon" />
+                   <input
+                     className="form-input-search search-icon"
             type="text"
             placeholder="Search by name, reg or serial…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-          />
+                   />
+                 </div>
           <div id="btn-danger-clear-all-div">
           <button
             className="btn-danger-clear-my-all"
@@ -398,7 +406,7 @@ function RosterDetail() {
         </button>
         </div>
         </div>
-          <label><span><FontAwesomeIcon icon={faFilter} /> Filter: </span>
+          <label className='list-details-filter'><span>Sort by: </span>
             <select
             className="filter-input"
             value={sortBy}

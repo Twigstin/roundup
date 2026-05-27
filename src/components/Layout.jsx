@@ -9,7 +9,8 @@ import {
   faBars,
   faChevronLeft,
   faHouse,
-  faUser
+  faUser,
+  faGrip
 } from '@fortawesome/free-solid-svg-icons'
 
 function Layout() {
@@ -67,8 +68,10 @@ useEffect(() => {
   const navItems = [
     { path: '/', icon: faHouse, label: 'Tasks' },
     { path: '/roster', icon: faUsers, label: 'Roster' },
-    { path: '/menu', icon: faUser, label: 'Menu' },
+    { path: '/menu', icon: faGrip, label: 'Menu' },
   ]
+
+  //<FontAwesomeIcon icon={faEllipsis} />
 
   const activeIndex = navItems.findIndex(item => isActive(item.path))
 
