@@ -406,7 +406,7 @@ function RosterDetail() {
         </button>
         </div>
         </div>
-          <label className='list-details-filter'><span>Sort by: </span>
+          <label className='list-details-filter'><span style={{ marginRight: "5px" }}>Sort by:</span>
             <select
             className="filter-input"
             value={sortBy}
