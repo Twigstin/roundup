@@ -503,7 +503,7 @@ const handleAddStudentToTask = async () => {
           <Spinner size={14} />
           Adding...
         </>
-      ) : 'Add to this task'}
+      ) : '+ Add to this task'}
     </button>
   </div>
 )}

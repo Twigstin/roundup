@@ -28,17 +28,23 @@ export const Auth = () => {
     setMessage("");
 
     if (isSignUp) {
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) {
-        setError(error.message);
-      } else {
-        setMessage("Account created! Check your email to confirm your account. Can't find it? Check your spam folder.");
-      }
+  const { error } = await supabase.auth.signUp({ email, password });
+  if (error) {
+    if (error.message.toLowerCase().includes('already registered') || error.message.toLowerCase().includes('already exists')) {
+      setError('An account with this email already exists. Try logging in instead.')
     } else {
+      setError(error.message)
+    }
+  } else {
+    setMessage("Account created! Check your email to confirm your account. Can't find it? Check your spam folder.")
+  }
+} else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         if (error.message === 'Email not confirmed') {
           setError('Please confirm your email address before logging in. Check your inbox.')
+        } else if (error.message === 'Invalid login credentials') {
+          setError('Incorrect email or password. Please check your details and try again.')
         } else {
           setError(error.message)
         }
@@ -103,7 +109,7 @@ export const Auth = () => {
         if (error) {
           setError(error.message)
         } else {
-          setMessage('Check your email for a password reset link.')
+          setMessage("If this email is registered, you'll receive a reset link in your email shortly. Check your spam folder if you don't see it.")
         }
       }}>
         {loading ? <><Spinner size={14} /><span style={{ marginLeft: '10px' }}>Sending...</span></> : 'Send reset link'}
