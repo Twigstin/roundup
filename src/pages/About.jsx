@@ -46,7 +46,7 @@ function About() {
           <span className="about-logo-letter bold">R</span>
         </div>
         <h1 className="about-app-name bold">Roundup</h1>
-        <p className="about-version">Version 1.0.0</p>
+        <p className="about-version">Version {__APP_VERSION__}</p>
       </div>
 
       <div className='menu-section-ctn'>
