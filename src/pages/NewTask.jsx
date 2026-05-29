@@ -15,6 +15,7 @@ function NewTask() {
   const [taskLimitReached, setTaskLimitReached] = useState(false);
   const [classLists, setClassLists] = useState([])
   const [selectedClassListId, setSelectedClassListId] = useState('')
+  const [checkingLimits, setCheckingLimits] = useState(true)
 
   useEffect(() => {
   if (!error) return
@@ -24,15 +25,16 @@ function NewTask() {
 
  useEffect(() => {
   const checkLimits = async () => {
-    const [students, tasks, lists] = await Promise.all([
-      getStudents(),
-      getTasks(),
-      getClassLists()
-    ])
-    if (students.length === 0) setRosterEmpty(true)
-    if (tasks.length >= 15) setTaskLimitReached(true)
-    setClassLists(lists)
-  }
+  const [students, tasks, lists] = await Promise.all([
+    getStudents(),
+    getTasks(),
+    getClassLists()
+  ])
+  if (students.length === 0) setRosterEmpty(true)
+  if (tasks.length >= 15) setTaskLimitReached(true)
+  setClassLists(lists)
+  setCheckingLimits(false)
+}
   checkLimits()
 }, [])
 
@@ -91,6 +93,14 @@ function NewTask() {
   }
 
   navigate('/')
+}
+
+if (checkingLimits) {
+  return (
+    <div className="loading-container">
+      <Spinner size={24} />
+    </div>
+  )
 }
 
   return (

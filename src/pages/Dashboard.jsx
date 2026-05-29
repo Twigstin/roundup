@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { getTasks, deleteTask, getClassLists } from '../api/index'
 import ConfirmModal from '../components/ConfirmModal'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLayerGroup, faBook, faSearch, faClipboardList, faBoxOpen, faBox, faXmark, faCircleHalfStroke, faHourglassHalf, faCloudArrowUp, faClock, faCircleCheck, faCircleQuestion, faTrashCan, faCreditCard, faFileCircleCheck, faUserCheck } from '@fortawesome/free-solid-svg-icons'
+import { faLayerGroup, faBook, faSearch, faClipboardList, faTrashCan, faCreditCard, faFileCircleCheck, faUserCheck } from '@fortawesome/free-solid-svg-icons'
 import Spinner from '../components/Spinner'
 import { supabase } from '../api/supabase'
 
@@ -353,31 +353,31 @@ const pendingCount = isPayment
                     {isPayment ? (
                       <>
                         <div className="task-stat">
-  <span className="task-stat-num success">{doneCount} <FontAwesomeIcon icon={faCircleCheck} /></span>
+  <span className="task-stat-num success successy">{doneCount}</span>
   <span className="task-stat-label">paid</span>
 </div>
 <div className="task-stat-divider" />
 
 <div className="task-stat">
-  <span className="task-stat-num warning">{partPaidCount} <FontAwesomeIcon icon={faCircleHalfStroke} /></span>
+  <span className="task-stat-num warning warningy">{partPaidCount}</span>
   <span className="task-stat-label">part paid</span>
 </div>
 
 <div className="task-stat-divider" />
 <div className="task-stat">
-  <span className="task-stat-num warning">{pendingCount} <FontAwesomeIcon icon={faXmark} /></span>
+  <span className="task-stat-num danger dangery">{pendingCount}</span>
   <span className="task-stat-label">not paid</span>
 </div>
 
 <div className="task-stat-divider" />
 <div className="task-stat">
-  <span className="task-stat-num" style={{ color: '#27500A' }}>{collectedCount} <FontAwesomeIcon icon={faBox} /></span>
+  <span className="task-stat-num successy" style={{ color: '#27500A' }}>{collectedCount}</span>
   <span className="task-stat-label">collected</span>
 </div>
 
 <div className="task-stat-divider" />
 <div className="task-stat" id="not-collected">
-  <span className="task-stat-num warning">{notCollectedCount} <FontAwesomeIcon icon={faBoxOpen} /></span>
+  <span className="task-stat-num danger dangery">{notCollectedCount}</span>
   <span className="task-stat-label">not collected</span>
 </div>
 
@@ -385,20 +385,12 @@ const pendingCount = isPayment
                     ) : (
                       <>
                         <div className="task-stat">
-                          <span className="task-stat-num success">{doneCount} {task.type === 'attendance' ? (
-                            <span><FontAwesomeIcon icon={faCircleCheck} /></span>
-                          ) : (
-                            <FontAwesomeIcon icon={faCloudArrowUp} />
-                          )}</span>
+                          <span className="task-stat-num success successy">{doneCount}</span>
                           <span className="task-stat-label">{task.type === 'attendance' ? "present" : 'submitted'}</span>
                         </div>
                         <div className="task-stat-divider" />
                         <div className="task-stat">
-                          <span className="task-stat-num warning">{pendingCount} {task.type === 'attendance' ? (
-                            <span><FontAwesomeIcon icon={faCircleQuestion} /></span>
-                          ) : (                            
-                            <span><FontAwesomeIcon icon={faClock} /></span>                          
-                          )}</span>
+                          <span className="task-stat-num warning warningy">{pendingCount}</span>
                           <span className="task-stat-label">{task.type === 'attendance' ? "absent" : 'pending'}</span>
                         </div>
                       </>

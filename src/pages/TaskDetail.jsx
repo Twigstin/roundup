@@ -24,8 +24,15 @@ function TaskDetail() {
   const [newStudentName, setNewStudentName] = useState('')
   const [newStudentReg, setNewStudentReg] = useState('')
   const [addingStudent, setAddingStudent] = useState(false)
+  const [addStudentError, setAddStudentError] = useState('')
 
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
+
+  useEffect(() => {
+  if (!addStudentError) return
+  const timer = setTimeout(() => setAddStudentError(''), 4000)
+  return () => clearTimeout(timer)
+}, [addStudentError])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -266,7 +273,18 @@ const handleDismissRosterUpdate = async () => {
 
 
 const handleAddStudentToTask = async () => {
-  if (!newStudentName.trim() || !newStudentReg.trim()) return
+   if (!newStudentName.trim() && !newStudentReg.trim()) {
+    setAddStudentError('Please enter both a name and reg number')
+    return
+  }
+  if (!newStudentName.trim()) {
+    setAddStudentError('Please enter the student name')
+    return
+  }
+  if (!newStudentReg.trim()) {
+    setAddStudentError('Please enter the reg number')
+    return
+  }
 
   setAddingStudent(true)
 
@@ -464,7 +482,10 @@ const handleAddStudentToTask = async () => {
 </div>
 
 {showAddStudent && (
+  
   <div className="form-card" style={{ marginBottom: '12px' }}>
+    {addStudentError && <p className="form-error">{addStudentError}</p>}
+    
     <p className="form-label" style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '500' }}>
       Add student to this task only
     </p>

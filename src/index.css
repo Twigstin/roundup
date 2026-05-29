@@ -445,6 +445,25 @@ button {
 .summary-number.danger  { color: #791F1F; }
 
 
+.successy {
+  background-color: #EAF3DE;
+  padding: 2px 13px 2px 13px;
+  border-radius: 15px;
+}
+
+.warningy {
+  background-color: #FAEEDA;
+  padding: 2px 13px 2px 13px;
+  border-radius: 15px;
+}
+
+.dangery {
+  background-color: #FCEBEB;
+  padding: 2px 13px 2px 13px;
+  border-radius: 15px;
+}
+
+
 .entry-list {
   display: flex;
   flex-direction: column;
@@ -693,12 +712,14 @@ button {
   display: none;
 }
 
-
-@media (max-width: 1025px) {
-  .type-badge {
+@media (max-width: 409px) {
+  .type-submission, .type-attendance {
     width: 120px;
   }
+}
 
+
+@media (max-width: 1025px) {
   #mobile-top-nav {
   display: flex;
   align-items: center;
