@@ -7,9 +7,50 @@ import Roster from './pages/Roster'
 import RosterDetail from './pages/RosterDetail'
 import Menu from './pages/Menu'
 import About from './pages/About'
+import { useRegisterSW } from 'virtual:pwa-register/react'
 
 function App() {
+  const { needRefresh, updateServiceWorker } = useRegisterSW()
+  
   return (
+    <>
+      {needRefresh[0] && (
+        <div style={{
+          position: 'fixed',
+          bottom: '80px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#111',
+          color: '#fff',
+          padding: '10px 16px',
+          borderRadius: '10px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          fontSize: '13px',
+          zIndex: 200,
+          whiteSpace: 'nowrap',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+        }}>
+          <span>Update available</span>
+          <button
+            onClick={() => updateServiceWorker(true)}
+            style={{
+              background: '#fff',
+              color: '#111',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '4px 10px',
+              fontSize: '12px',
+              cursor: 'pointer',
+              fontFamily: 'inter, sans-serif'
+            }}
+          >
+            Refresh
+          </button>
+        </div>
+      )}
+
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<Dashboard />} />
@@ -22,6 +63,7 @@ function App() {
         <Route path="/about" element={<About />} />
       </Route>
     </Routes>
+    </>
   )
 }
 
