@@ -1874,8 +1874,8 @@ button:active {
 
 
 .about-logo-circle {
-  width: 64px;
-  height: 64px;
+  width: 100px;
+  height: 100px;
   border-radius: 16px;
   background: #111;
   display: flex;

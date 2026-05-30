@@ -47,7 +47,7 @@ function ResetPassword({ onDone }) {
     <div className="auth-main-ctn">
       <div>
         <div className="about-logo-circle" style={{ margin: 'auto', marginBottom: '20px' }}>
-          <span className="about-logo-letter bold">R</span>
+          <img src='./public/icons/icon-192.png' style={{ width: "100%", height: "100%", borderRadius: "13px" }} alt="image of roundup official logo"/>
         </div>
         <h3 style={{ textAlign: 'center' }}>Create a new password</h3>
 
