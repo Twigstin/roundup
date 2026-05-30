@@ -58,7 +58,7 @@ export const Auth = () => {
     <div className="auth-main-ctn">
       <div>
         <div className="about-logo-circle" style={{ margin: 'auto', marginBottom: '20px' }}>
-          <img src='./public/icons/icon-192.png' style={{ width: "100%", height: "100%", borderRadius: "13px" }} alt="image of roundup official logo"/>
+          <img src='https://aqndgxltxpgovpedspzf.supabase.co/storage/v1/object/public/roundup-images/icon-192.png' style={{ width: "100%", height: "100%", borderRadius: "13px" }} alt="image of roundup official logo"/>
         </div>
 
         {isForgotPassword 

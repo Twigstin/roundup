@@ -44,7 +44,7 @@ function About() {
 
       <div className="about-hero">
         <div className="about-logo-circle">
-          <img src='./public/icons/icon-192.png' style={{ width: "100%", height: "100%", borderRadius: "13px" }} alt="image of roundup official logo"/>
+          <img src='https://aqndgxltxpgovpedspzf.supabase.co/storage/v1/object/public/roundup-images/icon-192.png' style={{ width: "100%", height: "100%", borderRadius: "13px" }} alt="image of roundup official logo"/>
         </div>
         <h1 className="about-app-name bold">Roundup</h1>
         <p className="about-version">Version {pkg.version}</p>
