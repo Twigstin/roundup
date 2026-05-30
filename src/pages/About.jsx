@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faXmark } from '@fortawesome/free-solid-svg-icons'
+import pkg from '../../package.json'
 
 function About() {
   const [lightboxSrc, setLightboxSrc] = useState(null)
@@ -46,7 +47,7 @@ function About() {
           <span className="about-logo-letter bold">R</span>
         </div>
         <h1 className="about-app-name bold">Roundup</h1>
-        <p className="about-version">Version {__APP_VERSION__}</p>
+        <p className="about-version">Version {pkg.version}</p>
       </div>
 
       <div className='menu-section-ctn'>
