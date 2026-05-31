@@ -61,9 +61,9 @@ function TaskDetail() {
   (!foundTask.roster_synced_at ||
     new Date(meta.updated_at) > new Date(foundTask.roster_synced_at))
 ) {
-  const existingStudentIds = allEntries.map(e => e.student_id)
-  const hasNewStudents = allStudents.some(s => !existingStudentIds.includes(s.id))
-  if (hasNewStudents) setShowRosterUpdate(true)
+  const existingRegNumbers = allEntries.map(e => e.student_reg_number)
+const hasNewStudents = allStudents.some(s => !existingRegNumbers.includes(s.reg_number))
+if (hasNewStudents) setShowRosterUpdate(true)
 }
 
       setLoading(false)
@@ -391,7 +391,7 @@ const handleAddStudentToTask = async () => {
         onClick={() => setFilter('collected')}
       >
         <p className="summary-label">Collected</p>
-        <p className="summary-number" style={{ color: '#27500A' }}>{collectedCount}</p>
+        <p className="summary-number success bold" style={{ color: '#27500A' }}>{collectedCount}</p>
       </div>
       <div
         className={`summary-card ${filter === 'not_collected' ? 'summary-card-active' : ''}`}
@@ -408,14 +408,14 @@ const handleAddStudentToTask = async () => {
   onClick={() => setFilter(isAttendance ? 'present' : 'submitted')}
 >
   <p className="summary-label">{isAttendance ? 'Present' : 'Submitted'}</p>
-  <p className="summary-number success">{submittedCount}</p>
+  <p className="summary-number success bold">{submittedCount}</p>
 </div>
 <div
   className={`summary-card ${filter === (isAttendance ? 'absent' : 'pending') ? 'summary-card-active' : ''}`}
   onClick={() => setFilter(isAttendance ? 'absent' : 'pending')}
 >
   <p className="summary-label">{isAttendance ? 'Absent' : 'Pending'}</p>
-  <p className="summary-number warning">{pendingCount}</p>
+  <p className="summary-number warning bold">{pendingCount}</p>
 </div>
     </>
   )}

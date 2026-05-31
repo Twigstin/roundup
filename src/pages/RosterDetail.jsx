@@ -6,7 +6,7 @@ import Spinner from '../components/Spinner'
 import { supabase } from '../api/supabase'
 import * as XLSX from 'xlsx'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faFilter, faSearch, faFileImport } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faFilter, faSearch, faFileImport, faXmark, faTrashCan } from '@fortawesome/free-solid-svg-icons'
 
 
 function RosterDetail() {
@@ -369,7 +369,7 @@ function RosterDetail() {
               onClick={() => setShowClearWarning(true)}
               disabled={importing}
             >
-              Clear all
+              <FontAwesomeIcon icon={faXmark} /> Clear all
             </button>
             </div>
           )}
@@ -402,7 +402,7 @@ function RosterDetail() {
             onClick={() => setShowClearWarning(true)}
             disabled={importing}
           >
-            Clear all
+            <FontAwesomeIcon icon={faXmark} /> Clear all
         </button>
         </div>
         </div>
@@ -447,7 +447,7 @@ function RosterDetail() {
     </div>
     <span className="desktop-only student-reg-desktop">{student.reg_number}</span>
     <button className="btn-danger remove-btn" onClick={() => handleDeleteClick(student.id)}>
-      Remove
+      <FontAwesomeIcon icon={faTrashCan} /> Remove
     </button>
   </div>
             ))}

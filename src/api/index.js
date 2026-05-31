@@ -200,13 +200,12 @@ export const updateEntry = async (entryId, updates) => {
 
 export const populateTaskEntries = async (taskId, taskType, students) => {
   const existingEntries = await getEntries(taskId)
-  const existingStudentIds = existingEntries.map(e => e.student_id)
+  const existingRegNumbers = existingEntries.map(e => e.student_reg_number)
+  const newStudents = students.filter(s => !existingRegNumbers.includes(s.reg_number))
 
   const defaultStatus = taskType === 'payment' ? 'not_paid'
     : taskType === 'attendance' ? 'absent'
     : 'pending'
-
-  const newStudents = students.filter(s => !existingStudentIds.includes(s.id))
 
   if (newStudents.length === 0) return []
 

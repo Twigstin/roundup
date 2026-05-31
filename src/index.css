@@ -329,29 +329,27 @@ button {
 }
 
 .btn-danger {
-  background: #fff;
-  color: #c0392b;
+  background: #c0392b;
+  color: #fff;
   padding: 4px 10px;
   border-radius: 6px;
   font-size: 12px;
-  border: 1px solid #f5c6c2;
+  border: none;
   cursor: pointer;
 }
 
 .btn-danger-clear-all > button {
-  background: #fff;
-  color: #c0392b;
+  background: #c0392b;
+  color: #fff;
   padding: 10px;
   border-radius: 15px;
   font-size: 12px;
-  border: 1px solid #f5c6c2;
+  border: none;
   cursor: pointer;
   text-align: center;
 }
 
-#btn-danger-clear-all-div {
 
-}
 
 @media (max-width: 440px) {
   .btn-danger-clear-all > button {
@@ -369,20 +367,21 @@ button {
 
 
 .btn-danger-clear-my-all {
-  background: #fff;
-  color: #c0392b;
+  background: #c0392b;
+  color: #fff;
   padding: 10px;
-  border-radius: 6px;
+  border-radius: 13px;
   font-size: 12px;
-  border: 1px solid #f5c6c2;
+  border: none;
   cursor: pointer;
   text-align: center;
+  margin-top: 5px;
 }
 
 
 
 .btn-danger:hover, .btn-danger-clear-all:hover {
-  background: #fdf0ef;
+  background: #a93226;
 }
 
 
@@ -2097,8 +2096,8 @@ button:active {
 }
 
 .lightbox-image {
-  width: 300px;
-  height: 300px;
+  width: 340px;
+  height: 340px;
   border-radius: 50%;
   object-fit: cover;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);

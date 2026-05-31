@@ -4,6 +4,9 @@ import { getClassLists, createClassList, deleteClassList, updateClassList } from
 import ConfirmModal from '../components/ConfirmModal'
 import Spinner from '../components/Spinner'
 import { supabase } from '../api/supabase'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faTrashCan, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
+
 
 function Roster() {
   const [classLists, setClassLists] = useState([])
@@ -153,7 +156,7 @@ function Roster() {
           <input
             className="formy-input"
             type="text"
-            placeholder="e.g. CSC 301 List, Main Class List…"
+            placeholder="Enter list name. e.g. CSC 301 List, Main Class List…"
             value={newListName}
             onChange={(e) => setNewListName(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleCreateList() }}
@@ -239,7 +242,7 @@ function Roster() {
                     setEditingName(list.name)
                   }}
                 >
-                  Rename
+                  <FontAwesomeIcon icon={faPenToSquare} /> Rename
                 </button>
                 <button
                   className="btn-danger"
@@ -248,7 +251,7 @@ function Roster() {
                     handleDeleteClick(list.id)
                   }}
                 >
-                  Delete
+                  <FontAwesomeIcon icon={faTrashCan} /> Delete
                 </button>
                 <span className="task-card-chevron">›</span>
               </div>
