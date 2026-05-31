@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Spinner from '../components/Spinner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faCircleInfo,faHeadset, faPeopleGroup } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faCircleInfo,faHeadset, faPeopleGroup, faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
 
 function Menu() {
   const [user, setUser] = useState(null)
@@ -77,9 +77,13 @@ function Menu() {
           <button className="menu-list-item menu-list-item-danger" onClick={handleLogout}>
             <span className="menu-list-item-label logout-label">{loggingOut ? (
                   <>
-                    <Spinner size={14} /><span style={{ marginLeft: '10px' }}>Logging out...</span>
+                    <Spinner size={14} /> <span style={{ marginLeft: '10px' }}>Logging out...</span>
                   </>
-                ) : "Log out"}</span>
+                ) : (
+                  <>
+                  <span><FontAwesomeIcon icon={faRightFromBracket} /></span><span style={{ marginLeft: '10px' }}>Log out</span>
+                  </>
+                )}</span>
           </button>
         </div>
       </div>

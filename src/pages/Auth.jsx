@@ -28,13 +28,13 @@ export const Auth = () => {
     setMessage("");
 
     if (isSignUp) {
-  const { error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({ email, password });
   if (error) {
-    if (error.message.toLowerCase().includes('already registered') || error.message.toLowerCase().includes('already exists')) {
-      setError('An account with this email already exists. Try logging in instead.')
-    } else {
-      setError(error.message)
-    }
+    setError(error.message)
+  } else if (data?.user?.identities?.length === 0) {
+    // This means the email already exists but enumeration protection 
+    // returned a fake success
+    setError('An account with this email already exists. Please log in instead.')
   } else {
     setMessage("Account created! Check your email to confirm your account. Can't find it? Check your spam folder.")
   }
