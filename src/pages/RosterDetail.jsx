@@ -369,7 +369,7 @@ function RosterDetail() {
               onClick={() => setShowClearWarning(true)}
               disabled={importing}
             >
-              <FontAwesomeIcon icon={faXmark} /> Clear all
+              <FontAwesomeIcon icon={faXmark} /> Clear List
             </button>
             </div>
           )}
@@ -402,7 +402,7 @@ function RosterDetail() {
             onClick={() => setShowClearWarning(true)}
             disabled={importing}
           >
-            <FontAwesomeIcon icon={faXmark} /> Clear all
+            <FontAwesomeIcon icon={faXmark} /> Clear List
         </button>
         </div>
         </div>

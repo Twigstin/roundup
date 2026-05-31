@@ -824,18 +824,14 @@ button {
   gap: 4px;
 }
 
-
-
-
-
-
-
-
-
   .task-card {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+  }
+
+  .task-card > div {
+    width: 100%;
   }
 
   .task-card-right {
@@ -2141,7 +2137,83 @@ button:active {
 }
 
 @media (min-width: 1025px) and (max-width: 1105px) {
-  #not-collected {
+  #not-collected, .not-collectedy {
     display: none;
   }
+}
+
+.task-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 10px;
+}
+
+.task-card-top-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.kebab-wrapper {
+  position: relative;
+}
+
+.kebab-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #999;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kebab-btn:hover {
+  background: #f0f0f0;
+  color: #111;
+}
+
+.kebab-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  min-width: 140px;
+  overflow: hidden;
+}
+
+.kebab-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  color: #111;
+  text-align: left;
+}
+
+.kebab-menu-item:hover {
+  background: #f5f5f5;
+}
+
+.kebab-menu-item-danger {
+  color: #c0392b;
+}
+
+.kebab-menu-item-danger:hover {
+  background: #fdf0ef;
 }

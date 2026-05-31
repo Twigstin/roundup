@@ -5,7 +5,7 @@ import ConfirmModal from '../components/ConfirmModal'
 import Spinner from '../components/Spinner'
 import { supabase } from '../api/supabase'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTrashCan, faPenToSquare } from '@fortawesome/free-solid-svg-icons'
+import { faTrashCan, faPenToSquare, faEllipsisVertical } from '@fortawesome/free-solid-svg-icons'
 
 
 function Roster() {
@@ -20,41 +20,42 @@ function Roster() {
   const [listToDelete, setListToDelete] = useState(null)
   const [renamingId, setRenamingId] = useState(null)
   const [deletingList, setDeletingList] = useState(false)
-  
-  const navigate = useNavigate()
+  const [openMenuId, setOpenMenuId] = useState(null)
 
+  const navigate = useNavigate()
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
 
-
-  const sortByUpdated = (lists) => 
-  [...lists].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+  const sortByUpdated = (lists) =>
+    [...lists].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
 
   useEffect(() => {
-  if (!error) return
-  const timer = setTimeout(() => setError(''), 4000)
-  return () => clearTimeout(timer)
-}, [error])
+    if (!error) return
+    const timer = setTimeout(() => setError(''), 4000)
+    return () => clearTimeout(timer)
+  }, [error])
 
-
+  useEffect(() => {
+    const handleClickOutside = () => setOpenMenuId(null)
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [])
 
   useEffect(() => {
     const fetchClassLists = async () => {
-  const lists = await getClassLists()
-  
-  const listsWithCounts = await Promise.all(
-    lists.map(async (list) => {
-      const { count } = await supabase
-        .from('students')
-        .select('*', { count: 'exact', head: true })
-        .eq('class_list_id', list.id)
-      return { ...list, studentCount: count || 0 }
-    })
-  )
-  
-  setClassLists(listsWithCounts)
-  setLoading(false)
-}
-    
+      const lists = await getClassLists()
+      const listsWithCounts = await Promise.all(
+        lists.map(async (list) => {
+          const { count } = await supabase
+            .from('students')
+            .select('*', { count: 'exact', head: true })
+            .eq('class_list_id', list.id)
+          return { ...list, studentCount: count || 0 }
+        })
+      )
+      setClassLists(listsWithCounts)
+      setLoading(false)
+    }
+
     fetchClassLists()
 
     const classListsSub = supabase
@@ -68,18 +69,17 @@ function Roster() {
           })
         }
         if (payload.eventType === 'UPDATE') {
-  const { count } = supabase
-    .from('students')
-    .select('*', { count: 'exact', head: true })
-    .eq('class_list_id', payload.new.id)
-    
-  setClassLists(prev => sortByUpdated(
-    prev.map(l => l.id === payload.new.id 
-      ? { ...payload.new, studentCount: count || 0 } 
-      : l
-    )
-  ))
-}
+          const { count } = supabase
+            .from('students')
+            .select('*', { count: 'exact', head: true })
+            .eq('class_list_id', payload.new.id)
+          setClassLists(prev => sortByUpdated(
+            prev.map(l => l.id === payload.new.id
+              ? { ...payload.new, studentCount: count || 0 }
+              : l
+            )
+          ))
+        }
         if (payload.eventType === 'DELETE') {
           setClassLists(prev => prev.filter(l => l.id !== payload.old.id))
         }
@@ -105,18 +105,18 @@ function Roster() {
   }
 
   const handleRenameList = async (listId) => {
-  if (!editingName.trim()) return
-  setRenamingId(listId)
-  const updated = await updateClassList(listId, editingName.trim())
-  setClassLists(prev => sortByUpdated(prev.map(l =>
-    l.id === listId
-      ? { ...updated, studentCount: l.studentCount }
-      : l
-  )))
-  setEditingId(null)
-  setEditingName('')
-  setRenamingId(null)
-}
+    if (!editingName.trim()) return
+    setRenamingId(listId)
+    const updated = await updateClassList(listId, editingName.trim())
+    setClassLists(prev => sortByUpdated(prev.map(l =>
+      l.id === listId
+        ? { ...updated, studentCount: l.studentCount }
+        : l
+    )))
+    setEditingId(null)
+    setEditingName('')
+    setRenamingId(null)
+  }
 
   const handleDeleteClick = (listId) => {
     setListToDelete(listId)
@@ -168,10 +168,8 @@ function Roster() {
             style={{ opacity: creating ? 0.6 : 1, whiteSpace: 'nowrap' }}
           >
             {creating ? (
-                  <>
-                    <Spinner size={14} /><span style={{ marginLeft: '10px' }}>Creating...</span>
-                  </>
-                ) : '+ Create list'}
+              <><Spinner size={14} /><span style={{ marginLeft: '10px' }}>Creating...</span></>
+            ) : '+ Create list'}
           </button>
         </div>
       </div>
@@ -208,10 +206,8 @@ function Roster() {
                       onClick={() => handleRenameList(list.id)}
                     >
                       {renamingId === list.id ? (
-                  <>
-                    <Spinner size={14} /><span style={{ marginLeft: '10px' }}>Saving...</span>
-                  </>
-                ) : 'Save'}
+                        <><Spinner size={14} /><span style={{ marginLeft: '10px' }}>Saving...</span></>
+                      ) : 'Save'}
                     </button>
                     <button
                       className="btn-secondary"
@@ -224,6 +220,47 @@ function Roster() {
                 ) : (
                   <div className="task-card-top">
                     <span className="task-card-title light-bold">{list.name}</span>
+                    <div
+                      className="task-card-top-right"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="kebab-wrapper">
+                        <button
+                          className="kebab-btn"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setOpenMenuId(openMenuId === list.id ? null : list.id)
+                          }}
+                        >
+                          <FontAwesomeIcon icon={faEllipsisVertical} />
+                        </button>
+                        {openMenuId === list.id && (
+                          <div className="kebab-menu">
+                            <button
+                              className="kebab-menu-item"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setOpenMenuId(null)
+                                setEditingId(list.id)
+                                setEditingName(list.name)
+                              }}
+                            >
+                              <FontAwesomeIcon icon={faPenToSquare} /> Rename
+                            </button>
+                            <button
+                              className="kebab-menu-item kebab-menu-item-danger"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setOpenMenuId(null)
+                                handleDeleteClick(list.id)
+                              }}
+                            >
+                              <FontAwesomeIcon icon={faTrashCan} /> Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -231,46 +268,22 @@ function Roster() {
                   {list.studentCount} student{list.studentCount <= 1 ? '' : 's'}
                 </p>
               </div>
-
-              <div className="task-card-actions">
-                <button
-                  className="btn-secondary"
-                  style={{ fontSize: '12px', padding: '4px 10px' }}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setEditingId(list.id)
-                    setEditingName(list.name)
-                  }}
-                >
-                  <FontAwesomeIcon icon={faPenToSquare} /> Rename
-                </button>
-                <button
-                  className="btn-danger"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleDeleteClick(list.id)
-                  }}
-                >
-                  <FontAwesomeIcon icon={faTrashCan} /> Delete
-                </button>
-                <span className="task-card-chevron">›</span>
-              </div>
             </div>
           ))}
         </div>
       )}
 
       {showDeleteWarning && (
-  <ConfirmModal
-    message="This will permanently delete this class list and all students in it. Tasks that used this list will not be affected. This action cannot be undone."
-    onConfirm={handleConfirmDelete}
-    onCancel={() => {
-      setShowDeleteWarning(false)
-      setListToDelete(null)
-    }}
-    loading={deletingList}
-  />
-)}
+        <ConfirmModal
+          message="This will permanently delete this class list and all students in it. Tasks that used this list will not be affected. This action cannot be undone."
+          onConfirm={handleConfirmDelete}
+          onCancel={() => {
+            setShowDeleteWarning(false)
+            setListToDelete(null)
+          }}
+          loading={deletingList}
+        />
+      )}
     </div>
   )
 }

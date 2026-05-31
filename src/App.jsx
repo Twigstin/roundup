@@ -17,7 +17,7 @@ function App() {
       {needRefresh[0] && (
         <div style={{
           position: 'fixed',
-          bottom: '80px',
+          bottom: '100px',
           left: '50%',
           transform: 'translateX(-50%)',
           background: '#111',
