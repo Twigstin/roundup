@@ -12,12 +12,35 @@ import {
   faUser,
   faGrip
 } from '@fortawesome/free-solid-svg-icons'
+import { useOnlineStatus } from '../hooks/useOnlineStatus'
 
 function Layout() {
   const location = useLocation()
   const navigate = useNavigate()
-
   const [avatarLetter, setAvatarLetter] = useState('')
+  const isOnline = useOnlineStatus()
+const [showBanner, setShowBanner] = useState(false)
+const [wasOffline, setWasOffline] = useState(false)
+const [bannerMessage, setBannerMessage] = useState('')
+const [bannerType, setBannerType] = useState('offline')
+
+useEffect(() => {
+  if (!isOnline) {
+    setBannerMessage("You're offline. Changes may not be saved.")
+    setBannerType('offline')
+    setShowBanner(true)
+    setWasOffline(true)
+  } else if (isOnline && wasOffline) {
+    setBannerMessage("You're back online. Changes will now save normally.")
+    setBannerType('online')
+    setShowBanner(true)
+    const timer = setTimeout(() => {
+      setShowBanner(false)
+      setWasOffline(false)
+    }, 3000)
+    return () => clearTimeout(timer)
+  }
+}, [isOnline])
 
 useEffect(() => {
   supabase.auth.getSession().then(({ data: { session } }) => {
@@ -104,6 +127,11 @@ useEffect(() => {
 
         <div className="desktop-content">
           
+          <div className={`offline-banner ${bannerType === 'online' ? 'offline-banner-online' : ''} ${showBanner ? 'offline-banner-visible' : ''}`}>
+  <span className={`offline-dot ${bannerType === 'online' ? 'offline-dot-online' : ''}`} />
+  {bannerMessage}
+</div>
+          
           <main className="page-content">
             <Outlet />
           </main>
@@ -125,6 +153,11 @@ useEffect(() => {
     </button>
   </div>
 )}
+
+<div className={`offline-banner ${bannerType === 'online' ? 'offline-banner-online' : ''} ${showBanner ? 'offline-banner-visible' : ''}`}>
+  <span className={`offline-dot ${bannerType === 'online' ? 'offline-dot-online' : ''}`} />
+  {bannerMessage}
+</div>
         <main className="page-content">
           <Outlet />
         </main>

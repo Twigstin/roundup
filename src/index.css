@@ -2246,3 +2246,45 @@ button:active {
 .kebab-menu-item-danger:hover {
   background: #fdf0ef;
 }
+
+
+
+
+
+.offline-banner {
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 13px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 99;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease, padding 0.35s ease;
+}
+
+.offline-banner-visible {
+  max-height: 44px;
+  padding: 10px 24px;
+}
+
+.offline-banner-online {
+  background: #166534;
+}
+
+.offline-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #c0392b;
+  flex-shrink: 0;
+  flex-shrink: 0;
+}
+
+.offline-dot-online {
+  background: #EAF3DE;
+}
