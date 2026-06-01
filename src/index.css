@@ -1095,8 +1095,8 @@ button {
 
 .edit-title-btn {
   font-size: 13px;
-  padding: 5px 10px;
-  border-radius: 10px;
+  padding: 7px 10px;
+  border-radius: 12px;
   border: 1px solid #ddd;
   background: #fff;
   color: #888;
@@ -1110,8 +1110,8 @@ button {
 
 .task-details-export-btn {
   font-size: 13px;
-  padding: 5px 10px;
-  border-radius: 10px;
+  padding: 7px 10px;
+  border-radius: 12px;
   border: none;
   background: #000;
   color: #fff;
