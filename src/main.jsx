@@ -51,7 +51,7 @@ function Root() {
   if (session === undefined) {
     return (
       <div className="loading-container">
-        <Spinner size={24} />
+        <Spinner size={36} />
       </div>
     )
   }

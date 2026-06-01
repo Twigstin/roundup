@@ -62,7 +62,8 @@ function About() {
           </div>
         </div>
 
-        <div className="menu-section">
+        {/**
+         <div className="menu-section">
           <p className="menu-section-label">Endorsement</p>
           <div className="about-card about-endorsement">
             <div className="about-person-row">
@@ -87,6 +88,7 @@ function About() {
             </div>
           </div>
         </div>
+         */}
 
         <div className="menu-section">
           <p className="menu-section-label">Creator</p>
