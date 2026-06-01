@@ -98,7 +98,7 @@ function NewTask() {
 if (checkingLimits) {
   return (
     <div className="loading-container">
-      <Spinner size={24} />
+      <Spinner size={36} />
     </div>
   )
 }

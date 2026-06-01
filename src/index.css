@@ -999,7 +999,9 @@ button {
 .loading-container {
   display: flex;
   justify-content: center;
-  padding: 60px 0;
+  align-items: center;
+  position: fixed;
+  inset: 0;
 }
 
 .summary-card {
@@ -1085,10 +1087,16 @@ button {
   flex-wrap: wrap;
 }
 
+.task-details-header-action-btns {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
 .edit-title-btn {
-  font-size: 12px;
-  padding: 4px 10px;
-  border-radius: 6px;
+  font-size: 13px;
+  padding: 5px 10px;
+  border-radius: 10px;
   border: 1px solid #ddd;
   background: #fff;
   color: #888;
@@ -1098,6 +1106,27 @@ button {
 .edit-title-btn:hover {
   color: #333;
   border-color: #bbb;
+}
+
+.task-details-export-btn {
+  font-size: 13px;
+  padding: 5px 10px;
+  border-radius: 10px;
+  border: none;
+  background: #000;
+  color: #fff;
+  cursor: pointer;
+}
+
+.hidden {
+  display: none;
+}
+
+.task-details-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
 }
 
 .title-edit-row {

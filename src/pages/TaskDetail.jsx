@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { getTasks, getEntries, getStudents, getStudentsByClassList, createEntry, updateEntry, populateTaskEntries, updateTask, getRosterMeta, syncTaskRoster } from '../api/index'
 import Spinner from '../components/Spinner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faSearch, faPenToSquare, faDownload } from '@fortawesome/free-solid-svg-icons'
 import { supabase } from '../api/supabase'
 
 function TaskDetail() {
@@ -25,6 +25,9 @@ function TaskDetail() {
   const [newStudentReg, setNewStudentReg] = useState('')
   const [addingStudent, setAddingStudent] = useState(false)
   const [addStudentError, setAddStudentError] = useState('')
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [isExportingData, setIsExportingData] = useState(false)
+  const [isOnTotalFilter, setIsOnTotalFilter] = useState(true)
 
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
 
@@ -33,6 +36,10 @@ function TaskDetail() {
   const timer = setTimeout(() => setAddStudentError(''), 4000)
   return () => clearTimeout(timer)
 }, [addStudentError])
+
+useEffect(() => {
+  setIsOnTotalFilter(filter === 'total' && search === '')
+}, [filter, search])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -105,7 +112,7 @@ if (hasNewStudents) setShowRosterUpdate(true)
   if (loading) {
     return (
     <div className="loading-container">
-      <Spinner size={24} />
+      <Spinner size={36} />
     </div>
   )
   }
@@ -250,8 +257,10 @@ const handlePopulateFromRoster = async () => {
 
 const handleSaveTitle = async () => {
   if (!titleText.trim()) return
+  setIsEditingTitle(true)
   await updateTask(task.id, { title: titleText.trim() })
   setTask(prev => ({ ...prev, title: titleText.trim() }))
+  setIsEditingTitle(false)
   setEditingTitle(false)
 }
 
@@ -308,6 +317,48 @@ const handleAddStudentToTask = async () => {
   setAddingStudent(false)
 }
 
+const handleExport = async () => {
+  setIsExportingData(true)
+
+  try {
+    const XLSX = await import('xlsx')
+
+    const hasNotes = entries.some(e => e.note && e.note.trim() !== '')
+    const hasCollected = isPayment
+
+    const rows = entries.map((entry, index) => {
+      const row = {
+        'S/N': index + 1,
+        'Name': entry.student_name,
+        'Reg Number': entry.student_reg_number,
+        'Status': entry.status.replace(/_/g, ' ')
+      }
+
+      if (hasCollected) {
+        row['Collected'] = entry.collected ? 'collected' : 'not collected'
+      }
+
+      if (hasNotes) {
+        row['Note'] = entry.note || ''
+      }
+
+      return row
+    })
+
+    const worksheet = XLSX.utils.json_to_sheet(rows)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Students')
+
+    const fileName = `${task.title.replace(/\s+/g, '-')}-export.xlsx`
+    XLSX.writeFile(workbook, fileName)
+
+  } catch (error) {
+    console.error('Export failed:', error)
+  }
+
+  setIsExportingData(false)
+}
+
 
 
   return (
@@ -331,16 +382,32 @@ const handleAddStudentToTask = async () => {
         autoFocus
       />
       <button className="btn-primary" style={{ padding: '8px 14px', fontSize: '13px' }} onClick={handleSaveTitle}>
-        Save
+        <span>
+          {isEditingTitle
+          ? (
+            <>
+              <Spinner size={14} /> <span style={{ marginLeft: '5px' }}>Saving...</span>
+            </>
+          )
+          : (
+              <>
+                <span>Save</span>
+              </>
+            )
+          }
+        </span>
       </button>
       <button className="btn-secondary" style={{ padding: '8px 14px', fontSize: '13px' }} onClick={() => setEditingTitle(false)}>
         Cancel
       </button>
     </div>
   ) : (
+    <div className='task-details-header'>
     <div className="title-display-row">
       <h1 className="page-title bold">{task.title}</h1>
-      <span className={`type-badge type-${task.type}`}>{task.type}</span>
+      <span className={`type-badge type-${task.type}`}>{task.type}</span>      
+    </div>
+    <div className='task-details-header-action-btns'>
       <button
         className="edit-title-btn"
         onClick={() => {
@@ -348,8 +415,30 @@ const handleAddStudentToTask = async () => {
           setEditingTitle(true)
         }}
       >
-        Edit Name
+        <FontAwesomeIcon icon={faPenToSquare} /> Edit Name
       </button>
+
+      <button
+        className={`task-details-export-btn${isOnTotalFilter ? "" : " hidden"}`}
+        onClick={handleExport}
+        disabled={isExportingData}
+      >
+        <span>
+          {isExportingData
+          ? (
+            <>
+              <Spinner size={14} /> <span style={{ marginLeft: '5px' }}>Exporting...</span>
+            </>
+          )
+          : (
+              <>
+                <span><FontAwesomeIcon icon={faDownload} />{`Export All (${total})`}</span>
+              </>
+            )
+          }
+        </span>        
+      </button>
+    </div>
     </div>
   )}
 </div>
