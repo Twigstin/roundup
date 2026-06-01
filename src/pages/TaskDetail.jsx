@@ -335,7 +335,7 @@ const handleExport = async () => {
       }
 
       if (hasCollected) {
-        row['Collected'] = entry.collected ? 'collected' : 'not collected'
+        row['Collected'] = entry.collected ? 'Yes' : 'No'
       }
 
       if (hasNotes) {
