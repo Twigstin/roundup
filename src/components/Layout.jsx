@@ -21,11 +21,40 @@ function Layout() {
   const navigate = useNavigate()
   const [avatarLetter, setAvatarLetter] = useState('')
   const isOnline = useOnlineStatus()
-const [showBanner, setShowBanner] = useState(false)
-const [wasOffline, setWasOffline] = useState(false)
-const [bannerMessage, setBannerMessage] = useState('')
-const [bannerType, setBannerType] = useState('offline')
-const { showFailureBanner } = useNetwork()
+  const [showBanner, setShowBanner] = useState(false)
+  const [wasOffline, setWasOffline] = useState(false)
+  const [bannerMessage, setBannerMessage] = useState('')
+  const [bannerType, setBannerType] = useState('offline')
+  const { showFailureBanner } = useNetwork()
+  const [installPrompt, setInstallPrompt] = useState(null)
+  const [showInstallBanner, setShowInstallBanner] = useState(false)
+
+
+  useEffect(() => {
+    const isInPWA = window.matchMedia('(display-mode: standalone)').matches
+    if (isInPWA) return // already in PWA, do nothing
+
+    const handler = (e) => {
+      e.preventDefault()
+      setInstallPrompt(e)
+      setShowInstallBanner(true)
+    }
+
+    window.addEventListener('beforeinstallprompt', handler)
+    return () => window.removeEventListener('beforeinstallprompt', handler)
+  }, [])
+
+  const handleInstall = async () => {
+    if (!installPrompt) return
+    await installPrompt.prompt()
+    const { outcome } = await installPrompt.userChoice
+    setInstallPrompt(null)
+    setShowInstallBanner(false)
+  }
+
+  const handleDismissInstall = () => {
+    setShowInstallBanner(false)
+  }
 
 useEffect(() => {
   if (!isOnline) {
@@ -137,7 +166,20 @@ useEffect(() => {
 
 {showFailureBanner && (
   <div className="supabase-failure-banner">
-    ⚠ Having trouble connecting to the server. Please check your network.
+    <FontAwesomeIcon icon={faTriangleExclamation} /> Having trouble connecting to the server. Please check your network.
+  </div>
+)}
+{showInstallBanner && (
+  <div className="install-banner">
+    <span>Install Roundup for the best experience</span>
+    <div className="install-banner-actions">
+      <button className="install-banner-btn-primary" onClick={handleInstall}>
+        Install
+      </button>
+      <button className="install-banner-btn-dismiss" onClick={handleDismissInstall}>
+        Dismiss
+      </button>
+    </div>
   </div>
 )}
           
@@ -171,6 +213,19 @@ useEffect(() => {
 {showFailureBanner && (
   <div className="supabase-failure-banner">
     <FontAwesomeIcon icon={faTriangleExclamation} /> Having trouble connecting to the server. Please check your network.
+  </div>
+)}
+{showInstallBanner && (
+  <div className="install-banner">
+    <span>Install Roundup for the best experience</span>
+    <div className="install-banner-actions">
+      <button className="install-banner-btn-primary" onClick={handleInstall}>
+        Install
+      </button>
+      <button className="install-banner-btn-dismiss" onClick={handleDismissInstall}>
+        Dismiss
+      </button>
+    </div>
   </div>
 )}
         <main className="page-content">

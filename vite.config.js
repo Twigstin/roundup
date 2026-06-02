@@ -36,7 +36,11 @@ export default defineConfig({
             type: 'image/png',
             purpose: 'any maskable'
           }
-        ]
+        ],
+        handle_links: "preferred",
+        launch_handler: {
+          client_mode: ["navigate-existing", "auto"]
+        }
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,woff,woff2}'],

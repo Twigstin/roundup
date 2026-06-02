@@ -432,7 +432,7 @@ const handleExport = async () => {
           )
           : (
               <>
-                <span><FontAwesomeIcon icon={faDownload} />{`Export All (${total})`}</span>
+                <span><FontAwesomeIcon icon={faDownload} /> {`Export All (${total})`}</span>
               </>
             )
           }
