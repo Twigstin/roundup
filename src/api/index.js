@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { reportSuccess, reportFailure } from '../context/networkReporter'
 
 //const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -14,7 +15,11 @@ export const getTasks = async () => {
     .from('tasks')
     .select('*')
     .order('updated_at', { ascending: false, nullsFirst: false })
-  if (error) throw error
+  if (error) {
+    reportFailure()
+    throw error
+  }
+  reportSuccess()
   return data
 }
 
@@ -52,7 +57,11 @@ export const getDashboardStats = async () => {
   const { data, error } = await supabase
     .from('entries')
     .select('task_id, status, collected')
-  if (error) throw error
+  if (error) {
+    reportFailure()
+    throw error
+  }
+  reportSuccess()
   return data
 }
 
@@ -95,7 +104,11 @@ export const getStudents = async () => {
     .from('students')
     .select('*')
     .order('name', { ascending: true })
-  if (error) throw error
+  if (error) {
+    reportFailure()
+    throw error
+  }
+  reportSuccess()
   return data
 }
 
@@ -153,7 +166,11 @@ export const getEntries = async (taskId) => {
     .from('entries')
     .select('*')
     .eq('task_id', taskId)
-  if (error) throw error
+  if (error) {
+    reportFailure()
+    throw error
+  }
+  reportSuccess()
   return data
 }
 
@@ -249,7 +266,11 @@ export const getClassLists = async () => {
     .select('*')
     .eq('user_id', userId)
     .order('updated_at', { ascending: false, nullsFirst: false })
-  if (error) throw error
+  if (error) {
+    reportFailure()
+    throw error
+  }
+  reportSuccess()
   return data
 }
 
@@ -289,6 +310,10 @@ export const getStudentsByClassList = async (classListId) => {
     .select('*')
     .eq('class_list_id', classListId)
     .order('name', { ascending: true })
-  if (error) throw error
+  if (error) {
+    reportFailure()
+    throw error
+  }
+  reportSuccess()
   return data
 }

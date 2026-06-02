@@ -2288,3 +2288,17 @@ button:active {
 .offline-dot-online {
   background: #EAF3DE;
 }
+
+
+
+.supabase-failure-banner {
+  background: #FAEEDA;
+  color: #633806;
+  border-bottom: 1px solid #EF9F27;
+  font-size: 13px;
+  padding: 10px 24px;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 98;
+}

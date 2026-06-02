@@ -7,6 +7,7 @@ import { Auth } from './pages/Auth.jsx'
 import ResetPassword from './pages/ResetPassword.jsx'
 import { supabase } from './api/supabase.js'
 import Spinner from './components/Spinner.jsx'
+import { NetworkProvider } from './context/NetworkContext.jsx'
 
 function Root() {
   const [session, setSession] = useState(undefined)
@@ -66,10 +67,12 @@ function Root() {
   }
 
   return (
+  <NetworkProvider>
     <BrowserRouter>
       <App />
     </BrowserRouter>
-  )
+  </NetworkProvider>
+)
 }
 
 createRoot(document.getElementById('root')).render(
