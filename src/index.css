@@ -815,10 +815,12 @@ button {
   font-size: 13px;
 }
 
+/*
 .app-name {
   font-size: 14px;
   white-space: nowrap;
 }
+  */
 
 .nav-links {
   gap: 4px;
