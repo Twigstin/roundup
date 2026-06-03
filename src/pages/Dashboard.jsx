@@ -21,6 +21,8 @@ function Dashboard() {
   const [isNewUser, setIsNewUser] = useState(false)
   const [hasClassList, setHasClassList] = useState(false)
   const [openMenuId, setOpenMenuId] = useState(null)
+  const [userFirstName, setUserFirstName] = useState('')
+  const [showProfileBanner, setShowProfileBanner] = useState(false)
 
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
 
@@ -78,6 +80,12 @@ function Dashboard() {
     const fetchData = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       const userId = session?.user?.id
+      const meta = session?.user?.user_metadata || {}
+      setUserFirstName(meta.first_name || '')
+      if (!meta.first_name) {
+        const dismissed = localStorage.getItem('roundup_profile_banner_dismissed')
+        if (!dismissed) setShowProfileBanner(true)
+      }
 
       const [tasks, entriesData, lists] = await Promise.all([
   getTasks(),
@@ -132,6 +140,13 @@ setLoading(false)
     }
   }, [])
 
+  const getGreeting = () => {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 17) return 'Good afternoon'
+  return 'Good evening'
+}
+
   const getTaskStats = (taskId, taskType) => {
     const taskEntries = allEntries.filter(e => e.task_id === taskId)
     const total = taskEntries.length
@@ -175,10 +190,17 @@ setLoading(false)
   return (
     
     <div>
-      <div className="page-header">
+       <div className="page-header">
+      <div>
+        {!isNewUser && userFirstName && (
+          <p className="dashboard-greeting">
+            {getGreeting()}, {userFirstName} 👋
+          </p>
+        )}
         <h1 className="page-title bold">Your tasks</h1>
-        <Link to="/tasks/new" className="btn-primary">+ New task</Link>
       </div>
+      <Link to="/tasks/new" className="btn-primary">+ New task</Link>
+    </div>
 
       {isNewUser && (
         <div className="onboarding-banner">
@@ -228,6 +250,34 @@ setLoading(false)
           </div>
         </div>
       )}
+
+      {showProfileBanner && !isNewUser && (
+  <div className="profile-setup-banner">
+    <div className="profile-setup-banner-text">
+      <p className="profile-setup-banner-title light-bold">Set up your profile</p>
+      <p className="profile-setup-banner-sub">Add your name and level so Roundup feels more personal.</p>
+    </div>
+    <div className="profile-setup-banner-actions">
+      <button
+        className="btn-primary"
+        style={{ fontSize: '13px', padding: '8px 14px' }}
+        onClick={() => navigate('/account/profile')}
+      >
+        Set up
+      </button>
+      <button
+        className="btn-secondary"
+        style={{ fontSize: '13px', padding: '8px 14px' }}
+        onClick={() => {
+          localStorage.setItem('roundup_profile_banner_dismissed', 'true')
+          setShowProfileBanner(false)
+        }}
+      >
+        Dismiss
+      </button>
+    </div>
+  </div>
+)}
 
       {tasks.length > 0 && (
         <div className="dashboard-toolbar">

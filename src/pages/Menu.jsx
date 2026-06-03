@@ -3,10 +3,11 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Spinner from '../components/Spinner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faCircleInfo,faHeadset, faPeopleGroup, faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faCircleInfo, faHeadset, faPeopleGroup, faRightFromBracket, faUserCog } from '@fortawesome/free-solid-svg-icons'
 
 function Menu() {
   const [user, setUser] = useState(null)
+  const [profile, setProfile] = useState({ firstName: '', lastName: '', level: '' })
   const [loading, setLoading] = useState(true)
   const [loggingOut, setLoggingOut] = useState(false)
 
@@ -15,7 +16,14 @@ function Menu() {
   useEffect(() => {
     const fetchUser = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      setUser(session?.user)
+      const u = session?.user
+      setUser(u)
+      const meta = u?.user_metadata || {}
+      setProfile({
+        firstName: meta.first_name || '',
+        lastName: meta.last_name || '',
+        level: meta.level || ''
+      })
       setLoading(false)
     }
     fetchUser()
@@ -27,24 +35,52 @@ function Menu() {
     setLoggingOut(false)
   }
 
+  const displayName = profile.firstName && profile.lastName
+    ? `${profile.firstName} ${profile.lastName}`
+    : profile.firstName
+      ? `${profile.firstName}`
+      : user?.email || ''
+
+  const avatarLetter = profile.firstName
+    ? profile.firstName.charAt(0).toUpperCase()
+    : user?.email?.charAt(0).toUpperCase() || '?'
+
+  const subLine = profile.firstName
+    ? `${profile.level ? profile.level + ' · ' : ''}Free plan`
+    : 'Free plan'
+
   if (loading) return null
 
   return (
     <div className="menu-page">
-
-      {/* Account section */}
+      <h1 className="page-title bold">Menu</h1>
+      {/* Account banner — tapping goes to edit profile */}
       <div className="menu-section">
-        <div className="menu-account-card">
+        <button
+          className="menu-account-card"
+          style={{ width: '100%', textAlign: 'left', cursor: 'pointer', border: '1px solid #e5e5e5', borderRadius: '12px', background: '#fff' }}
+          onClick={() => navigate('/account/profile')}
+        >
           <div className="menu-avatar">
-            <span className="menu-avatar-letter">
-              {user?.email?.charAt(0).toUpperCase()}
-            </span>
+            <span className="menu-avatar-letter">{avatarLetter}</span>
           </div>
-          <div className="menu-account-info">
-            <p className="menu-account-email">{user?.email}</p>
-            <p className="menu-account-sub">Free plan</p>
+          <div className="menu-account-info" style={{ flex: 1 }}>
+            <p className="menu-account-email">{displayName}</p>
+            <p className="menu-account-sub">{subLine}</p>
           </div>
-        </div>
+          <span className="menu-list-chevron">
+            <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
+          </span>
+        </button>
+        {!profile.firstName && (
+          <button
+            className="menu-setup-prompt"
+            onClick={() => navigate('/account/profile')}
+          >
+            <span>👋 Complete your profile setup — add your name and level</span>
+            <span className="menu-setup-arrow">Set up →</span>
+          </button>
+        )}
       </div>
 
       {/* App section */}
@@ -52,20 +88,41 @@ function Menu() {
         <p className="menu-section-label">App</p>
         <div className="menu-list">
           <button className="menu-list-item" onClick={() => navigate('/about')}>
-            <span className="menu-list-item-label"><span style={{ marginRight: "10px" }}><FontAwesomeIcon icon={faCircleInfo} style={{ color: "#111" }} /></span>About Roundup</span>
-            <span className="menu-list-chevron"><FontAwesomeIcon icon={faChevronRight} className="back-linky" /></span>
+            <span className="menu-list-item-label">
+              <span style={{ marginRight: '10px' }}>
+                <FontAwesomeIcon icon={faCircleInfo} style={{ color: '#111' }} />
+              </span>
+              About Roundup
+            </span>
+            <span className="menu-list-chevron">
+              <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
+            </span>
           </button>
           <button className="menu-list-item" onClick={() => {
             window.open('https://wa.me/2348065571520?text=Hi%2C%20I%20need%20help%20with%20Roundup.', '_blank')
           }}>
-            <span className="menu-list-item-label"><span style={{ marginRight: "10px" }}><FontAwesomeIcon icon={faHeadset} style={{ color: "#111" }} /></span>Contact support</span>
-            <span className="menu-list-chevron"><FontAwesomeIcon icon={faChevronRight} className="back-linky" /></span>
+            <span className="menu-list-item-label">
+              <span style={{ marginRight: '10px' }}>
+                <FontAwesomeIcon icon={faHeadset} style={{ color: '#111' }} />
+              </span>
+              Contact support
+            </span>
+            <span className="menu-list-chevron">
+              <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
+            </span>
           </button>
           <button className="menu-list-item" onClick={() => {
             window.open('https://chat.whatsapp.com/JNWoXb4eibt8ZBE1Gu0IAF?mode=gi_t', '_blank')
           }}>
-            <span className="menu-list-item-label"><span style={{ marginRight: "10px" }}><FontAwesomeIcon icon={faPeopleGroup} style={{ color: "#111" }} /></span>Join Roundup Community</span>
-            <span className="menu-list-chevron"><FontAwesomeIcon icon={faChevronRight} className="back-linky" /></span>
+            <span className="menu-list-item-label">
+              <span style={{ marginRight: '10px' }}>
+                <FontAwesomeIcon icon={faPeopleGroup} style={{ color: '#111' }} />
+              </span>
+              Join Roundup Community
+            </span>
+            <span className="menu-list-chevron">
+              <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
+            </span>
           </button>
         </div>
       </div>
@@ -74,16 +131,31 @@ function Menu() {
       <div className="menu-section">
         <p className="menu-section-label">Account</p>
         <div className="menu-list">
+          <button className="menu-list-item" onClick={() => navigate('/account')}>
+            <span className="menu-list-item-label">
+              <span style={{ marginRight: '10px' }}>
+                <FontAwesomeIcon icon={faUserCog} style={{ color: '#111' }} />
+              </span>
+              Manage account
+            </span>
+            <span className="menu-list-chevron">
+              <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
+            </span>
+          </button>
           <button className="menu-list-item menu-list-item-danger" onClick={handleLogout}>
-            <span className="menu-list-item-label logout-label">{loggingOut ? (
-                  <>
-                    <Spinner size={14} /> <span style={{ marginLeft: '10px' }}>Logging out...</span>
-                  </>
-                ) : (
-                  <>
-                  <span><FontAwesomeIcon icon={faRightFromBracket} /></span><span style={{ marginLeft: '10px' }}>Log out</span>
-                  </>
-                )}</span>
+            <span className="menu-list-item-label logout-label">
+              {loggingOut ? (
+                <>
+                  <Spinner size={14} />
+                  <span style={{ marginLeft: '10px' }}>Logging out...</span>
+                </>
+              ) : (
+                <>
+                  <span><FontAwesomeIcon icon={faRightFromBracket} /></span>
+                  <span style={{ marginLeft: '10px' }}>Log out</span>
+                </>
+              )}
+            </span>
           </button>
         </div>
       </div>
