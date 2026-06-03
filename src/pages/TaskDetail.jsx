@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useLocation } from 'react-router-dom'
 import { getTasks, getEntries, getStudents, getStudentsByClassList, createEntry, updateEntry, populateTaskEntries, updateTask, getRosterMeta, syncTaskRoster } from '../api/index'
 import Spinner from '../components/Spinner'
+import { TaskDetailSkeleton } from '../components/Skeleton'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faSearch, faPenToSquare, faDownload } from '@fortawesome/free-solid-svg-icons'
 import { supabase } from '../api/supabase'
 
 function TaskDetail() {
   const { id } = useParams()
+  const { state } = useLocation()
   const [task, setTask] = useState(null)
   const [entries, setEntries] = useState([])
   const [students, setStudents] = useState([])
@@ -44,20 +46,24 @@ useEffect(() => {
   useEffect(() => {
     const fetchData = async () => {
 
-      const allTasks = await getTasks()
-  const foundTask = allTasks.find(t => t.id === id)
-  
-  const [allEntries, allStudents, meta] = await Promise.all([
-    getEntries(id),
-    foundTask?.class_list_id 
-      ? getStudentsByClassList(foundTask.class_list_id)
-      : getStudents(),
-    getRosterMeta()
-  ])
+      // Use state instantly if available, fall back to fetch
+const stateTask = state?.task ?? null
+if (stateTask) setTask(stateTask)
 
-      setTask(foundTask)
-      setEntries(allEntries)
-      setStudents(allStudents)
+// Always verify in background
+const [allTasks, allEntries, allStudents, meta] = await Promise.all([
+  getTasks(),
+  getEntries(id),
+  stateTask?.class_list_id
+    ? getStudentsByClassList(stateTask.class_list_id)
+    : getStudents(),
+  getRosterMeta()
+])
+
+const foundTask = allTasks.find(t => t.id === id)
+setTask(foundTask)
+setEntries(allEntries)
+setStudents(allStudents)
 
       if (
   foundTask &&
@@ -109,13 +115,7 @@ if (hasNewStudents) setShowRosterUpdate(true)
     }
   }, [id])
 
-  if (loading) {
-    return (
-    <div className="loading-container">
-      <Spinner size={36} />
-    </div>
-  )
-  }
+  if (loading) return <TaskDetailSkeleton />
 
   const isPayment = task?.type === 'payment'
   const isAttendance = task?.type === 'attendance'

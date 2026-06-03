@@ -4,6 +4,7 @@ import { createTask, getTasks, getStudents, getStudentsByClassList, bulkCreateEn
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
 import Spinner from '../components/Spinner'
+import { NewTaskSkeleton } from '../components/Skeleton'
 
 function NewTask() {
   const [title, setTitle] = useState('')
@@ -95,13 +96,7 @@ function NewTask() {
   navigate('/')
 }
 
-if (checkingLimits) {
-  return (
-    <div className="loading-container">
-      <Spinner size={36} />
-    </div>
-  )
-}
+if (checkingLimits) return <NewTaskSkeleton />
 
   return (
     <div>

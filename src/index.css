@@ -2350,3 +2350,22 @@ button:active {
   color: #fff;
   border-color: #888;
 }
+
+/*skeleton stylings*/
+@keyframes skeleton-shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+ 
+.skeleton-block {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    #ececec 25%,
+    #f5f5f5 50%,
+    #ececec 75%
+  );
+  background-size: 600px 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}

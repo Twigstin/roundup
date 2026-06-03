@@ -5,6 +5,7 @@ import ConfirmModal from '../components/ConfirmModal'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLayerGroup, faBook, faSearch, faClipboardList, faTrashCan, faCreditCard, faFileCircleCheck, faUserCheck, faEllipsisVertical } from '@fortawesome/free-solid-svg-icons'
 import Spinner from '../components/Spinner'
+import { DashboardSkeleton } from '../components/Skeleton'
 import { supabase } from '../api/supabase'
 
 function Dashboard() {
@@ -78,20 +79,20 @@ function Dashboard() {
       const { data: { session } } = await supabase.auth.getSession()
       const userId = session?.user?.id
 
-      const [tasks, entriesData] = await Promise.all([
-        getTasks(),
-        fetchAllEntries(userId)
-      ])
+      const [tasks, entriesData, lists] = await Promise.all([
+  getTasks(),
+  fetchAllEntries(userId),
+  getClassLists()
+])
 
-      setTasks(tasks)
-      setAllEntries(entriesData)
+setTasks(tasks)
+setAllEntries(entriesData)
 
-      const lists = await getClassLists()
-      if (tasks.length === 0) {
-        setIsNewUser(true)
-        setHasClassList(lists.length > 0)
-      }
-      setLoading(false)
+if (tasks.length === 0) {
+  setIsNewUser(true)
+  setHasClassList(lists.length > 0)
+}
+setLoading(false)
     }
     fetchData()
 
@@ -169,15 +170,10 @@ function Dashboard() {
     return matchesSearch && matchesType
   })
 
-  if (loading) {
-    return (
-      <div className="loading-container">
-        <Spinner size={36} />
-      </div>
-    )
-  }
+  if (loading) return <DashboardSkeleton />
 
   return (
+    
     <div>
       <div className="page-header">
         <h1 className="page-title bold">Your tasks</h1>
@@ -273,7 +269,7 @@ function Dashboard() {
               <div
                 key={task.id}
                 className="task-card"
-                onClick={() => navigate(`/tasks/${task.id}`)}
+                onClick={() => navigate(`/tasks/${task.id}`, { state: { task } })}
               >
                 <div className="task-card-left">
                   <div className="task-card-top">

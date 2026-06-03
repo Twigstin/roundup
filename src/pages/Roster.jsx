@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { getClassLists, createClassList, deleteClassList, updateClassList } from '../api/index'
 import ConfirmModal from '../components/ConfirmModal'
 import Spinner from '../components/Spinner'
+import { RosterSkeleton } from '../components/Skeleton'
 import { supabase } from '../api/supabase'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrashCan, faPenToSquare, faEllipsisVertical } from '@fortawesome/free-solid-svg-icons'
@@ -132,13 +133,7 @@ function Roster() {
     setDeletingList(false)
   }
 
-  if (loading) {
-    return (
-      <div className="loading-container">
-        <Spinner size={36} />
-      </div>
-    )
-  }
+  if (loading) return <RosterSkeleton />
 
   return (
     <div>

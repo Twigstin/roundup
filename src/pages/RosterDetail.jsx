@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { getStudentsByClassList, createStudent, deleteStudent, bulkCreateStudents, clearAllStudents, updateClassList } from '../api/index'
 import ConfirmModal from '../components/ConfirmModal'
 import Spinner from '../components/Spinner'
+import { RosterDetailSkeleton } from '../components/Skeleton'
 import { supabase } from '../api/supabase'
 import * as XLSX from 'xlsx'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -280,13 +281,7 @@ function RosterDetail() {
     (s.serial_number && s.serial_number.toLowerCase().includes(search.toLowerCase()))
   )
 
-  if (loading) {
-    return (
-      <div className="loading-container">
-        <Spinner size={36} />
-      </div>
-    )
-  }
+  if (loading) return <RosterDetailSkeleton />
 
   return (
     <div>
