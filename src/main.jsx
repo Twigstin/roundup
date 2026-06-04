@@ -10,10 +10,19 @@ import Spinner from './components/Spinner.jsx'
 import { NetworkProvider } from './context/NetworkContext.jsx'
 import posthog from 'posthog-js'
 
+const testEmails = [
+  'aniobi653@gmail.com',
+  'austinaniobi0@gmail.com',
+  'aniobiaustin19@gmail.com',
+  'twigstin@gmail.com',
+  'okehieugochukwu85@gmail.com'
+]
+
 posthog.init('phc_ransVbfReTXvvxUVQ7vXS2dV8Fmy5ypk8uagY3Lxakfd', {
   api_host: 'https://us.i.posthog.com',
   person_profiles: 'identified_only'
 })
+
 
 function Root() {
   const [session, setSession] = useState(undefined)
@@ -41,7 +50,8 @@ function Root() {
           setSession(currentSession)
           posthog.identify(currentSession.user.id, {
             email: currentSession.user.email,
-            name: currentSession.user.user_metadata?.display_name || null
+            name: currentSession.user.user_metadata?.display_name || null,
+            is_test: testEmails.includes(currentSession.user.email)
           })
         } else {
           supabase.auth.signOut()
