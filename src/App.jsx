@@ -11,6 +11,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react'
 import Account from './pages/Account'
 import EditProfile from './pages/EditProfile'
 import ChangePassword from './pages/ChangePassword'
+import HowToUse from './pages/HowToUse'
 
 function App() {
   const { needRefresh, updateServiceWorker } = useRegisterSW()
@@ -67,6 +68,7 @@ function App() {
         <Route path="/account" element={<Account />} />
         <Route path="/account/profile" element={<EditProfile />} />
         <Route path="/account/password" element={<ChangePassword />} />
+        <Route path="/how-to-use" element={<HowToUse />} />
       </Route>
     </Routes>
     </>

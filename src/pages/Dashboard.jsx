@@ -23,6 +23,7 @@ function Dashboard() {
   const [openMenuId, setOpenMenuId] = useState(null)
   const [userFirstName, setUserFirstName] = useState('')
   const [showProfileBanner, setShowProfileBanner] = useState(false)
+  const [showTutorialBanner, setShowTutorialBanner] = useState(false)
 
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
 
@@ -82,6 +83,8 @@ function Dashboard() {
       const userId = session?.user?.id
       const meta = session?.user?.user_metadata || {}
       setUserFirstName(meta.first_name || '')
+      const onboardingChoice = localStorage.getItem('roundup_onboarding')
+      if (!onboardingChoice) setShowTutorialBanner(true)
       if (!meta.first_name) {
         const dismissed = localStorage.getItem('roundup_profile_banner_dismissed')
         if (!dismissed) setShowProfileBanner(true)
@@ -190,6 +193,39 @@ setLoading(false)
   return (
     
     <div>
+      {showTutorialBanner && (
+      <div className="tutorial-banner">
+        <div className="tutorial-banner-text">
+          <p className="tutorial-banner-title light-bold">New to Roundup? 👋</p>
+          <p className="tutorial-banner-sub">
+            Watch a quick tutorial to get up and running in minutes. You can revisit it anytime under Menu → How to Use Roundup.
+          </p>
+        </div>
+        <div className="tutorial-banner-actions">
+          <button
+            className="btn-primary"
+            style={{ fontSize: '13px', padding: '8px 14px', whiteSpace: 'nowrap' }}
+            onClick={() => {
+              localStorage.setItem('roundup_onboarding', 'tutorial')
+              setShowTutorialBanner(false)
+              navigate('/how-to-use')
+            }}
+          >
+            Watch tutorial
+          </button>
+          <button
+            className="btn-secondary"
+            style={{ fontSize: '13px', padding: '8px 14px', whiteSpace: 'nowrap' }}
+            onClick={() => {
+              localStorage.setItem('roundup_onboarding', 'skipped')
+              setShowTutorialBanner(false)
+            }}
+          >
+            Skip for now
+          </button>
+        </div>
+      </div>
+    )}
        <div className="page-header">
       <div>
         {!isNewUser && userFirstName && (

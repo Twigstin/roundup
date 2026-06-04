@@ -30,6 +30,7 @@ function TaskDetail() {
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [isExportingData, setIsExportingData] = useState(false)
   const [isOnTotalFilter, setIsOnTotalFilter] = useState(true)
+  const [isSavingNote, setIsSavingNote] = useState(false)
 
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
 
@@ -214,6 +215,7 @@ const handleStatusUpdate = async (entryId, currentStatus) => {
 }
 
 const handleSaveNote = async (entryId) => {
+  setIsSavingNote(true)
   await updateEntry(entryId, {
     note: noteText,
     updated_at: new Date().toISOString()
@@ -225,6 +227,7 @@ const handleSaveNote = async (entryId) => {
 
   setEditingNoteId(null)
   setNoteText('')
+  setIsSavingNote(false)
 }
 
 const handleCollectedToggle = async (entryId, currentCollected) => {
@@ -715,7 +718,20 @@ const handleExport = async () => {
           style={{ padding: '6px 14px', fontSize: '13px' }}
           onClick={() => handleSaveNote(entry.id)}
         >
-          Save
+          <span>
+          {isSavingNote
+          ? (
+            <>
+              <Spinner size={14} /> <span style={{ marginLeft: '5px' }}>Saving...</span>
+            </>
+          )
+          : (
+              <>
+                <span>Save</span>
+              </>
+            )
+          }
+        </span>
         </button>
         <button
           className="btn-secondary"

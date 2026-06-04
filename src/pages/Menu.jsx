@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Spinner from '../components/Spinner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faCircleInfo, faHeadset, faPeopleGroup, faRightFromBracket, faUserCog } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faCircleInfo, faCirclePlay, faHeadset, faPeopleGroup, faRightFromBracket, faUserCog } from '@fortawesome/free-solid-svg-icons'
 
 function Menu() {
   const [user, setUser] = useState(null)
@@ -93,6 +93,17 @@ function Menu() {
                 <FontAwesomeIcon icon={faCircleInfo} style={{ color: '#111' }} />
               </span>
               About Roundup
+            </span>
+            <span className="menu-list-chevron">
+              <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
+            </span>
+          </button>
+          <button className="menu-list-item" onClick={() => navigate('/how-to-use')}>
+            <span className="menu-list-item-label">
+              <span style={{ marginRight: '10px' }}>
+                <FontAwesomeIcon icon={faCirclePlay} style={{ color: '#111' }} />
+              </span>
+              How to use Roundup
             </span>
             <span className="menu-list-chevron">
               <FontAwesomeIcon icon={faChevronRight} className="back-linky" />

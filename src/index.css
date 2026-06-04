@@ -695,6 +695,8 @@ button {
 }
 
 #btn-danger-all-clear {
+  border-radius: 15px;
+  border: none;
   display: none;
 }
 
@@ -2454,6 +2456,131 @@ button:active {
   }
 
   .profile-setup-banner-actions {
+    width: 100%;
+  }
+}
+
+
+
+
+
+
+
+
+
+.how-to-video-wrapper {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+}
+ 
+.how-to-video {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+ 
+.how-to-step-card {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+ 
+.how-to-step-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+ 
+.how-to-step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+ 
+.how-to-step-title {
+  font-size: 14px;
+  color: #111;
+}
+ 
+.how-to-step-desc {
+  font-size: 13px;
+  color: #888;
+  line-height: 1.6;
+}
+ 
+.how-to-ready-section {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+ 
+.how-to-ready-label {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 12px;
+}
+ 
+.how-to-ready-btn {
+  padding: 12px 24px;
+  font-size: 14px;
+}
+ 
+.tutorial-banner {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+ 
+.tutorial-banner-text {
+  flex: 1;
+}
+ 
+.tutorial-banner-title {
+  font-size: 14px;
+  color: #111;
+  margin-bottom: 4px;
+}
+ 
+.tutorial-banner-sub {
+  font-size: 13px;
+  color: #888;
+  line-height: 1.5;
+}
+ 
+.tutorial-banner-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+ 
+@media (max-width: 1025px) {
+  .tutorial-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+ 
+  .tutorial-banner-actions {
     width: 100%;
   }
 }

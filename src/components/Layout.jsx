@@ -75,10 +75,23 @@ useEffect(() => {
 }, [isOnline])
 
 useEffect(() => {
+  const updateAvatar = (session) => {
+    const meta = session?.user?.user_metadata || {}
+    const letter = meta.first_name
+      ? meta.first_name.charAt(0).toUpperCase()
+      : session?.user?.email?.charAt(0).toUpperCase() || ''
+    setAvatarLetter(letter)
+  }
+
   supabase.auth.getSession().then(({ data: { session } }) => {
-    const email = session?.user?.email || ''
-    setAvatarLetter(email.charAt(0).toUpperCase())
+    updateAvatar(session)
   })
+
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'USER_UPDATED') updateAvatar(session)
+  })
+
+  return () => subscription.unsubscribe()
 }, [])
 /*
 useEffect(() => {
