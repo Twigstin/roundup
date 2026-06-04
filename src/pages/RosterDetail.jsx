@@ -8,6 +8,7 @@ import { supabase } from '../api/supabase'
 import * as XLSX from 'xlsx'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faFilter, faSearch, faFileImport, faXmark, faTrashCan } from '@fortawesome/free-solid-svg-icons'
+import posthog from 'posthog-js'
 
 
 function RosterDetail() {
@@ -103,6 +104,9 @@ function RosterDetail() {
   setRegNumber('')
   setSerialNumber('')
   setError('')
+
+  posthog.capture('student_added_manually')
+
   setAddingStudent(false)
 }
 
@@ -191,6 +195,7 @@ function RosterDetail() {
       }
 
       await bulkCreateStudents(newStudents, id)
+      posthog.capture('roster_imported', { method: 'excel', student_count: newStudents.length })
       setImporting(false)
       setError('')
     }
@@ -223,6 +228,7 @@ function RosterDetail() {
       }
 
       await bulkCreateStudents(newStudents, id)
+      posthog.capture('roster_imported', { method: 'csv', student_count: newStudents.length })
       setImporting(false)
       setError('')
     }

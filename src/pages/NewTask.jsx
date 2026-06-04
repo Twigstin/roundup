@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
 import Spinner from '../components/Spinner'
 import { NewTaskSkeleton } from '../components/Skeleton'
+import posthog from 'posthog-js'
 
 function NewTask() {
   const [title, setTitle] = useState('')
@@ -72,6 +73,7 @@ function NewTask() {
   }
 
   await createTask(newTask)
+  posthog.capture('task_created', { type: newTask.type })
 
   const students = await getStudentsByClassList(selectedClassListId)
 

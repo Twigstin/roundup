@@ -6,6 +6,7 @@ import { TaskDetailSkeleton } from '../components/Skeleton'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faSearch, faPenToSquare, faDownload } from '@fortawesome/free-solid-svg-icons'
 import { supabase } from '../api/supabase'
+import posthog from 'posthog-js'
 
 function TaskDetail() {
   const { id } = useParams()
@@ -205,6 +206,7 @@ const handleStatusUpdate = async (entryId, currentStatus) => {
       status: newStatus,
       updated_at: new Date().toISOString()
     })
+    posthog.capture('status_updated', { new_status: newStatus, task_type: task.type })
   } catch (error) {
     // Roll back state if database call fails
     setEntries(prev =>
@@ -243,6 +245,7 @@ const handleCollectedToggle = async (entryId, currentCollected) => {
       collected: newCollected,
       updated_at: new Date().toISOString()
     })
+    posthog.capture('collected_toggled', { new_value: newCollected })
   } catch (error) {
     // Roll back on failure
     setEntries(prev =>
@@ -358,6 +361,8 @@ const handleExport = async () => {
   } catch (error) {
     console.error('Export failed:', error)
   }
+
+  posthog.capture('excel_exported', { task_type: task.type, student_count: entries.length })
 
   setIsExportingData(false)
 }

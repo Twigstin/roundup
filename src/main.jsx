@@ -8,6 +8,12 @@ import ResetPassword from './pages/ResetPassword.jsx'
 import { supabase } from './api/supabase.js'
 import Spinner from './components/Spinner.jsx'
 import { NetworkProvider } from './context/NetworkContext.jsx'
+import posthog from 'posthog-js'
+
+posthog.init('phc_ransVbfReTXvvxUVQ7vXS2dV8Fmy5ypk8uagY3Lxakfd', {
+  api_host: 'https://us.i.posthog.com',
+  person_profiles: 'identified_only'
+})
 
 function Root() {
   const [session, setSession] = useState(undefined)
@@ -33,15 +39,19 @@ function Root() {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         if (currentSession?.user?.email_confirmed_at) {
           setSession(currentSession)
+          posthog.identify(currentSession.user.id, {
+            email: currentSession.user.email,
+            name: currentSession.user.user_metadata?.display_name || null
+          })
         } else {
-        //Email not confirmed yet — sign them back out silently
           supabase.auth.signOut()
         }
-}
+      }
 
       if (event === 'SIGNED_OUT') {
         setSession(null)
         setIsRecovery(false)
+        posthog.reset()
         window.history.replaceState({}, '', '/')
       }
     })
