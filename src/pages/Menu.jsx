@@ -44,10 +44,12 @@ function Menu() {
   const avatarLetter = profile.firstName
     ? profile.firstName.charAt(0).toUpperCase()
     : user?.email?.charAt(0).toUpperCase() || '?'
-
+/*
   const subLine = profile.firstName
     ? `${profile.level ? profile.level + ' · ' : ''}Free plan`
     : 'Free plan'
+
+*/
 
   if (loading) return null
 
@@ -66,7 +68,19 @@ function Menu() {
           </div>
           <div className="menu-account-info" style={{ flex: 1 }}>
             <p className="menu-account-email">{displayName}</p>
-            <p className="menu-account-sub">{subLine}</p>
+            {profile.firstName && <p className="menu-account-sub">{user.email}</p>}
+            <p className="menu-account-sub">
+  {profile.firstName
+    ? [profile.level, 'Free plan']
+        .filter(Boolean)
+        .map((part, i, arr) => (
+          <span key={i}>
+            {part}{i < arr.length - 1 && <span style={{ fontWeight: '700', margin: '0 4px' }}>·</span>}
+          </span>
+        ))
+    : 'Free plan'
+  }
+</p>
           </div>
           <span className="menu-list-chevron">
             <FontAwesomeIcon icon={faChevronRight} className="back-linky" />

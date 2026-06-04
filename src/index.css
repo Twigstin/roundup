@@ -1737,8 +1737,8 @@ button:active {
 }
 
 .menu-avatar {
-  width: 44px;
-  height: 44px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   background: #111;
   display: flex;
@@ -1749,7 +1749,7 @@ button:active {
 
 .menu-avatar-letter {
   color: #fff;
-  font-size: 18px;
+  font-size: 23px;
   font-family: 'montserrat-bold', sans-serif;
 }
 
