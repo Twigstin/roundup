@@ -70,17 +70,13 @@ function Roster() {
           })
         }
         if (payload.eventType === 'UPDATE') {
-          const { count } = supabase
-            .from('students')
-            .select('*', { count: 'exact', head: true })
-            .eq('class_list_id', payload.new.id)
-          setClassLists(prev => sortByUpdated(
-            prev.map(l => l.id === payload.new.id
-              ? { ...payload.new, studentCount: count || 0 }
-              : l
-            )
-          ))
-        }
+  setClassLists(prev => sortByUpdated(
+    prev.map(l => l.id === payload.new.id
+      ? { ...payload.new, studentCount: l.studentCount }
+      : l
+    )
+  ))
+}
         if (payload.eventType === 'DELETE') {
           setClassLists(prev => prev.filter(l => l.id !== payload.old.id))
         }
