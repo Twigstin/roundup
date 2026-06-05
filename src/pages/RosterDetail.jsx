@@ -134,17 +134,15 @@ function RosterDetail() {
 
   const extractStudents = (headers, rows, getCols) => {
     const nameIndex = headers.findIndex(h =>
-      ['name', 'names', 'fullname', 'studentname', 'full name',
-       'student name', "candidate's name", 'candidates name', 'candidatename'].includes(h)
+      ['name', 'names', 'fullname', 'studentname', 'candidatesname', 'candidatename'].includes(h)
     )
+
     const regIndex = headers.findIndex(h =>
-      ['regnumber', 'reg number', 'reg_number', 'matric', 'matricnumber',
-       'matric number', 'matric_number', 'registrationnumber', 'registration number',
-       'registrationno', 'registration no'].includes(h)
+      ['regno', 'regnumber', 'matric', 'matricnumber', 'registrationnumber', 'registrationno'].includes(h)
     )
+
     const serialIndex = headers.findIndex(h =>
-      ['s/n', 'sn', 'serial', 'serialnumber', 'serial number',
-       'serial_number', 'no', 'number', 's.n'].includes(h)
+      ['sn', 'serial', 'serialnumber', 'no', 'number'].includes(h)
     )
 
     if (nameIndex === -1 || regIndex === -1) return null
@@ -183,7 +181,7 @@ function RosterDetail() {
       }
 
       const headers = rows[0].map(h =>
-        h?.toString().toLowerCase().trim().replace(/\s+/g, ' ')
+        h?.toString().toLowerCase().replace(/[^a-z]/g, '').trim()
       )
 
       const newStudents = extractStudents(headers, rows.slice(1), (row) => row)
@@ -211,8 +209,8 @@ function RosterDetail() {
     reader.onload = async (event) => {
       const text = event.target.result
       const lines = text.trim().split('\n')
-      const headers = lines[0].toLowerCase().split(',').map(h =>
-        h.trim().replace(/\s+/g, ' ')
+      const headers = lines[0].split(',').map(h =>
+        h.toLowerCase().replace(/[^a-z]/g, '').trim()
       )
 
       const newStudents = extractStudents(
