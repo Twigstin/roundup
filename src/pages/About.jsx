@@ -12,13 +12,17 @@ function About() {
       name: 'Nestor Anyanwu',
       role: 'Director of ICT NACOS FUTO',
       avatarUrl: "https://aqndgxltxpgovpedspzf.supabase.co/storage/v1/object/public/roundup-images/nestor-avatar.jpg"
-    },
+    }
+  ]
+
+  /**
+   ,
     {
       name: 'Oruche Chukwudumebi Godfrey',
       role: 'Director of ICT ASICTS FUTO',
       avatarUrl: "https://aqndgxltxpgovpedspzf.supabase.co/storage/v1/object/public/roundup-images/dumebi-avatar.JPG"
     }
-  ]
+   */
 
   return (
     <div>
