@@ -1737,8 +1737,8 @@ button:active {
 }
 
 .menu-avatar {
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   background: #111;
   display: flex;
@@ -1749,7 +1749,7 @@ button:active {
 
 .menu-avatar-letter {
   color: #fff;
-  font-size: 23px;
+  font-size: 20px;
   font-family: 'montserrat-bold', sans-serif;
 }
 
@@ -1760,7 +1760,7 @@ button:active {
 }
 
 .menu-account-email {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   color: #111;
 }
@@ -1801,8 +1801,13 @@ button:active {
 }
 
 .menu-list-item-label {
-  font-size: 14px;
+  font-size: 15px;
   color: #111;
+}
+
+.user-email {
+  font-size: 15px;
+  color: #bbb;
 }
 
 .logout-label {
@@ -2392,7 +2397,7 @@ button:active {
   border: 1px dashed #ccc;
   border-radius: 10px;
   padding: 12px 14px;
-  font-size: 13px;
+  font-size: 14px;
   color: #555;
   cursor: pointer;
   text-align: left;
@@ -2582,5 +2587,11 @@ button:active {
  
   .tutorial-banner-actions {
     width: 100%;
+  }
+}
+
+@media (max-width: 350px) {
+  .email-div {
+    display: none;
   }
 }

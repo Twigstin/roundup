@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Spinner from '../components/Spinner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faCircleInfo, faCirclePlay, faHeadset, faPeopleGroup, faRightFromBracket, faUserCog } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faEnvelope, faCircleInfo, faCirclePlay, faHeadset, faPeopleGroup, faRightFromBracket, faUserCog } from '@fortawesome/free-solid-svg-icons'
 
 function Menu() {
   const [user, setUser] = useState(null)
@@ -68,7 +68,6 @@ function Menu() {
           </div>
           <div className="menu-account-info" style={{ flex: 1 }}>
             <p className="menu-account-email">{displayName}</p>
-            {profile.firstName && <p className="menu-account-sub">{user.email}</p>}
             <p className="menu-account-sub">
   {profile.firstName
     ? [profile.level, 'Free plan']
@@ -167,6 +166,17 @@ function Menu() {
               <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
             </span>
           </button>
+          <div className="menu-list-item email-div">
+            <span className="menu-list-item-label">
+              <span style={{ marginRight: '10px' }}>
+                <FontAwesomeIcon icon={faEnvelope} style={{ color: '#111' }} />
+              </span>
+              Email
+            </span>
+            <span className="user-email">
+              {user.email}
+            </span>
+          </div>
           <button className="menu-list-item menu-list-item-danger" onClick={handleLogout}>
             <span className="menu-list-item-label logout-label">
               {loggingOut ? (

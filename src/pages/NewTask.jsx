@@ -95,7 +95,13 @@ function NewTask() {
     await bulkCreateEntries(newEntries)
   }
 
-  navigate('/')
+  if (students.length === 0) {
+    navigate(`/roster/${selectedClassListId}`, {
+      state: { showEmptyPrompt: true }
+    })
+  } else {
+    navigate('/')
+  }
 }
 
 if (checkingLimits) return <NewTaskSkeleton />

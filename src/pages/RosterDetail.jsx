@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useLocation } from 'react-router-dom'
 import { getStudentsByClassList, createStudent, deleteStudent, bulkCreateStudents, clearAllStudents, updateClassList } from '../api/index'
 import ConfirmModal from '../components/ConfirmModal'
 import Spinner from '../components/Spinner'
@@ -13,6 +13,8 @@ import posthog from 'posthog-js'
 
 function RosterDetail() {
   const { id } = useParams()
+  const { state } = useLocation()
+  const [showUploadPrompt, setShowUploadPrompt] = useState(state?.showEmptyPrompt || false)
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
   const [name, setName] = useState('')
@@ -289,6 +291,35 @@ function RosterDetail() {
 
   return (
     <div>
+      {showUploadPrompt && (
+  <div className="roster-update-banner">
+    <div className="roster-update-text">
+      <p className="roster-update-title">Your class list is empty</p>
+      <p className="roster-update-subtitle">
+        Upload your student list now so Roundup can start tracking them in your task.
+      </p>
+    </div>
+    <div className="roster-update-actions">
+      <button
+        className="btn-primary"
+        style={{ fontSize: '13px', padding: '8px 14px' }}
+        onClick={() => {
+          setShowUploadPrompt(false)
+          fileInputRef.current.click()
+        }}
+      >
+        Import list
+      </button>
+      <button
+        className="btn-secondary"
+        style={{ fontSize: '13px', padding: '8px 14px' }}
+        onClick={() => setShowUploadPrompt(false)}
+      >
+        Dismiss
+      </button>
+    </div>
+  </div>
+)}
       <div className="page-header">
         <Link to="/roster" className="back-link"><FontAwesomeIcon icon={faChevronLeft}/> Class lists</Link>
         <span className="roster-count">{students.length} student{students.length !== 1 ? 's' : ''}</span>

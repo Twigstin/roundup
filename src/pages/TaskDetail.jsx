@@ -32,6 +32,7 @@ function TaskDetail() {
   const [isExportingData, setIsExportingData] = useState(false)
   const [isOnTotalFilter, setIsOnTotalFilter] = useState(true)
   const [isSavingNote, setIsSavingNote] = useState(false)
+  const [isLoadingInDetectedStudents, setIsLoadingInDetectedStudents] = useState(false)
 
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
 
@@ -78,7 +79,7 @@ setStudents(allStudents)
 ) {
   const existingRegNumbers = allEntries.map(e => e.student_reg_number)
 const hasNewStudents = allStudents.some(s => !existingRegNumbers.includes(s.reg_number))
-if (hasNewStudents) setShowRosterUpdate(true)
+if (hasNewStudents && allEntries.length > 0) setShowRosterUpdate(true)
 }
 
       setLoading(false)
@@ -271,11 +272,11 @@ const handleSaveTitle = async () => {
 }
 
 const handleRosterSync = async () => {
-  setShowRosterUpdate(false)
-  setPopulating(true)
+  setIsLoadingInDetectedStudents(true)
   await populateTaskEntries(task.id, task.type, students)
   setTask(prev => ({ ...prev, roster_synced_at: new Date().toISOString() }))
-  setPopulating(false)
+  setIsLoadingInDetectedStudents(false)
+  setShowRosterUpdate(false)
 }
 
 
@@ -522,19 +523,19 @@ const handleExport = async () => {
     <div className="roster-update-text">
       <p className="roster-update-title">Class list updated</p>
       <p className="roster-update-subtitle">
-        New students were added to your roster since this task was created.
+        New students were added to your classlist since this task was created.
         Would you like to load them into this task?
       </p>
     </div>
     <div className="roster-update-actions">
       <button
-        className="btn-primary"
-        style={{ fontSize: '13px', padding: '8px 14px' }}
-        onClick={handleRosterSync}
-        disabled={populating}
-      >
-        {populating ? 'Loading...' : 'Load new students'}
-      </button>
+  className="btn-primary"
+  style={{ fontSize: '13px', padding: '8px 14px', display: 'flex', alignItems: 'center', gap: '8px' }}
+  onClick={handleRosterSync}
+  disabled={isLoadingInDetectedStudents}
+>
+  {isLoadingInDetectedStudents ? <><Spinner size={14} />Loading...</> : 'Load new students'}
+</button>
       <button
         className="btn-secondary"
         style={{ fontSize: '13px', padding: '8px 14px' }}
@@ -632,21 +633,24 @@ const handleExport = async () => {
     {enrichedEntries.length === 0 ? (
       students.length === 0 ? (
         <>
-          <p className="empty-title">No class list added yet</p>
+          <p className="empty-title">Your class list is empty</p>
           <p className="empty-subtitle">
-            You need to add your class list to the roster before tracking can begin.
-            Once added, your full list will appear here automatically.
+            Upload your student list to start tracking. Tap the button below to go there now — it only takes a few seconds.
           </p>
-          <Link to="/roster" className="btn-primary" style={{ display: 'inline-block', marginTop: '16px' }}>
-            Go to roster →
-          </Link>
+          <Link 
+  to={`/roster/${task.class_list_id}`}
+  state={{ showEmptyPrompt: true }}
+  className="btn-primary" 
+  style={{ display: 'inline-block', marginTop: '16px' }}
+>
+  Upload class list →
+</Link>
         </>
       ) : (
         <>
           <p className="empty-title">Your class list isn't loaded into this task yet</p>
           <p className="empty-subtitle">
-            You added your roster after creating this task.
-            Click below to load your full class list into this task instantly.
+            Your students are ready but haven't been pulled into this task. Load them in now to start tracking.
           </p>
           <button
             className="btn-primary"
@@ -654,7 +658,7 @@ const handleExport = async () => {
             onClick={handlePopulateFromRoster}
             disabled={populating}
           >
-            {populating ? 'Loading...' : 'Load class list into this task →'}
+            {populating ? <><Spinner size={14} /><span style={{ marginLeft: "10px" }}>Loading...</span></> : 'Load class list into this task →'}
           </button>
         </>
       )
