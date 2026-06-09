@@ -33,6 +33,13 @@ function TaskDetail() {
   const [isOnTotalFilter, setIsOnTotalFilter] = useState(true)
   const [isSavingNote, setIsSavingNote] = useState(false)
   const [isLoadingInDetectedStudents, setIsLoadingInDetectedStudents] = useState(false)
+  const [showExportModal, setShowExportModal] = useState(false)
+  const [exportTitle, setExportTitle] = useState('')
+  const [exportDate, setExportDate] = useState(true)
+  const [exportSummary, setExportSummary] = useState(true)
+  const [exportBasic, setExportBasic] = useState(true)
+  const [regNumberFixes, setRegNumberFixes] = useState({})
+  const [exportBlockedMsg, setExportBlockedMsg] = useState('')
 
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
 
@@ -324,35 +331,199 @@ const handleAddStudentToTask = async () => {
   setAddingStudent(false)
 }
 
+
+const isValidRegNumber = (reg) => {
+  if (!reg || reg.toString().trim() === '' || reg === '-') return false
+  const val = reg.toString().trim()
+  const futoPattern = /^\d{10,12}$/
+  const otherUniPattern = /^(?:PG\/)?[A-Z0-9]{2,4}[\/\-\.]?[A-Z0-9]{2,4}[\/\-\.]?[A-Z0-9]{2,4}[\/\-\.]?\d{3,6}$/i
+  return futoPattern.test(val) || otherUniPattern.test(val)
+}
+
+const openExportModal = () => {
+  if (filteredEntries.length === 0) {
+    setExportBlockedMsg('⚠️ Nothing to export — your current filter has no students.')
+    setTimeout(() => setExportBlockedMsg(''), 3000)
+    return
+  }
+
+  setExportTitle(task.title)
+  setExportDate(false)
+  setExportSummary(false)
+  setExportBasic(true)
+  const fixes = {}
+  filteredEntries.forEach(entry => {
+    if (!isValidRegNumber(entry.student_reg_number)) {
+      fixes[entry.id] = entry.student_reg_number || ''
+    }
+  })
+  setRegNumberFixes(fixes)
+  setShowExportModal(true)
+}
+
 const handleExport = async () => {
+  setShowExportModal(false)
   setIsExportingData(true)
 
   try {
-    const XLSX = await import('xlsx')
+    const XLSX = await import('xlsx-js-style')
 
-    const hasNotes = entries.some(e => e.note && e.note.trim() !== '')
-    const hasCollected = isPayment
+    const hasNotes = !exportBasic && filteredEntries.some(e => e.note && e.note.trim() !== '')
+    const hasCollected = !exportBasic && isPayment
+    const totalCols = exportBasic ? 3 : (3 + 1 + (hasCollected ? 1 : 0) + (hasNotes ? 1 : 0))
 
-    const rows = entries.map((entry, index) => {
-      const row = {
-        'S/N': index + 1,
-        'Name': entry.student_name,
-        'Reg Number': entry.student_reg_number,
-        'Status': entry.status.replace(/_/g, ' ')
+    // Build header rows as aoa
+    const headerRows = []
+
+    if (exportTitle.trim()) headerRows.push([`${exportTitle.trim()}`])
+if (exportDate) {
+  const dateStr = new Date().toLocaleDateString('en-GB', {
+    day: '2-digit', month: 'long', year: 'numeric'
+  })
+  headerRows.push([`Date: ${dateStr}`])
+}
+if (exportSummary) {
+  if (isPayment) {
+    headerRows.push([`Total: ${filteredEntries.length} | Paid: ${filteredEntries.filter(e => e.status === 'paid').length} | Part paid: ${filteredEntries.filter(e => e.status === 'part_paid').length} | Not paid: ${filteredEntries.filter(e => e.status === 'not_paid').length}`])
+  } else if (isAttendance) {
+    headerRows.push([`Total: ${filteredEntries.length} | Present: ${filteredEntries.filter(e => e.status === 'present').length} | Absent: ${filteredEntries.filter(e => e.status === 'absent').length}`])
+  } else {
+    headerRows.push([`Total: ${filteredEntries.length} | Submitted: ${filteredEntries.filter(e => e.status === 'submitted').length} | Pending: ${filteredEntries.filter(e => e.status === 'pending').length}`])
+  }
+}
+
+    // Column headers row
+    const colHeaders = ['S/N', 'Name', 'Reg Number']
+    if (!exportBasic) {
+      colHeaders.push('Status')
+      if (hasCollected) colHeaders.push('Collected')
+      if (hasNotes) colHeaders.push('Note')
+    }
+
+    // Data rows — use fixed reg numbers where provided
+    const dataRows = filteredEntries.map((entry, index) => {
+      const regNumber = regNumberFixes.hasOwnProperty(entry.id)
+        ? regNumberFixes[entry.id]
+        : entry.student_reg_number
+      const isInvalid = !isValidRegNumber(regNumber)
+      const row = [
+        index + 1,
+        entry.student_name,
+        regNumber || ''
+      ]
+      if (!exportBasic) {
+        row.push(entry.status.replace(/_/g, ' '))
+        if (hasCollected) row.push(entry.collected ? 'Yes' : 'No')
+        if (hasNotes) row.push(entry.note || '')
       }
-
-      if (hasCollected) {
-        row['Collected'] = entry.collected ? 'Yes' : 'No'
-      }
-
-      if (hasNotes) {
-        row['Note'] = entry.note || ''
-      }
-
-      return row
+      return { row, isInvalid }
     })
 
-    const worksheet = XLSX.utils.json_to_sheet(rows)
+    // Build full aoa — header rows first, then col headers, then data
+    const titleRowIndex = exportTitle.trim() ? 0 : -1
+const colHeaderRowIndex = headerRows.length + (headerRows.length > 0 ? 1 : 0)
+const dataStartRowIndex = colHeaderRowIndex + 1
+
+    const allRows = [
+  ...headerRows,
+  ...(headerRows.length > 0 ? [['']] : []),
+  colHeaders,
+  ...dataRows.map(d => d.row)
+]
+
+    const worksheet = XLSX.utils.aoa_to_sheet(allRows)
+
+    // Merge title row across all columns if title exists
+    /*
+    if (exportTitle.trim()) {
+  worksheet['!merges'] = worksheet['!merges'] || []
+  worksheet['!merges'].push({
+    s: { r: titleRowIndex, c: 0 },
+    e: { r: titleRowIndex, c: totalCols - 1 }
+  })
+  const titleCell = worksheet['A1']
+  if (titleCell) {
+    titleCell.s = {
+      font: { bold: true, sz: 18 },
+      alignment: { horizontal: 'center', vertical: 'center' }
+    }
+  }
+}
+*/
+
+    // Style header info rows (date + summary lines) — bold, sz 13, merged
+
+// Style ALL header rows (title, date, summary) in one loop
+for (let r = 0; r < headerRows.length; r++) {
+  const cellRef = XLSX.utils.encode_cell({ r, c: 0 })
+  if (worksheet[cellRef]) {
+    worksheet[cellRef].s = {
+      font: { bold: true, sz: r === 0 && exportTitle.trim() ? 18 : 13 },
+      alignment: {
+        horizontal: r === 0 && exportTitle.trim() ? 'center' : 'left',
+        vertical: 'center'
+      }
+    }
+  }
+  if (!worksheet['!merges']) worksheet['!merges'] = []
+  worksheet['!merges'].push({
+    s: { r, c: 0 },
+    e: { r, c: totalCols - 1 }
+  })
+}
+
+    // Merge other header rows (date, summary) across all columns
+    
+    
+   
+
+    // Style column header row
+    for (let c = 0; c < totalCols; c++) {
+      const cellRef = XLSX.utils.encode_cell({ r: colHeaderRowIndex, c })
+      if (!worksheet[cellRef]) worksheet[cellRef] = { v: colHeaders[c], t: 's' }
+      worksheet[cellRef].s = {
+        font: { bold: true, color: { rgb: 'FFFFFF' } },
+        fill: { fgColor: { rgb: '111111' } },
+        border: {
+          top: { style: 'thin', color: { rgb: '000000' } },
+          bottom: { style: 'thin', color: { rgb: '000000' } },
+          left: { style: 'thin', color: { rgb: '000000' } },
+          right: { style: 'thin', color: { rgb: '000000' } }
+        },
+        alignment: { horizontal: 'center', vertical: 'center' }
+      }
+    }
+
+    // Style data rows
+    dataRows.forEach((dataRow, rowOffset) => {
+      const r = dataStartRowIndex + rowOffset
+      for (let c = 0; c < totalCols; c++) {
+        const cellRef = XLSX.utils.encode_cell({ r, c })
+        if (!worksheet[cellRef]) worksheet[cellRef] = { v: '', t: 's' }
+        //const isRegCol = c === 2
+        worksheet[cellRef].s = {
+          fill: { patternType: 'solid', fgColor: { rgb: 'FFFFFF' } },
+          border: {
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } }
+          },
+          alignment: { horizontal: c === 0 ? 'center' : 'left', vertical: 'center' }
+        }
+      }
+    })
+
+    // Column widths
+    worksheet['!cols'] = [
+      { wch: 5 },
+      { wch: 35 },
+      { wch: 20 },
+      ...(!exportBasic ? [{ wch: 14 }] : []),
+      ...(hasCollected ? [{ wch: 12 }] : []),
+      ...(hasNotes ? [{ wch: 30 }] : [])
+    ]
+
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Students')
 
@@ -363,8 +534,7 @@ const handleExport = async () => {
     console.error('Export failed:', error)
   }
 
-  posthog.capture('excel_exported', { task_type: task.type, student_count: entries.length })
-
+  posthog.capture('excel_exported', { task_type: task.type, student_count: filteredEntries.length })
   setIsExportingData(false)
 }
 
@@ -416,6 +586,22 @@ const handleExport = async () => {
       <h1 className="page-title bold">{task.title}</h1>
       <span className={`type-badge type-${task.type}`}>{task.type}</span>      
     </div>
+    {exportBlockedMsg && (
+  <p style={{ 
+    fontSize: '13px', 
+  color: '#b45309', 
+  backgroundColor: '#fef3c7', 
+  borderColor: '#f59e0b', // Optional: slightly darker border
+  borderWidth: '1px',
+  borderStyle: 'solid',
+  padding: '8px 12px',
+  borderRadius: '6px',
+  textAlign: 'center', 
+  marginBottom: '8px'
+    }}>
+      {exportBlockedMsg}
+  </p>
+)}
     <div className='task-details-header-action-btns'>
       <button
         className="edit-title-btn"
@@ -428,8 +614,8 @@ const handleExport = async () => {
       </button>
 
       <button
-        className={`task-details-export-btn${isOnTotalFilter ? "" : " hidden"}`}
-        onClick={handleExport}
+        className="task-details-export-btn"
+        onClick={openExportModal}
         disabled={isExportingData}
       >
         <span>
@@ -441,7 +627,7 @@ const handleExport = async () => {
           )
           : (
               <>
-                <span><FontAwesomeIcon icon={faDownload} /> {`Export All (${total})`}</span>
+                <span><FontAwesomeIcon icon={faDownload} /> {filter === 'total' ? `Export All (${total})` : `Export ${filter.replace('_', ' ')} (${filteredEntries.length})`}</span>
               </>
             )
           }
@@ -771,6 +957,126 @@ const handleExport = async () => {
   )}
 
 </div>
+
+
+{showExportModal && (
+  <div className="modal-overlay" onClick={() => setShowExportModal(false)}>
+    <div className="modal-card" id='modal-card' onClick={(e) => e.stopPropagation()}>
+  
+  
+  <div style={{ overflowY: 'auto', flex: 1, padding: '24px 24px 0 24px' }}>
+    <h2 className="page-title bold" style={{ fontSize: '16px', marginBottom: '16px' }}>Export settings</h2>
+
+    <div className="form-field">
+      <label className="form-label">List title</label>
+      <input
+        className="form-input"
+        type="text"
+        value={exportTitle}
+        onChange={(e) => setExportTitle(e.target.value)}
+        placeholder="e.g. CSC 301 Assignment 3"
+      />
+      <span className="form-hint">Appears as a header at the top of the exported file</span>
+    </div>
+
+    <div className="form-field">
+      <label className="form-label">Export type</label>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '6px' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
+          <input type="radio" name="exportType" checked={exportBasic} onChange={() => setExportBasic(true)} />
+          <div>
+            <p style={{ margin: 0, fontWeight: '500' }}>Basic</p>
+            <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>S/N, Name, Reg Number only</p>
+          </div>
+        </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
+          <input type="radio" name="exportType" checked={!exportBasic} onChange={() => setExportBasic(false)} />
+          <div>
+            <p style={{ margin: 0, fontWeight: '500' }}>Full</p>
+            <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>Includes status, collected and notes</p>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <hr style={{ height: '1px', border: 'none', backgroundColor: '#e5e5e5', marginTop: '10px', marginBottom: '10px' }}/>
+
+    <div className="form-field">
+      <label className="form-label">Additional header info</label>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '6px' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
+          <input type="checkbox" checked={exportDate} onChange={(e) => setExportDate(e.target.checked)} />
+          Date
+        </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
+          <input type="checkbox" checked={exportSummary} onChange={(e) => setExportSummary(e.target.checked)} />
+          Summary stats
+        </label>
+      </div>
+    </div>
+
+    {Object.keys(regNumberFixes).length > 0 && (
+      <div className="form-field">
+        <hr style={{ height: '1px', border: 'none', backgroundColor: '#e5e5e5', marginTop: '10px', marginBottom: '10px' }}/>
+        <label className="form-label" style={{ color: '#b45309' }}>
+          ⚠️ {Object.keys(regNumberFixes).length} student{Object.keys(regNumberFixes).length > 1 ? 's have' : ' has'} a missing or invalid reg number
+        </label>
+        <p style={{ fontSize: '12px', color: '#888', marginBottom: '10px' }}>
+          Fix them below or export anyway.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {filteredEntries
+            .filter(entry => regNumberFixes.hasOwnProperty(entry.id))
+            .map(entry => (
+              <div key={entry.id} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '13px', flex: 1, color: '#333', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {entry.student_name}
+                </span>
+                <input
+                  className="form-input"
+                  type="text"
+                  style={{ flex: 1, fontSize: '13px', padding: '6px 10px' }}
+                  placeholder="Enter reg number"
+                  value={regNumberFixes[entry.id]}
+                  onChange={(e) => setRegNumberFixes(prev => ({ ...prev, [entry.id]: e.target.value }))}
+                />
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    )}
+
+    <div style={{ height: '16px' }} />
+  </div>
+
+  {/* Sticky buttons — always visible at bottom */}
+  <div style={{
+    padding: '16px 24px',
+    borderTop: '1px solid #e5e5e5',
+    display: 'flex',
+    gap: '8px',
+    background: '#fff'
+  }}>
+    <button
+      className="btn-primary"
+      style={{ flex: 1, padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+      onClick={handleExport}
+    >
+      <FontAwesomeIcon icon={faDownload} /> Export
+    </button>
+    <button
+      className="btn-secondary"
+      style={{ flex: 1, padding: '10px' }}
+      onClick={() => setShowExportModal(false)}
+    >
+      Cancel
+    </button>
+  </div>
+
+</div>
+  </div>
+)}
   </div>
 )
 }
