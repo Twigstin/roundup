@@ -97,6 +97,7 @@ function About() {
             </div>
           </div>
         </div>
+        
          */}
 
         <div className="menu-section">
