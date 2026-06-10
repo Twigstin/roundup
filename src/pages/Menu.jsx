@@ -58,7 +58,7 @@ function Menu() {
       <h1 className="page-title bold">Menu</h1>
       {/* Account banner — tapping goes to edit profile */}
       <div className="menu-section">
-        <button
+        <div
           className="menu-account-card"
           style={{ width: '100%', textAlign: 'left', cursor: 'pointer', border: '1px solid #e5e5e5', borderRadius: '12px', background: '#fff' }}
           onClick={() => navigate('/account/profile')}
@@ -84,7 +84,7 @@ function Menu() {
           <span className="menu-list-chevron">
             <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
           </span>
-        </button>
+        </div>
         {!profile.firstName && (
           <button
             className="menu-setup-prompt"
@@ -100,7 +100,7 @@ function Menu() {
       <div className="menu-section">
         <p className="menu-section-label">App</p>
         <div className="menu-list">
-          <button className="menu-list-item" onClick={() => navigate('/about')}>
+          <div className="menu-list-item" onClick={() => navigate('/about')}>
             <span className="menu-list-item-label">
               <span style={{ marginRight: '10px' }}>
                 <FontAwesomeIcon icon={faCircleInfo} style={{ color: '#111' }} />
@@ -110,8 +110,8 @@ function Menu() {
             <span className="menu-list-chevron">
               <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
             </span>
-          </button>
-          <button className="menu-list-item" onClick={() => navigate('/tutorials')}>
+          </div>
+          <div className="menu-list-item" onClick={() => navigate('/tutorials')}>
             <span className="menu-list-item-label">
               <span style={{ marginRight: '10px' }}>
                 <FontAwesomeIcon icon={faCirclePlay} style={{ color: '#111' }} />
@@ -121,8 +121,8 @@ function Menu() {
             <span className="menu-list-chevron">
               <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
             </span>
-          </button>
-          <button className="menu-list-item" onClick={() => {
+          </div>
+          <div className="menu-list-item" onClick={() => {
             window.open('https://wa.me/2348065571520?text=Hi%2C%20I%20need%20help%20with%20Roundup.', '_blank')
           }}>
             <span className="menu-list-item-label">
@@ -134,8 +134,8 @@ function Menu() {
             <span className="menu-list-chevron">
               <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
             </span>
-          </button>
-          <button className="menu-list-item" onClick={() => {
+          </div>
+          <div className="menu-list-item" onClick={() => {
             window.open('https://chat.whatsapp.com/JNWoXb4eibt8ZBE1Gu0IAF?mode=gi_t', '_blank')
           }}>
             <span className="menu-list-item-label">
@@ -147,7 +147,7 @@ function Menu() {
             <span className="menu-list-chevron">
               <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
             </span>
-          </button>
+          </div>
         </div>
       </div>
 
@@ -155,7 +155,7 @@ function Menu() {
       <div className="menu-section">
         <p className="menu-section-label">Account</p>
         <div className="menu-list">
-          <button className="menu-list-item" onClick={() => navigate('/account')}>
+          <div className="menu-list-item" onClick={() => navigate('/account')}>
             <span className="menu-list-item-label">
               <span style={{ marginRight: '10px' }}>
                 <FontAwesomeIcon icon={faUserCog} style={{ color: '#111' }} />
@@ -165,7 +165,7 @@ function Menu() {
             <span className="menu-list-chevron">
               <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
             </span>
-          </button>
+          </div>
           <div className="menu-list-item email-div">
             <span className="menu-list-item-label">
               <span style={{ marginRight: '10px' }}>
@@ -177,7 +177,7 @@ function Menu() {
               {user.email}
             </span>
           </div>
-          <button className="menu-list-item menu-list-item-danger" onClick={handleLogout}>
+          <div className="menu-list-item menu-list-item-danger" onClick={handleLogout}>
             <span className="menu-list-item-label logout-label">
               {loggingOut ? (
                 <>
@@ -191,7 +191,7 @@ function Menu() {
                 </>
               )}
             </span>
-          </button>
+          </div>
         </div>
       </div>
 

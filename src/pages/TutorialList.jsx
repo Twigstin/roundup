@@ -21,7 +21,7 @@ function TutorialList() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {tutorials.map((tutorial) => (
-          <button
+          <div
             key={tutorial.id}
             className="tutorial-list-card"
             onClick={() => navigate(`/tutorials/${tutorial.id}`)}
@@ -37,7 +37,7 @@ function TutorialList() {
             <span className="menu-list-chevron">
               <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
             </span>
-          </button>
+          </div>
         ))}
       </div>
     </div>
