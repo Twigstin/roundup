@@ -4,7 +4,7 @@ import { getTasks, getEntries, getStudents, getStudentsByClassList, createEntry,
 import Spinner from '../components/Spinner'
 import { TaskDetailSkeleton } from '../components/Skeleton'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faSearch, faPenToSquare, faDownload } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faSearch, faPenToSquare, faDownload, faUserCheck, faFileCircleCheck, faCreditCard } from '@fortawesome/free-solid-svg-icons'
 import { supabase } from '../api/supabase'
 import posthog from 'posthog-js'
 
@@ -626,7 +626,14 @@ const handleExport = async () => {
     <div className='task-details-header'>
     <div className="title-display-row">
       <h1 className="page-title bold">{task.title}</h1>
-      <span className={`type-badge type-${task.type}`}>{task.type}</span>      
+      <span className={`type-badge type-${task.type}`}>
+        {task.type === "payment" ? (
+                                  <FontAwesomeIcon icon={faCreditCard} className="dashboard-icons" />
+                                ) : task.type === "submission" ? (
+                                  <FontAwesomeIcon icon={faFileCircleCheck} className="dashboard-icons" />
+                                ) : (
+                                  <FontAwesomeIcon icon={faUserCheck} className="dashboard-icons" />
+                                )} {task.type}</span>      
     </div>
     {exportBlockedMsg && (
   <p style={{ 

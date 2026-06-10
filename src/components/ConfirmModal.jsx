@@ -2,7 +2,7 @@ import Spinner from './Spinner'
 
 function ConfirmModal({ message, onConfirm, onCancel, loading = false }) {
   return (
-    <div className="modal-overlay">
+    <div className="confirm-modal-overlay">
       <div className="modal-box">
         <p className="modal-message">{message}</p>
         <div className="modal-actions">
