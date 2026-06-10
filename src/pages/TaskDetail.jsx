@@ -37,9 +37,12 @@ function TaskDetail() {
   const [exportTitle, setExportTitle] = useState('')
   const [exportDate, setExportDate] = useState(true)
   const [exportSummary, setExportSummary] = useState(true)
-  const [exportBasic, setExportBasic] = useState(true)
+  //const [exportBasic, setExportBasic] = useState(true)
   const [regNumberFixes, setRegNumberFixes] = useState({})
   const [exportBlockedMsg, setExportBlockedMsg] = useState('')
+  const [exportType, setExportType] = useState('basic') // 'basic' | 'full' | 'custom'
+  const [customStatusCols, setCustomStatusCols] = useState([])
+  const [exportSortBy, setExportSortBy] = useState('default') // 'default' | 'az' | 'recent'
 
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
 
@@ -340,6 +343,35 @@ const isValidRegNumber = (reg) => {
   return futoPattern.test(val) || otherUniPattern.test(val)
 }
 
+
+
+const getAvailableStatuses = () => {
+  if (isPayment) return [
+    { key: 'paid', label: 'Paid' },
+    { key: 'part_paid', label: 'Part paid' },
+    { key: 'not_paid', label: 'Not paid' },
+    { key: 'collected', label: 'Collected' }
+  ]
+  if (isAttendance) return [
+    { key: 'present', label: 'Present' },
+    { key: 'absent', label: 'Absent' }
+  ]
+  return [
+    { key: 'submitted', label: 'Submitted' },
+    { key: 'pending', label: 'Pending' }
+  ]
+}
+
+const getSortedEntries = (entries) => {
+  if (exportSortBy === 'az') {
+    return [...entries].sort((a, b) => a.student_name.localeCompare(b.student_name))
+  }
+  if (exportSortBy === 'recent') {
+    return [...entries].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+  }
+  return entries
+}
+
 const openExportModal = () => {
   if (filteredEntries.length === 0) {
     setExportBlockedMsg('⚠️ Nothing to export — your current filter has no students.')
@@ -350,7 +382,16 @@ const openExportModal = () => {
   setExportTitle(task.title)
   setExportDate(false)
   setExportSummary(false)
-  setExportBasic(true)
+  setExportType('basic')
+  setExportSortBy('default')
+
+  // Auto-set custom cols based on active filter
+  if (filter !== 'total') {
+    setCustomStatusCols([filter])
+  } else {
+    setCustomStatusCols([])
+  }
+
   const fixes = {}
   filteredEntries.forEach(entry => {
     if (!isValidRegNumber(entry.student_reg_number)) {
@@ -368,114 +409,115 @@ const handleExport = async () => {
   try {
     const XLSX = await import('xlsx-js-style')
 
-    const hasNotes = !exportBasic && filteredEntries.some(e => e.note && e.note.trim() !== '')
-    const hasCollected = !exportBasic && isPayment
-    const totalCols = exportBasic ? 3 : (3 + 1 + (hasCollected ? 1 : 0) + (hasNotes ? 1 : 0))
+    const isBasic = exportType === 'basic'
+    const isFull = exportType === 'full'
+    const isCustom = exportType === 'custom'
 
-    // Build header rows as aoa
+    const sortedEntries = getSortedEntries(filteredEntries)
+
+    const hasNotes = isFull && sortedEntries.some(e => e.note && e.note.trim() !== '')
+    const hasCollected = isFull && isPayment
+
+    // For custom — determine which status columns to include
+    const activeStatuses = isCustom
+      ? (filter !== 'total' ? [filter] : customStatusCols)
+      : []
+
+    const totalCols = isBasic
+      ? 3
+      : isFull
+      ? (3 + 1 + (hasCollected ? 1 : 0) + (hasNotes ? 1 : 0))
+      : (3 + activeStatuses.length)
+
+    // Build header rows
     const headerRows = []
+    if (exportTitle.trim()) headerRows.push([exportTitle.trim()])
+    if (exportDate) {
+      const dateStr = new Date().toLocaleDateString('en-GB', {
+        day: '2-digit', month: 'long', year: 'numeric'
+      })
+      headerRows.push([`Date: ${dateStr}`])
+    }
+    if (exportSummary) {
+      if (isPayment) {
+        headerRows.push([`Total: ${sortedEntries.length} | Paid: ${sortedEntries.filter(e => e.status === 'paid').length} | Part paid: ${sortedEntries.filter(e => e.status === 'part_paid').length} | Not paid: ${sortedEntries.filter(e => e.status === 'not_paid').length}`])
+      } else if (isAttendance) {
+        headerRows.push([`Total: ${sortedEntries.length} | Present: ${sortedEntries.filter(e => e.status === 'present').length} | Absent: ${sortedEntries.filter(e => e.status === 'absent').length}`])
+      } else {
+        headerRows.push([`Total: ${sortedEntries.length} | Submitted: ${sortedEntries.filter(e => e.status === 'submitted').length} | Pending: ${sortedEntries.filter(e => e.status === 'pending').length}`])
+      }
+    }
 
-    if (exportTitle.trim()) headerRows.push([`${exportTitle.trim()}`])
-if (exportDate) {
-  const dateStr = new Date().toLocaleDateString('en-GB', {
-    day: '2-digit', month: 'long', year: 'numeric'
-  })
-  headerRows.push([`Date: ${dateStr}`])
-}
-if (exportSummary) {
-  if (isPayment) {
-    headerRows.push([`Total: ${filteredEntries.length} | Paid: ${filteredEntries.filter(e => e.status === 'paid').length} | Part paid: ${filteredEntries.filter(e => e.status === 'part_paid').length} | Not paid: ${filteredEntries.filter(e => e.status === 'not_paid').length}`])
-  } else if (isAttendance) {
-    headerRows.push([`Total: ${filteredEntries.length} | Present: ${filteredEntries.filter(e => e.status === 'present').length} | Absent: ${filteredEntries.filter(e => e.status === 'absent').length}`])
-  } else {
-    headerRows.push([`Total: ${filteredEntries.length} | Submitted: ${filteredEntries.filter(e => e.status === 'submitted').length} | Pending: ${filteredEntries.filter(e => e.status === 'pending').length}`])
-  }
-}
-
-    // Column headers row
+    // Column headers
     const colHeaders = ['S/N', 'Name', 'Reg Number']
-    if (!exportBasic) {
+    if (isFull) {
       colHeaders.push('Status')
       if (hasCollected) colHeaders.push('Collected')
       if (hasNotes) colHeaders.push('Note')
     }
+    if (isCustom) {
+      const statusLabels = {
+        paid: 'Paid', part_paid: 'Part Paid', not_paid: 'Not Paid',
+        collected: 'Collected', submitted: 'Submitted', pending: 'Pending',
+        present: 'Present', absent: 'Absent'
+      }
+      activeStatuses.forEach(s => colHeaders.push(statusLabels[s] || s))
+    }
 
-    // Data rows — use fixed reg numbers where provided
-    const dataRows = filteredEntries.map((entry, index) => {
+    // Data rows
+    const dataRows = sortedEntries.map((entry, index) => {
       const regNumber = regNumberFixes.hasOwnProperty(entry.id)
         ? regNumberFixes[entry.id]
         : entry.student_reg_number
       const isInvalid = !isValidRegNumber(regNumber)
-      const row = [
-        index + 1,
-        entry.student_name,
-        regNumber || ''
-      ]
-      if (!exportBasic) {
+      const row = [index + 1, entry.student_name, regNumber || '']
+
+      if (isFull) {
         row.push(entry.status.replace(/_/g, ' '))
         if (hasCollected) row.push(entry.collected ? 'Yes' : 'No')
         if (hasNotes) row.push(entry.note || '')
       }
+
+      if (isCustom) {
+        activeStatuses.forEach(s => {
+          if (s === 'collected') {
+            row.push(entry.collected ? '✓' : '')
+          } else {
+            row.push(entry.status === s ? '✓' : '')
+          }
+        })
+      }
+
       return { row, isInvalid }
     })
 
-    // Build full aoa — header rows first, then col headers, then data
-    const titleRowIndex = exportTitle.trim() ? 0 : -1
-const colHeaderRowIndex = headerRows.length + (headerRows.length > 0 ? 1 : 0)
-const dataStartRowIndex = colHeaderRowIndex + 1
+    const colHeaderRowIndex = headerRows.length + (headerRows.length > 0 ? 1 : 0)
+    const dataStartRowIndex = colHeaderRowIndex + 1
 
     const allRows = [
-  ...headerRows,
-  ...(headerRows.length > 0 ? [['']] : []),
-  colHeaders,
-  ...dataRows.map(d => d.row)
-]
+      ...headerRows,
+      ...(headerRows.length > 0 ? [['']] : []),
+      colHeaders,
+      ...dataRows.map(d => d.row)
+    ]
 
     const worksheet = XLSX.utils.aoa_to_sheet(allRows)
 
-    // Merge title row across all columns if title exists
-    /*
-    if (exportTitle.trim()) {
-  worksheet['!merges'] = worksheet['!merges'] || []
-  worksheet['!merges'].push({
-    s: { r: titleRowIndex, c: 0 },
-    e: { r: titleRowIndex, c: totalCols - 1 }
-  })
-  const titleCell = worksheet['A1']
-  if (titleCell) {
-    titleCell.s = {
-      font: { bold: true, sz: 18 },
-      alignment: { horizontal: 'center', vertical: 'center' }
-    }
-  }
-}
-*/
-
-    // Style header info rows (date + summary lines) — bold, sz 13, merged
-
-// Style ALL header rows (title, date, summary) in one loop
-for (let r = 0; r < headerRows.length; r++) {
-  const cellRef = XLSX.utils.encode_cell({ r, c: 0 })
-  if (worksheet[cellRef]) {
-    worksheet[cellRef].s = {
-      font: { bold: true, sz: r === 0 && exportTitle.trim() ? 18 : 13 },
-      alignment: {
-        horizontal: r === 0 && exportTitle.trim() ? 'center' : 'left',
-        vertical: 'center'
+    // Style all header rows in one loop
+    for (let r = 0; r < headerRows.length; r++) {
+      const cellRef = XLSX.utils.encode_cell({ r, c: 0 })
+      if (worksheet[cellRef]) {
+        worksheet[cellRef].s = {
+          font: { bold: true, sz: r === 0 && exportTitle.trim() ? 18 : 13 },
+          alignment: {
+            horizontal: r === 0 && exportTitle.trim() ? 'center' : 'left',
+            vertical: 'center'
+          }
+        }
       }
+      if (!worksheet['!merges']) worksheet['!merges'] = []
+      worksheet['!merges'].push({ s: { r, c: 0 }, e: { r, c: totalCols - 1 } })
     }
-  }
-  if (!worksheet['!merges']) worksheet['!merges'] = []
-  worksheet['!merges'].push({
-    s: { r, c: 0 },
-    e: { r, c: totalCols - 1 }
-  })
-}
-
-    // Merge other header rows (date, summary) across all columns
-    
-    
-   
 
     // Style column header row
     for (let c = 0; c < totalCols; c++) {
@@ -500,7 +542,6 @@ for (let r = 0; r < headerRows.length; r++) {
       for (let c = 0; c < totalCols; c++) {
         const cellRef = XLSX.utils.encode_cell({ r, c })
         if (!worksheet[cellRef]) worksheet[cellRef] = { v: '', t: 's' }
-        //const isRegCol = c === 2
         worksheet[cellRef].s = {
           fill: { patternType: 'solid', fgColor: { rgb: 'FFFFFF' } },
           border: {
@@ -519,9 +560,10 @@ for (let r = 0; r < headerRows.length; r++) {
       { wch: 5 },
       { wch: 35 },
       { wch: 20 },
-      ...(!exportBasic ? [{ wch: 14 }] : []),
+      ...(isFull ? [{ wch: 14 }] : []),
       ...(hasCollected ? [{ wch: 12 }] : []),
-      ...(hasNotes ? [{ wch: 30 }] : [])
+      ...(hasNotes ? [{ wch: 30 }] : []),
+      ...(isCustom ? activeStatuses.map(() => ({ wch: 12 })) : [])
     ]
 
     const workbook = XLSX.utils.book_new()
@@ -965,90 +1007,149 @@ for (let r = 0; r < headerRows.length; r++) {
   
   
   <div style={{ overflowY: 'auto', flex: 1, padding: '24px 24px 0 24px' }}>
-    <h2 className="page-title bold" style={{ fontSize: '16px', marginBottom: '16px' }}>Export settings</h2>
+  <h2 className="page-title bold" style={{ fontSize: '16px', marginBottom: '16px' }}>Export settings</h2>
 
-    <div className="form-field">
-      <label className="form-label">List title</label>
-      <input
-        className="form-input"
-        type="text"
-        value={exportTitle}
-        onChange={(e) => setExportTitle(e.target.value)}
-        placeholder="e.g. CSC 301 Assignment 3"
-      />
-      <span className="form-hint">Appears as a header at the top of the exported file</span>
-    </div>
-
-    <div className="form-field">
-      <label className="form-label">Export type</label>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '6px' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
-          <input type="radio" name="exportType" checked={exportBasic} onChange={() => setExportBasic(true)} />
-          <div>
-            <p style={{ margin: 0, fontWeight: '500' }}>Basic</p>
-            <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>S/N, Name, Reg Number only</p>
-          </div>
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
-          <input type="radio" name="exportType" checked={!exportBasic} onChange={() => setExportBasic(false)} />
-          <div>
-            <p style={{ margin: 0, fontWeight: '500' }}>Full</p>
-            <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>Includes status, collected and notes</p>
-          </div>
-        </label>
-      </div>
-    </div>
-
-    <hr style={{ height: '1px', border: 'none', backgroundColor: '#e5e5e5', marginTop: '10px', marginBottom: '10px' }}/>
-
-    <div className="form-field">
-      <label className="form-label">Additional header info</label>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '6px' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
-          <input type="checkbox" checked={exportDate} onChange={(e) => setExportDate(e.target.checked)} />
-          Date
-        </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
-          <input type="checkbox" checked={exportSummary} onChange={(e) => setExportSummary(e.target.checked)} />
-          Summary stats
-        </label>
-      </div>
-    </div>
-
-    {Object.keys(regNumberFixes).length > 0 && (
-      <div className="form-field">
-        <hr style={{ height: '1px', border: 'none', backgroundColor: '#e5e5e5', marginTop: '10px', marginBottom: '10px' }}/>
-        <label className="form-label" style={{ color: '#b45309' }}>
-          ⚠️ {Object.keys(regNumberFixes).length} student{Object.keys(regNumberFixes).length > 1 ? 's have' : ' has'} a missing or invalid reg number
-        </label>
-        <p style={{ fontSize: '12px', color: '#888', marginBottom: '10px' }}>
-          Fix them below or export anyway.
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {filteredEntries
-            .filter(entry => regNumberFixes.hasOwnProperty(entry.id))
-            .map(entry => (
-              <div key={entry.id} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '13px', flex: 1, color: '#333', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {entry.student_name}
-                </span>
-                <input
-                  className="form-input"
-                  type="text"
-                  style={{ flex: 1, fontSize: '13px', padding: '6px 10px' }}
-                  placeholder="Enter reg number"
-                  value={regNumberFixes[entry.id]}
-                  onChange={(e) => setRegNumberFixes(prev => ({ ...prev, [entry.id]: e.target.value }))}
-                />
-              </div>
-            ))
-          }
-        </div>
-      </div>
-    )}
-
-    <div style={{ height: '16px' }} />
+  <div className="form-field">
+    <label className="form-label">List title</label>
+    <input
+      className="form-input"
+      type="text"
+      value={exportTitle}
+      onChange={(e) => setExportTitle(e.target.value)}
+      placeholder="e.g. CSC 301 Assignment 3"
+    />
+    <span className="form-hint">Appears as a header at the top of the exported file</span>
   </div>
+
+  <div className="form-field">
+    <label className="form-label">Export type</label>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '6px' }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
+        <input type="radio" name="exportType" checked={exportType === 'basic'} onChange={() => setExportType('basic')} />
+        <div>
+          <p style={{ margin: 0, fontWeight: '500' }}>Basic</p>
+          <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>S/N, Name, Reg Number only</p>
+        </div>
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
+        <input type="radio" name="exportType" checked={exportType === 'full'} onChange={() => setExportType('full')} />
+        <div>
+          <p style={{ margin: 0, fontWeight: '500' }}>Full</p>
+          <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>Includes status, collected and notes</p>
+        </div>
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
+        <input type="radio" name="exportType" checked={exportType === 'custom'} onChange={() => setExportType('custom')} />
+        <div>
+          <p style={{ margin: 0, fontWeight: '500' }}>Custom</p>
+          <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>Choose which statuses to include as columns</p>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  {/* Custom status checkboxes — only show on total filter */}
+  {exportType === 'custom' && filter === 'total' && (
+    <div className="form-field">
+      <label className="form-label">Select status columns</label>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+        {getAvailableStatuses().map(s => (
+          <label key={s.key} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
+            <input
+              type="checkbox"
+              checked={customStatusCols.includes(s.key)}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setCustomStatusCols(prev => [...prev, s.key])
+                } else {
+                  setCustomStatusCols(prev => prev.filter(k => k !== s.key))
+                }
+              }}
+            />
+            {s.label}
+          </label>
+        ))}
+      </div>
+      {exportType === 'custom' && filter === 'total' && customStatusCols.length === 0 && (
+        <p style={{ fontSize: '12px', color: '#b45309', marginTop: '6px' }}>Select at least one status to include</p>
+      )}
+    </div>
+  )}
+
+  {exportType === 'custom' && filter !== 'total' && (
+    <p style={{ fontSize: '12px', color: '#888', marginBottom: '10px', marginTop: '-8px' }}>
+      Will export a ✓ column for <strong>{filter.replace('_', ' ')}</strong> based on your active filter.
+    </p>
+  )}
+
+  <hr style={{ height: '1px', border: 'none', backgroundColor: '#e5e5e5', marginTop: '10px', marginBottom: '10px' }}/>
+
+  <div className="form-field">
+    <label className="form-label">Sort order</label>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
+        <input type="radio" name="sortBy" checked={exportSortBy === 'default'} onChange={() => setExportSortBy('default')} />
+        Default order
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
+        <input type="radio" name="sortBy" checked={exportSortBy === 'az'} onChange={() => setExportSortBy('az')} />
+        A–Z (alphabetical)
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
+        <input type="radio" name="sortBy" checked={exportSortBy === 'recent'} onChange={() => setExportSortBy('recent')} />
+        Recently updated
+      </label>
+    </div>
+  </div>
+
+  <hr style={{ height: '1px', border: 'none', backgroundColor: '#e5e5e5', marginTop: '10px', marginBottom: '10px' }}/>
+
+  <div className="form-field">
+    <label className="form-label">Additional header info</label>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '6px' }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
+        <input type="checkbox" checked={exportDate} onChange={(e) => setExportDate(e.target.checked)} />
+        Date
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
+        <input type="checkbox" checked={exportSummary} onChange={(e) => setExportSummary(e.target.checked)} />
+        Summary stats
+      </label>
+    </div>
+  </div>
+
+  {Object.keys(regNumberFixes).length > 0 && (
+    <div className="form-field">
+      <hr style={{ height: '1px', border: 'none', backgroundColor: '#e5e5e5', marginTop: '10px', marginBottom: '10px' }}/>
+      <label className="form-label" style={{ color: '#b45309' }}>
+        ⚠️ {Object.keys(regNumberFixes).length} student{Object.keys(regNumberFixes).length > 1 ? 's have' : ' has'} a missing or invalid reg number
+      </label>
+      <p style={{ fontSize: '12px', color: '#888', marginBottom: '10px' }}>Fix them below or export anyway.</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {filteredEntries
+          .filter(entry => regNumberFixes.hasOwnProperty(entry.id))
+          .map(entry => (
+            <div key={entry.id} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '13px', flex: 1, color: '#333', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {entry.student_name}
+              </span>
+              <input
+                className="form-input"
+                type="text"
+                style={{ flex: 1, fontSize: '13px', padding: '6px 10px' }}
+                placeholder="Enter reg number"
+                value={regNumberFixes[entry.id]}
+                onChange={(e) => setRegNumberFixes(prev => ({ ...prev, [entry.id]: e.target.value }))}
+              />
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  )}
+
+  <div style={{ height: '16px' }} />
+</div>
 
   {/* Sticky buttons — always visible at bottom */}
   <div style={{
@@ -1059,12 +1160,17 @@ for (let r = 0; r < headerRows.length; r++) {
     background: '#fff'
   }}>
     <button
-      className="btn-primary"
-      style={{ flex: 1, padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-      onClick={handleExport}
-    >
-      <FontAwesomeIcon icon={faDownload} /> Export
-    </button>
+  className="btn-primary"
+  style={{ flex: 1, padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+    opacity: exportType === 'custom' && filter === 'total' && customStatusCols.length === 0 ? 0.5 : 1
+  }}
+  onClick={() => {
+    if (exportType === 'custom' && filter === 'total' && customStatusCols.length === 0) return
+    handleExport()
+  }}
+>
+  <FontAwesomeIcon icon={faDownload} /> Export
+</button>
     <button
       className="btn-secondary"
       style={{ flex: 1, padding: '10px' }}
