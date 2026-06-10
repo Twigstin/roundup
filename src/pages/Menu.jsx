@@ -111,7 +111,7 @@ function Menu() {
               <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
             </span>
           </button>
-          <button className="menu-list-item" onClick={() => navigate('/how-to-use')}>
+          <button className="menu-list-item" onClick={() => navigate('/tutorials')}>
             <span className="menu-list-item-label">
               <span style={{ marginRight: '10px' }}>
                 <FontAwesomeIcon icon={faCirclePlay} style={{ color: '#111' }} />

@@ -208,7 +208,7 @@ setLoading(false)
             onClick={() => {
               localStorage.setItem('roundup_onboarding', 'tutorial')
               setShowTutorialBanner(false)
-              navigate('/how-to-use')
+              navigate('/tutorials/getting-started')
             }}
           >
             Watch tutorial

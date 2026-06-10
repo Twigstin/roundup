@@ -100,7 +100,7 @@ function About() {
          */}
 
         <div className="menu-section">
-          <p className="menu-section-label">Creator</p>
+          <p className="menu-section-label">Founder & Creator</p>
           <div className="about-card">
             <div className="about-person-row">
               <div>
