@@ -11,7 +11,7 @@ const tutorials = [
     id: 'getting-started',
     title: 'Getting Started with Roundup',
     description: 'Learn the basics — setting up your class list and creating your first task.',
-    youtubeId: 'YOUR_VIDEO_ID_HERE',
+    youtubeId: 'yqYROpLBgaY',
     duration: '16:15',
     steps: [
       {
