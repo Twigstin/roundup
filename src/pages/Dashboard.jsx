@@ -297,7 +297,7 @@ setLoading(false)
       <button
         className="btn-primary"
         style={{ fontSize: '13px', padding: '8px 14px' }}
-        onClick={() => navigate('/account/profile')}
+        onClick={() => navigate('/account/profile', { state: { from: '/' } })}
       >
         Set up
       </button>

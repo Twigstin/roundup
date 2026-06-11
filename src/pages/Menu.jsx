@@ -61,26 +61,29 @@ function Menu() {
         <div
           className="menu-account-card"
           style={{ width: '100%', textAlign: 'left', cursor: 'pointer', border: '1px solid #e5e5e5', borderRadius: '12px', background: '#fff' }}
-          onClick={() => navigate('/account/profile')}
+          onClick={() => navigate('/account/profile', { state: { from: '/menu' } })}
         >
           <div className="menu-avatar">
             <span className="menu-avatar-letter">{avatarLetter}</span>
           </div>
-          <div className="menu-account-info" style={{ flex: 1 }}>
-            <p className="menu-account-email">{displayName}</p>
-            <p className="menu-account-sub">
-  {profile.firstName
-    ? [profile.level, 'Free plan']
-        .filter(Boolean)
-        .map((part, i, arr) => (
-          <span key={i}>
-            {part}{i < arr.length - 1 && <span style={{ fontWeight: '700', margin: '0 4px' }}>·</span>}
-          </span>
-        ))
-    : 'Free plan'
-  }
-</p>
-          </div>
+          <div className="menu-account-info" style={{ flex: 1, minWidth: 0 }}>
+  <p className="menu-account-email">{displayName}</p>
+  <p className="menu-account-sub">
+    {profile.firstName
+      ? [profile.level, 'Free plan']
+          .filter(Boolean)
+          .map((part, i, arr) => (
+            <span key={i}>
+              {part}{i < arr.length - 1 && <span style={{ fontWeight: '700', margin: '0 4px' }}>·</span>}
+            </span>
+          ))
+      : 'Free plan'
+    }
+  </p>
+  {profile.firstName && user?.email && (
+    <p className="menu-account-email-line">{user.email}</p>
+  )}
+</div>
           <span className="menu-list-chevron">
             <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
           </span>
@@ -88,7 +91,7 @@ function Menu() {
         {!profile.firstName && (
           <button
             className="menu-setup-prompt"
-            onClick={() => navigate('/account/profile')}
+            onClick={() => navigate('/account/profile', { state: { from: '/menu' } })}
           >
             <span>👋 Complete your profile setup — add your name and level</span>
             <span className="menu-setup-arrow">Set up →</span>
@@ -166,17 +169,7 @@ function Menu() {
               <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
             </span>
           </div>
-          <div className="menu-list-item email-div">
-            <span className="menu-list-item-label">
-              <span style={{ marginRight: '10px' }}>
-                <FontAwesomeIcon icon={faEnvelope} style={{ color: '#111' }} />
-              </span>
-              Email
-            </span>
-            <span className="user-email">
-              {user.email}
-            </span>
-          </div>
+          
           <div className="menu-list-item menu-list-item-danger" onClick={handleLogout}>
             <span className="menu-list-item-label logout-label">
               {loggingOut ? (

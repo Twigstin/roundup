@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import { supabase } from '../api/supabase'
 import Spinner from '../components/Spinner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
+import { Link, useLocation } from 'react-router-dom'
 
 function EditProfile() {
+  const { state } = useLocation()
+  const backPath = state?.from || '/account'
+  const backLabel = state?.from === '/menu' ? 'Menu'
+    : state?.from === '/' ? 'Tasks'
+    : 'Manage account'
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [level, setLevel] = useState('')
@@ -13,6 +18,7 @@ function EditProfile() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -86,8 +92,8 @@ function EditProfile() {
   return (
     <div>
       <div className="page-header">
-        <Link to="/account" className="back-link">
-          <FontAwesomeIcon icon={faChevronLeft} /> Manage account
+        <Link to={backPath} className="back-link">
+          <FontAwesomeIcon icon={faChevronLeft} /> {backLabel}
         </Link>
       </div>
 

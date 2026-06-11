@@ -636,19 +636,8 @@ const handleExport = async () => {
                                 )} {task.type}</span>      
     </div>
     {exportBlockedMsg && (
-  <p style={{ 
-    fontSize: '13px', 
-  color: '#b45309', 
-  backgroundColor: '#fef3c7', 
-  borderColor: '#f59e0b', // Optional: slightly darker border
-  borderWidth: '1px',
-  borderStyle: 'solid',
-  padding: '8px 12px',
-  borderRadius: '6px',
-  textAlign: 'center', 
-  marginBottom: '8px'
-    }}>
-      {exportBlockedMsg}
+  <p id="export-no-data-msg-ctn">
+      <span className='export-no-data-msg'>{exportBlockedMsg}</span>
   </p>
 )}
     <div className='task-details-header-action-btns'>

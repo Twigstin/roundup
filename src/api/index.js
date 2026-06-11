@@ -124,6 +124,17 @@ export const createStudent = async (student, classListId) => {
   return data
 }
 
+export const updateStudent = async (studentId, updates) => {
+  const { data, error } = await supabase
+    .from('students')
+    .update(updates)
+    .eq('id', studentId)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
 export const bulkCreateStudents = async (newStudents, classListId) => {
   const userId = await getUserId()
   const studentsWithUser = newStudents.map(s => ({
