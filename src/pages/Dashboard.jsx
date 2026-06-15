@@ -24,6 +24,8 @@ function Dashboard() {
   const [userFirstName, setUserFirstName] = useState('')
   const [showProfileBanner, setShowProfileBanner] = useState(false)
   const [showTutorialBanner, setShowTutorialBanner] = useState(false)
+  const [showArchived, setShowArchived] = useState(false)
+  const [archivingTaskId, setArchivingTaskId] = useState(null)
 
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
 
@@ -54,6 +56,20 @@ function Dashboard() {
     setModalOpen(false)
     setTaskToDelete(null)
   }
+
+  const handleArchiveTask = async (e, taskId, currentArchived) => {
+  e.stopPropagation()
+  setArchivingTaskId(taskId)
+  await supabase
+    .from('tasks')
+    .update({ is_archived: !currentArchived })
+    .eq('id', taskId)
+  setTasks(prev => prev.map(t =>
+    t.id === taskId ? { ...t, is_archived: !currentArchived } : t
+  ))
+  setArchivingTaskId(null)
+  setOpenMenuId(null)
+}
 
   const fetchAllEntries = async (userId) => {
     const countResult = await supabase
@@ -99,10 +115,10 @@ function Dashboard() {
 setTasks(tasks)
 setAllEntries(entriesData)
 
-if (tasks.length === 0) {
+if (tasks.length === 0 && lists.length === 0) {
   setIsNewUser(true)
-  setHasClassList(lists.length > 0)
 }
+setHasClassList(lists.length > 0)
 setLoading(false)
     }
     fetchData()
@@ -182,11 +198,36 @@ setLoading(false)
     return { total, doneCount, pendingCount, partPaidCount, collectedCount, notCollectedCount, isPayment }
   }
 
+
+  const archivedCount = tasks.filter(t => t.is_archived).length
+
+useEffect(() => {
+  if (showArchived && archivedCount === 0) {
+    setShowArchived(false)
+  }
+}, [tasks, showArchived, archivedCount])
+
+const filteredTasks = tasks.filter(task => {
+  if (task.is_archived !== showArchived) return false
+  const matchesSearch = task.title.toLowerCase().includes(search.toLowerCase())
+  const matchesType = typeFilter === 'all' || task.type === typeFilter
+  return matchesSearch && matchesType
+})
+
+
+  /*
   const filteredTasks = tasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(search.toLowerCase())
-    const matchesType = typeFilter === 'all' || task.type === typeFilter
-    return matchesSearch && matchesType
-  })
+  if (showArchived) return task.is_archived
+  if (!showArchived) return !task.is_archived
+  const matchesSearch = task.title.toLowerCase().includes(search.toLowerCase())
+  const matchesType = typeFilter === 'all' || task.type === typeFilter
+  return matchesSearch && matchesType
+}).filter(task => {
+  const matchesSearch = task.title.toLowerCase().includes(search.toLowerCase())
+  const matchesType = typeFilter === 'all' || task.type === typeFilter
+  return matchesSearch && matchesType
+})
+  */
 
   if (loading) return <DashboardSkeleton />
 
@@ -257,7 +298,7 @@ setLoading(false)
                   Add your class list
                 </p>
                 <p className="onboarding-step-desc">
-                  Import your student roster so Roundup can track them automatically.
+                  Create and Import your class list so Roundup can track it automatically.
                 </p>
                 {!hasClassList && (
                   <Link to="/roster" className="btn-primary" style={{ display: 'inline-block', marginTop: '10px', textAlign: 'center', fontSize: '13px', padding: '8px 14px' }}>
@@ -316,37 +357,80 @@ setLoading(false)
 )}
 
       {tasks.length > 0 && (
-        <div className="dashboard-toolbar">
-          <div className="input-wrapper">
-            <FontAwesomeIcon icon={faSearch} className="input-icon" />
-            <input
-              className="form-input search-icon"
-              type="text"
-              placeholder="Search tasks…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <div className="filter-tabs">
-            <button className={`filter-tab ${typeFilter === 'all' ? 'active' : ''}`} onClick={() => setTypeFilter('all')}>All</button>
-            <button className={`filter-tab ${typeFilter === 'submission' ? 'active' : ''}`} onClick={() => setTypeFilter('submission')}>Submission</button>
-            <button className={`filter-tab ${typeFilter === 'payment' ? 'active' : ''}`} onClick={() => setTypeFilter('payment')}>Payment</button>
-            <button className={`filter-tab ${typeFilter === 'attendance' ? 'active' : ''}`} onClick={() => setTypeFilter('attendance')}>Attendance</button>
-          </div>
-        </div>
-      )}
+  <div className="dashboard-toolbar">
+    <div className="input-wrapper">
+      <FontAwesomeIcon icon={faSearch} className="input-icon" />
+      <input
+        className="form-input search-icon"
+        type="text"
+        placeholder="Search tasks…"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+    </div>
 
-      {tasks.length === 0 ? (
-        <div className="empty-state">
-          <p className="empty-title">No tasks yet</p>
-          <p className="empty-subtitle">Create your first task to start tracking</p>
-        </div>
-      ) : filteredTasks.length === 0 ? (
-        <div className="empty-state">
-          <p className="empty-title">No tasks found</p>
-          <p className="empty-subtitle">Try a different search or filter</p>
-        </div>
-      ) : (
+    {/* Row 1 — Active / Archived toggle */}
+    <div className="filter-tabs">
+      <button
+        className={`filter-tab ${!showArchived ? 'active' : ''}`}
+        onClick={() => { setShowArchived(false); setTypeFilter('all') }}
+      >
+        Active tasks
+      </button>
+      {archivedCount > 0 && (
+        <button
+          className={`filter-tab ${showArchived ? 'active' : ''}`}
+          onClick={() => { setShowArchived(true); setTypeFilter('all') }}
+        >
+          Archived ({archivedCount})
+        </button>
+      )}
+    </div>
+
+    {/* Row 2 — Type filter */}
+    <div className="filter-tabs">
+      <button
+        className={`filter-tab ${typeFilter === 'all' ? 'active' : ''}`}
+        onClick={() => setTypeFilter('all')}
+      >
+        All
+      </button>
+      <button
+        className={`filter-tab ${typeFilter === 'submission' ? 'active' : ''}`}
+        onClick={() => setTypeFilter('submission')}
+      >
+        Submission
+      </button>
+      <button
+        className={`filter-tab ${typeFilter === 'payment' ? 'active' : ''}`}
+        onClick={() => setTypeFilter('payment')}
+      >
+        Payment
+      </button>
+      <button
+        className={`filter-tab ${typeFilter === 'attendance' ? 'active' : ''}`}
+        onClick={() => setTypeFilter('attendance')}
+      >
+        Attendance
+      </button>
+    </div>
+  </div>
+)}
+
+      {filteredTasks.length === 0 ? (
+  <div className="empty-state">
+    <p className="empty-title">
+      {showArchived ? 'No archived tasks' : tasks.filter(t => !t.is_archived).length === 0 ? 'No tasks yet' : 'No tasks found'}
+    </p>
+    <p className="empty-subtitle">
+      {showArchived
+        ? 'Tasks you archive will appear here'
+        : tasks.filter(t => !t.is_archived).length === 0
+        ? 'Create your first task to start tracking'
+        : 'Try a different search or filter'}
+    </p>
+  </div>
+) : (
         <div className="task-list">
           {filteredTasks.map(task => {
             const { total, doneCount, pendingCount, partPaidCount, collectedCount, notCollectedCount, isPayment } = getTaskStats(task.id, task.type)
@@ -395,6 +479,20 @@ setLoading(false)
                         </button>
                         {openMenuId === task.id && (
                           <div className="kebab-menu">
+                            <button
+  className="kebab-menu-item"
+  onClick={(e) => {
+    e.stopPropagation()
+    handleArchiveTask(e, task.id, task.is_archived || false)
+  }}
+>
+  {archivingTaskId === task.id ? (
+    <><Spinner size={12} /> {task.is_archived ? 'Unarchiving...' : 'Archiving...'}</>
+  ) : (
+    task.is_archived ? '↑ Unarchive task' : '↓ Archive task'
+  )}
+</button>
+
                             <button
                               className="kebab-menu-item kebab-menu-item-danger"
                               onClick={(e) => {
@@ -474,6 +572,8 @@ setLoading(false)
           loading={deletingTask}
         />
       )}
+      
+      
     </div>
   )
 }
