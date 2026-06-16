@@ -2650,6 +2650,16 @@ button:active {
   z-index: 300;
 }
 
+.modal-overlay-new-list {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+}
+
 .modal-card {
   background: #fff;
   border-top-left-radius: 16px;
@@ -2666,6 +2676,20 @@ button:active {
   animation: slideUp 0.3s ease;
 }
 
+.modal-card-new-list {
+  background: #fff;
+  border-top-left-radius: 16px;
+  border-radius: 16px;
+  padding: 0;
+  width: 100%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 0.2s ease;
+}
+
 @media (min-width: 769px) {
   
   #modal-card {
@@ -2674,6 +2698,10 @@ button:active {
   }
 
   .modal-overlay {
+    align-items: center;
+  }
+
+  .modal-overlay-new-list {
     align-items: center;
   }
 }
@@ -2693,6 +2721,8 @@ button:active {
   #modal-card {
     animation: fadeIn 0.2s ease;
   }
+
+  
 }
 
 

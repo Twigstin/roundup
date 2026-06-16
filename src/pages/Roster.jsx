@@ -275,18 +275,18 @@ function Roster() {
 
     {/* Create list modal */}
     {showCreateModal && (
-      <div className="modal-overlay" onClick={() => {
+      <div className="modal-overlay-new-list" onClick={() => {
         setShowCreateModal(false)
         setNewListName('')
         setError('')
       }}>
-        <div className="modal-card" id="modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-card-new-list" id="modal-card-new-list" onClick={(e) => e.stopPropagation()}>
           <div style={{ padding: '24px' }}>
             <h2 className="page-title bold" style={{ fontSize: '16px', marginBottom: '8px' }}>
               Name your class list
             </h2>
             <p style={{ fontSize: '13px', color: '#888', marginBottom: '20px' }}>
-              e.g. CSC 301 List, Main Class List…
+              e.g. Main Class List, French 102 Class List…
             </p>
             {error && <p className="form-error">{error}</p>}
             <input
