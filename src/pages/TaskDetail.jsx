@@ -4,7 +4,7 @@ import { getTasks, getEntries, getStudents, getStudentsByClassList, createEntry,
 import Spinner from '../components/Spinner'
 import { TaskDetailSkeleton } from '../components/Skeleton'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faSearch, faPenToSquare, faDownload, faUserCheck, faFileCircleCheck, faCreditCard } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faArrowRight, faSearch, faPenToSquare, faDownload, faUserCheck, faFileCircleCheck, faCreditCard } from '@fortawesome/free-solid-svg-icons'
 import { supabase } from '../api/supabase'
 import posthog from 'posthog-js'
 
@@ -55,6 +55,19 @@ function TaskDetail() {
 useEffect(() => {
   setIsOnTotalFilter(filter === 'total' && search === '')
 }, [filter, search])
+
+useEffect(() => {
+  if (showExportModal) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
+
+  // Cleanup in case component unmounts while modal is open
+  return () => {
+    document.body.style.overflow = ''
+  }
+}, [showExportModal])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -867,7 +880,7 @@ const handleExport = async () => {
   className="btn-primary" 
   style={{ display: 'inline-block', marginTop: '16px' }}
 >
-  Upload class list →
+  Upload class list <FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowRight} />
 </Link>
         </>
       ) : (
@@ -882,7 +895,7 @@ const handleExport = async () => {
             onClick={handlePopulateFromRoster}
             disabled={populating}
           >
-            {populating ? <><Spinner size={14} /><span style={{ marginLeft: "10px" }}>Loading...</span></> : 'Load class list into this task →'}
+            {populating ? <><Spinner size={14} /><span style={{ marginLeft: "10px" }}>Loading...</span></> : <span>Load class list into this task <FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowRight} /></span>}
           </button>
         </>
       )

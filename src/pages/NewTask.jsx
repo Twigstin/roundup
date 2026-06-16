@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { createTask, markReferralActivated, getTasks, getStudents, getStudentsByClassList, bulkCreateEntries, getClassLists } from '../api/index'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import Spinner from '../components/Spinner'
 import { NewTaskSkeleton } from '../components/Skeleton'
 import posthog from 'posthog-js'
@@ -121,7 +121,7 @@ if (checkingLimits) return <NewTaskSkeleton />
       You have no class lists yet. Create a class list first so students are automatically tracked when you create a task.
     </p>
     <Link to="/roster" className="roster-warning-link">
-      Create class list →
+      Create class list <FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowRight} />
     </Link>
   </div>
 )}
@@ -179,7 +179,7 @@ if (checkingLimits) return <NewTaskSkeleton />
   <label className="form-label">Class list</label>
   {classLists.length === 0 ? (
     <p style={{ fontSize: '13px', color: '#888' }}>
-      No class lists found. <Link to="/roster">Create one first →</Link>
+      No class lists found. <Link to="/roster">Create one first <FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowRight} /></Link>
     </p>
   ) : (
     <select

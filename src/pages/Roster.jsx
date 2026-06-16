@@ -6,7 +6,7 @@ import Spinner from '../components/Spinner'
 import { RosterSkeleton } from '../components/Skeleton'
 import { supabase } from '../api/supabase'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTrashCan, faSearch, faPenToSquare, faEllipsisVertical } from '@fortawesome/free-solid-svg-icons'
+import { faTrashCan, faSearch, faPenToSquare, faEllipsisVertical, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 
 
 function Roster() {
@@ -312,7 +312,9 @@ function Roster() {
               onClick={handleCreateList}
               disabled={creating}
             >
-              {creating ? <><Spinner size={14} />Creating...</> : 'Create list →'}
+              {creating 
+              ? <><Spinner size={14} />Creating...</>
+              : <span>Create list <FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowRight} /></span>}
             </button>
             <button
               className="btn-secondary"

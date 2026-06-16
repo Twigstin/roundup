@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { getTasks, deleteTask, getClassLists } from '../api/index'
 import ConfirmModal from '../components/ConfirmModal'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLayerGroup, faBook, faSearch, faClipboardList, faTrashCan, faCreditCard, faFileCircleCheck, faUserCheck, faEllipsisVertical } from '@fortawesome/free-solid-svg-icons'
+import { faLayerGroup, faArrowUp, faArrowDown, faBook, faSearch, faClipboardList, faTrashCan, faArrowRight, faCreditCard, faFileCircleCheck, faUserCheck, faEllipsisVertical } from '@fortawesome/free-solid-svg-icons'
 import Spinner from '../components/Spinner'
 import { DashboardSkeleton } from '../components/Skeleton'
 import { supabase } from '../api/supabase'
@@ -94,70 +94,106 @@ function Dashboard() {
   }
 
   useEffect(() => {
-    const fetchData = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      const userId = session?.user?.id
-      const meta = session?.user?.user_metadata || {}
-      setUserFirstName(meta.first_name || '')
-      const onboardingChoice = localStorage.getItem('roundup_onboarding')
-      if (!onboardingChoice) setShowTutorialBanner(true)
-      if (!meta.first_name) {
-        const dismissed = localStorage.getItem('roundup_profile_banner_dismissed')
-        if (!dismissed) setShowProfileBanner(true)
+  const fetchData = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    const userId = session?.user?.id
+    const meta = session?.user?.user_metadata || {}
+    setUserFirstName(meta.first_name || '')
+    
+    const hasCompletedOnboarding = meta.onboarding_complete || false
+
+    const onboardingChoice = localStorage.getItem('roundup_onboarding')
+    if (!onboardingChoice) setShowTutorialBanner(true)
+    if (!meta.first_name) {
+      const dismissed = localStorage.getItem('roundup_profile_banner_dismissed')
+      if (!dismissed) setShowProfileBanner(true)
+    }
+
+    const [tasks, entriesData, lists] = await Promise.all([
+      getTasks(),
+      fetchAllEntries(userId),
+      getClassLists()
+    ])
+
+    setTasks(tasks)
+    setAllEntries(entriesData)
+    setHasClassList(lists.length > 0)
+    setLoading(false)
+
+    
+    if (!hasCompletedOnboarding && (tasks.length > 0)) {
+      await supabase.auth.updateUser({
+        data: { onboarding_complete: true }
+      })
+      return
+    }
+
+    // Genuinely new user
+    if (!hasCompletedOnboarding) {
+      setIsNewUser(true)
+    }
+  }
+
+  fetchData()
+
+  const tasksSub = supabase
+    .channel(`tasks-changes-${channelId.current}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, async (payload) => {
+      if (payload.eventType === 'INSERT') {
+        setTasks(prev => {
+          const isFirst = prev.length === 0
+          if (isFirst) {
+            // First task ever created — complete onboarding
+            supabase.auth.updateUser({
+              data: { onboarding_complete: true }
+            })
+            setIsNewUser(false)
+          }
+          return [payload.new, ...prev]
+        })
       }
+      if (payload.eventType === 'DELETE') {
+        setTasks(prev => prev.filter(t => t.id !== payload.old.id))
+      }
+      if (payload.eventType === 'UPDATE') {
+        setTasks(prev => prev.map(t => t.id === payload.new.id ? payload.new : t))
+      }
+    })
+    .subscribe()
 
-      const [tasks, entriesData, lists] = await Promise.all([
-  getTasks(),
-  fetchAllEntries(userId),
-  getClassLists()
-])
+  const entriesSub = supabase
+    .channel(`entries-changes-dashboard-${channelId.current}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'entries' }, (payload) => {
+      if (payload.eventType === 'INSERT') {
+        setAllEntries(prev => [...prev, payload.new])
+      }
+      if (payload.eventType === 'UPDATE') {
+        setAllEntries(prev => prev.map(e => e.id === payload.new.id ? payload.new : e))
+      }
+      if (payload.eventType === 'DELETE') {
+        setAllEntries(prev => prev.filter(e => e.id !== payload.old.id))
+      }
+    })
+    .subscribe()
 
-setTasks(tasks)
-setAllEntries(entriesData)
-
-if (tasks.length === 0 && lists.length === 0) {
-  setIsNewUser(true)
-}
-setHasClassList(lists.length > 0)
-setLoading(false)
+    const rosterSub = supabase
+  .channel(`roster-changes-${channelId.current}`)
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'class_lists' }, (payload) => {
+    if (payload.eventType === 'INSERT') {
+      setHasClassList(true) // step 1 done, banner updates to step 2
     }
-    fetchData()
-
-    const tasksSub = supabase
-      .channel(`tasks-changes-${channelId.current}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          setTasks(prev => [payload.new, ...prev])
-        }
-        if (payload.eventType === 'DELETE') {
-          setTasks(prev => prev.filter(t => t.id !== payload.old.id))
-        }
-        if (payload.eventType === 'UPDATE') {
-          setTasks(prev => prev.map(t => t.id === payload.new.id ? payload.new : t))
-        }
-      })
-      .subscribe()
-
-    const entriesSub = supabase
-      .channel(`entries-changes-dashboard-${channelId.current}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'entries' }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          setAllEntries(prev => [...prev, payload.new])
-        }
-        if (payload.eventType === 'UPDATE') {
-          setAllEntries(prev => prev.map(e => e.id === payload.new.id ? payload.new : e))
-        }
-        if (payload.eventType === 'DELETE') {
-          setAllEntries(prev => prev.filter(e => e.id !== payload.old.id))
-        }
-      })
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(tasksSub)
-      supabase.removeChannel(entriesSub)
+    if (payload.eventType === 'DELETE') {
+      // optional: handle if they delete their only list
     }
-  }, [])
+  })
+  .subscribe()
+
+  return () => {
+    supabase.removeChannel(tasksSub)
+    supabase.removeChannel(entriesSub)
+    supabase.removeChannel(rosterSub)
+  }
+}, [])
 
   const getGreeting = () => {
   const hour = new Date().getHours()
@@ -239,7 +275,7 @@ const filteredTasks = tasks.filter(task => {
         <div className="tutorial-banner-text">
           <p className="tutorial-banner-title light-bold">New to Roundup? 👋</p>
           <p className="tutorial-banner-sub">
-            Watch a quick tutorial to get up and running in minutes. You can revisit it anytime under Menu → How to Use Roundup.
+            Watch a quick tutorial to get up and running in minutes. You can revisit it anytime under Menu <FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowRight} /> How to Use Roundup.
           </p>
         </div>
         <div className="tutorial-banner-actions">
@@ -302,7 +338,7 @@ const filteredTasks = tasks.filter(task => {
                 </p>
                 {!hasClassList && (
                   <Link to="/roster" className="btn-primary" style={{ display: 'inline-block', marginTop: '10px', textAlign: 'center', fontSize: '13px', padding: '8px 14px' }}>
-                    Go to Roster →
+                    Go to Roster <FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowRight} />
                   </Link>
                 )}
               </div>
@@ -319,7 +355,7 @@ const filteredTasks = tasks.filter(task => {
                 </p>
                 {hasClassList && (
                   <Link to="/tasks/new" className="btn-primary" style={{ display: 'inline-block', marginTop: '10px', textAlign: 'center', fontSize: '13px', padding: '8px 14px' }}>
-                    Create task →
+                    Create task <FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowRight} />
                   </Link>
                 )}
               </div>
@@ -489,7 +525,7 @@ const filteredTasks = tasks.filter(task => {
   {archivingTaskId === task.id ? (
     <><Spinner size={12} /> {task.is_archived ? 'Unarchiving...' : 'Archiving...'}</>
   ) : (
-    task.is_archived ? '↑ Unarchive task' : '↓ Archive task'
+    task.is_archived ? <span><FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowUp} /> Unarchive task</span> : <span><FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowDown} /> Archive task</span>
   )}
 </button>
 

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons'
 
 
@@ -48,7 +48,7 @@ function Community() {
         rel="noopener noreferrer"
         className="btn-primary support-cta-btn"
       >
-        <FontAwesomeIcon icon={faWhatsapp} className="invite-whatsapp-icon" /> Join the community →
+        <FontAwesomeIcon icon={faWhatsapp} className="invite-whatsapp-icon" /> Join the community <FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowRight} />
       </a>
     </div>
   )

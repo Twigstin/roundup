@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faHeadset } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faHeadset, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons'
 
 const SUPPORT_WHATSAPP = 'https://wa.me/2348065571520?text=Hi%2C%20I%20need%20help%20with%20Roundup.'
@@ -49,7 +49,7 @@ function Support() {
         rel="noopener noreferrer"
         className="btn-primary support-cta-btn"
       >
-        <FontAwesomeIcon icon={faWhatsapp} className="invite-whatsapp-icon" /> Message on WhatsApp →
+        <FontAwesomeIcon icon={faWhatsapp} className="invite-whatsapp-icon" /> Message on WhatsApp <FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowRight} />
       </a>
     </div>
   )

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Spinner from '../components/Spinner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faUserPlus, faCircleInfo, faCirclePlay, faHeadset, faPeopleGroup, faRightFromBracket, faUserCog } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faUserPlus, faCircleInfo, faArrowRight, faCirclePlay, faHeadset, faPeopleGroup, faRightFromBracket, faUserCog } from '@fortawesome/free-solid-svg-icons'
 
 function Menu() {
   const [user, setUser] = useState(null)
@@ -94,7 +94,7 @@ function Menu() {
             onClick={() => navigate('/account/profile', { state: { from: '/menu' } })}
           >
             <span>👋 Complete your profile setup — add your name and level</span>
-            <span className="menu-setup-arrow">Set up →</span>
+            <span className="menu-setup-arrow">Set up <FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowRight} /></span>
           </button>
         )}
       </div>
