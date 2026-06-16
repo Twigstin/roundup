@@ -54,6 +54,8 @@ function Invite() {
         Share Roundup with other class reps. Help them make class management simpler and faster.
       </p>
 
+      
+
       <div className="invite-stats">
         {[
           { label: 'Invited', value: stats.signedUp },
