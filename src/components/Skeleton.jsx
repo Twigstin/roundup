@@ -47,7 +47,7 @@ export function DashboardSkeleton() {
               <SkeletonBlock width="80px" height="12px" borderRadius="4px" />
             </div>
             <div className="task-card-right">
-              <div className="task-card-stats" style={{ gap: '16px' }}>
+              <div className="task-card-statsy" style={{ gap: '16px' }}>
                 {[1, 2, 3].map(j => (
                   <div key={j} className="task-stat">
                     <SkeletonBlock width="36px" height="24px" borderRadius="12px" />
@@ -76,6 +76,10 @@ export function RosterSkeleton() {
       {/* Create list button */}
 <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
   <SkeletonBlock width="120px" height="36px" borderRadius="15px" />
+  
+</div>
+<div style={{ marginBottom: "20px" }}>
+  <SkeletonBlock width="100%" height="42px" borderRadius="8px" />
 </div>
 
       {/* Class list cards */}
@@ -247,6 +251,40 @@ export function NewTaskSkeleton() {
         </div>
 
         <SkeletonBlock width="100%" height="44px" borderRadius="15px" />
+      </div>
+    </div>
+  )
+}
+
+//Invite skeleton
+export function InviteSkeleton() {
+  return (
+    <div>
+      <div className="page-header">
+        <SkeletonBlock width="60px" height="16px" borderRadius="4px" />
+      </div>
+
+      <SkeletonBlock width="160px" height="28px" borderRadius="8px" style={{ marginBottom: '6px' }} />
+      <SkeletonBlock width="280px" height="16px" borderRadius="4px" style={{ marginBottom: '24px' }} />
+
+      {/* Stats row */}
+      <div className="invite-stats">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="summary-card">
+            <SkeletonBlock width="60px" height="11px" borderRadius="4px" style={{ marginBottom: '10px' }} />
+            <SkeletonBlock width="40px" height="28px" borderRadius="6px" />
+          </div>
+        ))}
+      </div>
+
+      {/* Invite link card */}
+      <div className="form-card" style={{ marginBottom: '16px' }}>
+        <SkeletonBlock width="100px" height="14px" borderRadius="4px" style={{ marginBottom: '12px' }} />
+        <SkeletonBlock width="100%" height="42px" borderRadius="8px" style={{ marginBottom: '12px' }} />
+        <div className="invite-actions">
+          <SkeletonBlock width="180px" height="42px" borderRadius="15px" />
+          <SkeletonBlock width="190px" height="42px" borderRadius="15px" />
+        </div>
       </div>
     </div>
   )

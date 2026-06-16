@@ -6,7 +6,7 @@ import Spinner from '../components/Spinner'
 import { RosterSkeleton } from '../components/Skeleton'
 import { supabase } from '../api/supabase'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTrashCan, faPenToSquare, faEllipsisVertical } from '@fortawesome/free-solid-svg-icons'
+import { faTrashCan, faSearch, faPenToSquare, faEllipsisVertical } from '@fortawesome/free-solid-svg-icons'
 
 
 function Roster() {
@@ -23,6 +23,7 @@ function Roster() {
   const [deletingList, setDeletingList] = useState(false)
   const [openMenuId, setOpenMenuId] = useState(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [search, setSearch] = useState('')
 
   const navigate = useNavigate()
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
@@ -132,6 +133,10 @@ function Roster() {
     setDeletingList(false)
   }
 
+  const filteredClassLists = classLists.filter(list =>
+  list.name.toLowerCase().includes(search.toLowerCase())
+)
+
   if (loading) return <RosterSkeleton />
 
   return (
@@ -163,9 +168,25 @@ function Roster() {
             + Create list
           </button>
         </div>
+        <div className="input-wrapper" style={{ marginBottom: "20px" }}>
+    <FontAwesomeIcon icon={faSearch} className="input-icon" />
+    <input
+      className="form-input search-icon"
+      type="text"
+      placeholder="Search class lists…"
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+    />
+  </div>
 
-        <div className="task-list">
-          {classLists.map(list => (
+        {filteredClassLists.length === 0 ? (
+  <div className="empty-state">
+    <p className="empty-title">No results found</p>
+    <p className="empty-subtitle">Try a different search</p>
+  </div>
+) : (
+  <div className="task-list">
+    {filteredClassLists.map(list => (
             <div key={list.id} className="task-card" onClick={() => navigate(`/roster/${list.id}`)}>
               <div className="task-card-left">
                 {editingId === list.id ? (
@@ -247,7 +268,8 @@ function Roster() {
               </div>
             </div>
           ))}
-        </div>
+  </div>
+)}
       </>
     )}
 

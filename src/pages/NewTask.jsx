@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { createTask, getTasks, getStudents, getStudentsByClassList, bulkCreateEntries, getClassLists } from '../api/index'
+import { createTask, markReferralActivated, getTasks, getStudents, getStudentsByClassList, bulkCreateEntries, getClassLists } from '../api/index'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons'
 import Spinner from '../components/Spinner'
 import { NewTaskSkeleton } from '../components/Skeleton'
 import posthog from 'posthog-js'
+import { supabase } from '../api/supabase'
 
 function NewTask() {
   const [title, setTitle] = useState('')
@@ -74,6 +75,11 @@ function NewTask() {
 
   await createTask(newTask)
   posthog.capture('task_created', { type: newTask.type })
+
+  const { data: { session } } = await supabase.auth.getSession()
+if (session?.user?.id) {
+  await markReferralActivated(session.user.id)
+}
 
   const students = await getStudentsByClassList(selectedClassListId)
 

@@ -328,3 +328,28 @@ export const getStudentsByClassList = async (classListId) => {
   reportSuccess()
   return data
 }
+
+
+//referrals
+
+export const getReferralStats = async (userId) => {
+  const { data, error } = await supabase
+    .from('referrals')
+    .select('referred_id, signed_up_at, activated_at')
+    .eq('referrer_id', userId)
+  if (error) return { total: 0, signedUp: 0, activated: 0, referrals: [] }
+  return {
+    total: data.length,
+    signedUp: data.length,
+    activated: data.filter(r => r.activated_at).length,
+    referrals: data
+  }
+}
+
+export const markReferralActivated = async (userId) => {
+  await supabase
+    .from('referrals')
+    .update({ activated_at: new Date().toISOString() })
+    .eq('referred_id', userId)
+    .is('activated_at', null)
+}

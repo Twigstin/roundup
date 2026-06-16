@@ -13,6 +13,9 @@ import EditProfile from './pages/EditProfile'
 import ChangePassword from './pages/ChangePassword'
 import TutorialList from './pages/TutorialList'
 import TutorialDetail from './pages/TutorialDetail'
+import Invite from './pages/Invite'
+import Community from './pages/Community'
+import Support from './pages/Support'
 
 function App() {
   const { needRefresh, updateServiceWorker } = useRegisterSW()
@@ -71,6 +74,9 @@ function App() {
         <Route path="/account/password" element={<ChangePassword />} />
         <Route path="/tutorials" element={<TutorialList />} />
         <Route path="/tutorials/:id" element={<TutorialDetail />} />
+        <Route path="/invite" element={<Invite />} />
+        <Route path="/community" element={<Community />} />
+        <Route path="/support" element={<Support />} />
       </Route>
     </Routes>
     </>

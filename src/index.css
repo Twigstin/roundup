@@ -630,6 +630,14 @@ button {
   flex-wrap: wrap;
 }
 
+.task-card-statsy {
+  width: 165px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 10px;
+}
+
 .task-stat {
   display: flex;
   flex-direction: column;
@@ -867,10 +875,7 @@ button {
     align-items: flex-start;
   }
 
-  .task-card-stats {
-    width: 100%;
-    justify-content: space-between;
-  }
+  
 
   .task-card-actions {
     width: 100%;
@@ -946,6 +951,14 @@ button {
     width: 100%;
     justify-content: flex-start;
     gap: 16px;
+    width: 100%;
+  }
+
+  .task-card-statsy {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 16px;
+    width: 100%;
   }
 
   .task-stat-divider {
@@ -2212,6 +2225,8 @@ button:active {
   gap: 10px;
 }
 
+
+
 .task-card-top-right {
   display: flex;
   align-items: center;
@@ -2478,7 +2493,11 @@ button:active {
   flex-shrink: 0;
 }
 
+
+
 @media (max-width: 1025px) {
+  
+
   .profile-setup-banner {
     flex-direction: column;
     align-items: flex-start;
@@ -2889,4 +2908,273 @@ button:active {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
+}
+
+
+
+.invite-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.invite-title {
+  font-size: 20px;
+  margin-bottom: 6px;
+}
+
+.invite-subtitle {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.invite-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 380px) {
+  .invite-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.invite-stat-card {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 14px 16px;
+  text-align: center;
+}
+
+.invite-stat-label {
+  font-size: 11px;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.invite-stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: #111;
+}
+
+.invite-link-card {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 20px;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.invite-link-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111;
+}
+
+.invite-link-display {
+  background: #f5f5f5;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #555;
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.invite-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+}
+
+@media (max-width: 480px) {
+  .invite-actions {
+    flex-direction: column;
+  }
+}
+
+.invite-btn-primary {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 15px;
+  font-size: 14px;
+  cursor: pointer;
+  font-family: 'inter', sans-serif;
+}
+
+.invite-btn-primary:hover {
+  background: #333;
+}
+
+.invite-btn-whatsapp {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background: #fff;
+  color: #111;
+  border: 1px solid #ddd;
+  border-radius: 15px;
+  font-size: 14px;
+  cursor: pointer;
+  font-family: 'inter', sans-serif;
+}
+
+.invite-btn-whatsapp:hover {
+  background: #f5f5f5;
+}
+
+.invite-whatsapp-icon {
+  color: #25D366;
+  font-size: 16px;
+}
+
+.invite-referrals-card {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 20px;
+}
+
+.invite-referrals-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111;
+  margin-bottom: 16px;
+}
+
+.invite-referral-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.invite-referral-row:last-child {
+  border-bottom: none;
+}
+
+.invite-referral-name {
+  font-size: 13px;
+  color: #333;
+}
+
+.invite-referral-badge {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.invite-referral-badge-active {
+  background: #EAF3DE;
+  color: #27500A;
+}
+
+.invite-referral-badge-pending {
+  background: #f5f5f5;
+  color: #888;
+}
+
+
+
+
+
+
+
+
+
+.support-page-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 0 8px;
+  text-align: center;
+  margin-bottom: 4px;
+}
+ 
+.support-page-subtitle {
+  font-size: 14px;
+  color: #888;
+  line-height: 1.6;
+  max-width: 340px;
+  text-align: center;
+  margin-top: 4px;
+}
+ 
+.support-icon-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+ 
+.support-icon {
+  font-size: 32px;
+  color: #fff;
+}
+ 
+.support-section-label {
+  font-size: 13px;
+  color: #111;
+}
+ 
+.support-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+ 
+.support-list li {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.5;
+  padding-left: 16px;
+  position: relative;
+}
+ 
+.support-list li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #111;
+  font-weight: bold;
+}
+ 
+.support-cta-btn {
+  display: block;
+  text-align: center;
+  padding: 14px;
+  font-size: 15px;
+  border-radius: 15px;
+  text-decoration: none;
+  margin-bottom: 24px;
 }

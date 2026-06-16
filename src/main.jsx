@@ -23,6 +23,12 @@ posthog.init('phc_ransVbfReTXvvxUVQ7vXS2dV8Fmy5ypk8uagY3Lxakfd', {
   person_profiles: 'identified_only'
 })
 
+const urlParams = new URLSearchParams(window.location.search)
+const refParam = urlParams.get('ref')
+if (refParam) {
+  localStorage.setItem('roundup_ref', refParam)
+}
+
 
 function Root() {
   const [session, setSession] = useState(undefined)
@@ -46,17 +52,36 @@ function Root() {
       }
 
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        if (currentSession?.user?.email_confirmed_at) {
-          setSession(currentSession)
-          posthog.identify(currentSession.user.id, {
-            email: currentSession.user.email,
-            name: currentSession.user.user_metadata?.display_name || null,
-            is_test: testEmails.includes(currentSession.user.email)
-          })
-        } else {
-          supabase.auth.signOut()
-        }
+  if (currentSession?.user?.email_confirmed_at) {
+    setSession(currentSession)
+    posthog.identify(currentSession.user.id, {
+      email: currentSession.user.email,
+      name: currentSession.user.user_metadata?.display_name || null,
+      is_test: testEmails.includes(currentSession.user.email)
+    })
+
+    // Capture referral if present
+    const pendingRef = localStorage.getItem('roundup_ref')
+    if (pendingRef && pendingRef !== currentSession.user.id) {
+      const { data: existing } = supabase
+        .from('referrals')
+        .select('id')
+        .eq('referred_id', currentSession.user.id)
+        .single()
+
+      if (!existing) {
+        supabase.from('referrals').insert({
+          referrer_id: pendingRef,
+          referred_id: currentSession.user.id
+        })
+        posthog.capture('referral_signup', { referrer_id: pendingRef })
       }
+      localStorage.removeItem('roundup_ref')
+    }
+  } else {
+    supabase.auth.signOut()
+  }
+}
 
       if (event === 'SIGNED_OUT') {
         setSession(null)

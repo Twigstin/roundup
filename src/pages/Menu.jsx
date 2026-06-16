@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Spinner from '../components/Spinner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight, faEnvelope, faCircleInfo, faCirclePlay, faHeadset, faPeopleGroup, faRightFromBracket, faUserCog } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faUserPlus, faCircleInfo, faCirclePlay, faHeadset, faPeopleGroup, faRightFromBracket, faUserCog } from '@fortawesome/free-solid-svg-icons'
 
 function Menu() {
   const [user, setUser] = useState(null)
@@ -125,8 +125,20 @@ function Menu() {
               <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
             </span>
           </div>
+
+          <div className="menu-list-item" onClick={() => navigate('/invite')}>
+            <span className="menu-list-item-label">
+              <span style={{ marginRight: '10px' }}>
+                <FontAwesomeIcon icon={faUserPlus} style={{ color: '#111' }} />
+              </span>
+              Invite a user
+            </span>
+            <span className="menu-list-chevron">
+              <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
+            </span>
+          </div>
           <div className="menu-list-item" onClick={() => {
-            window.open('https://wa.me/2348065571520?text=Hi%2C%20I%20need%20help%20with%20Roundup.', '_blank')
+            navigate('/support')
           }}>
             <span className="menu-list-item-label">
               <span style={{ marginRight: '10px' }}>
@@ -139,7 +151,7 @@ function Menu() {
             </span>
           </div>
           <div className="menu-list-item" onClick={() => {
-            window.open('https://chat.whatsapp.com/JNWoXb4eibt8ZBE1Gu0IAF?mode=gi_t', '_blank')
+            navigate('/community')
           }}>
             <span className="menu-list-item-label">
               <span style={{ marginRight: '10px' }}>
