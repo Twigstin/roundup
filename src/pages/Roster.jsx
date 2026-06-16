@@ -22,6 +22,7 @@ function Roster() {
   const [renamingId, setRenamingId] = useState(null)
   const [deletingList, setDeletingList] = useState(false)
   const [openMenuId, setOpenMenuId] = useState(null)
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
   const navigate = useNavigate()
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
@@ -89,17 +90,19 @@ function Roster() {
   }, [])
 
   const handleCreateList = async () => {
-    if (!newListName.trim()) {
-      setError('Please enter a list name')
-      return
-    }
-    setCreating(true)
-    const saved = await createClassList(newListName.trim())
-    setClassLists(prev => sortByUpdated([...prev, { ...saved, studentCount: 0 }]))
-    setNewListName('')
-    setError('')
-    setCreating(false)
+  if (!newListName.trim()) {
+    setError('Please enter a list name')
+    return
   }
+  setCreating(true)
+  const saved = await createClassList(newListName.trim())
+  setClassLists(prev => sortByUpdated([...prev, { ...saved, studentCount: 0 }]))
+  setNewListName('')
+  setError('')
+  setCreating(false)
+  setShowCreateModal(false)
+  navigate(`/roster/${saved.id}`, { state: { showEmptyPrompt: true } })
+}
 
   const handleRenameList = async (listId) => {
     if (!editingName.trim()) return
@@ -132,54 +135,41 @@ function Roster() {
   if (loading) return <RosterSkeleton />
 
   return (
-    <div>
-      <div className="page-header">
-        <h1 className="page-title bold">Class lists</h1>
-        <span className="roster-count">{classLists.length} list{classLists.length !== 1 ? 's' : ''}</span>
-      </div>
+  <div>
+    <div className="page-header">
+      <h1 className="page-title bold">Class lists</h1>
+      <span className="roster-count">{classLists.length} list{classLists.length !== 1 ? 's' : ''}</span>
+    </div>
 
-      <div className="form-card" style={{ marginBottom: '16px' }}>
-        <p className="form-label" style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '500' }}>
-          Create new list
-        </p>
-        {error && <p className="form-error">{error}</p>}
-        <div className="roster-align">
-          <input
-            className="formy-input"
-            type="text"
-            placeholder="Enter list name. e.g. CSC 301 List, Main Class List…"
-            value={newListName}
-            onChange={(e) => setNewListName(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleCreateList() }}
-          />
+    {classLists.length === 0 ? (
+      <div className="empty-state">
+        <p className="empty-title">No class lists yet</p>
+        <p className="empty-subtitle">Create your first class list to start managing students</p>
+        <button
+          className="btn-primary"
+          style={{ display: 'inline-block', marginTop: '16px' }}
+          onClick={() => setShowCreateModal(true)}
+        >
+          + Create class list
+        </button>
+      </div>
+    ) : (
+      <>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
           <button
             className="btn-primary"
-            onClick={handleCreateList}
-            disabled={creating}
-            style={{ opacity: creating ? 0.6 : 1, whiteSpace: 'nowrap' }}
+            onClick={() => setShowCreateModal(true)}
           >
-            {creating ? (
-              <><Spinner size={14} /><span style={{ marginLeft: '10px' }}>Creating...</span></>
-            ) : '+ Create list'}
+            + Create list
           </button>
         </div>
-      </div>
 
-      {classLists.length === 0 ? (
-        <div className="empty-state">
-          <p className="empty-title">No class lists yet</p>
-          <p className="empty-subtitle">Create your first list to start managing students</p>
-        </div>
-      ) : (
         <div className="task-list">
           {classLists.map(list => (
             <div key={list.id} className="task-card" onClick={() => navigate(`/roster/${list.id}`)}>
               <div className="task-card-left">
                 {editingId === list.id ? (
-                  <div
-                    className="title-edit-row"
-                    onClick={(e) => e.stopPropagation()}
-                  >
+                  <div className="title-edit-row" onClick={(e) => e.stopPropagation()}>
                     <input
                       className="form-input title-edit-input"
                       type="text"
@@ -211,10 +201,7 @@ function Roster() {
                 ) : (
                   <div className="task-card-top">
                     <span className="task-card-title light-bold">{list.name}</span>
-                    <div
-                      className="task-card-top-right"
-                      onClick={(e) => e.stopPropagation()}
-                    >
+                    <div className="task-card-top-right" onClick={(e) => e.stopPropagation()}>
                       <div className="kebab-wrapper">
                         <button
                           className="kebab-btn"
@@ -254,7 +241,6 @@ function Roster() {
                     </div>
                   </div>
                 )}
-
                 <p className="task-card-meta">
                   {list.studentCount} student{list.studentCount <= 1 ? '' : 's'}
                 </p>
@@ -262,21 +248,79 @@ function Roster() {
             </div>
           ))}
         </div>
-      )}
+      </>
+    )}
 
-      {showDeleteWarning && (
-        <ConfirmModal
-          message="This will permanently delete this class list and all students in it. Tasks that used this list will not be affected. This action cannot be undone."
-          onConfirm={handleConfirmDelete}
-          onCancel={() => {
-            setShowDeleteWarning(false)
-            setListToDelete(null)
-          }}
-          loading={deletingList}
-        />
-      )}
-    </div>
-  )
+    {/* Create list modal */}
+    {showCreateModal && (
+      <div className="modal-overlay" onClick={() => {
+        setShowCreateModal(false)
+        setNewListName('')
+        setError('')
+      }}>
+        <div className="modal-card" id="modal-card" onClick={(e) => e.stopPropagation()}>
+          <div style={{ padding: '24px' }}>
+            <h2 className="page-title bold" style={{ fontSize: '16px', marginBottom: '8px' }}>
+              Name your class list
+            </h2>
+            <p style={{ fontSize: '13px', color: '#888', marginBottom: '20px' }}>
+              e.g. CSC 301 List, Main Class List…
+            </p>
+            {error && <p className="form-error">{error}</p>}
+            <input
+              className="form-input"
+              type="text"
+              placeholder="Enter list name"
+              value={newListName}
+              onChange={(e) => setNewListName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleCreateList() }}
+              autoFocus
+            />
+          </div>
+          <div style={{
+            padding: '16px 24px',
+            borderTop: '1px solid #e5e5e5',
+            display: 'flex',
+            gap: '8px',
+            background: '#fff'
+          }}>
+            <button
+              className="btn-primary"
+              style={{ flex: 1, padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              onClick={handleCreateList}
+              disabled={creating}
+            >
+              {creating ? <><Spinner size={14} />Creating...</> : 'Create list →'}
+            </button>
+            <button
+              className="btn-secondary"
+              style={{ flex: 1, padding: '10px' }}
+              onClick={() => {
+                setShowCreateModal(false)
+                setNewListName('')
+                setError('')
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {showDeleteWarning && (
+      <ConfirmModal
+        message="This will permanently delete this class list and all students in it. Tasks that used this list will not be affected. This action cannot be undone."
+        onConfirm={handleConfirmDelete}
+        onCancel={() => {
+          setShowDeleteWarning(false)
+          setListToDelete(null)
+        }}
+        loading={deletingList}
+      />
+    )}
+  </div>
+)
 }
 
 export default Roster

@@ -19,14 +19,21 @@ export function DashboardSkeleton() {
       </div>
 
       {/* Toolbar */}
-      <div className="dashboard-toolbar">
-        <SkeletonBlock width="100%" height="42px" borderRadius="8px" />
-        <div className="filter-tabs">
-          {[80, 90, 80, 100].map((w, i) => (
-            <SkeletonBlock key={i} width={`${w}px`} height="32px" borderRadius="20px" />
-          ))}
-        </div>
-      </div>
+<div className="dashboard-toolbar">
+  <SkeletonBlock width="100%" height="42px" borderRadius="8px" />
+  {/* Row 1 — Active/Archived toggle */}
+  <div className="filter-tabs">
+    {[100, 110].map((w, i) => (
+      <SkeletonBlock key={i} width={`${w}px`} height="32px" borderRadius="20px" />
+    ))}
+  </div>
+  {/* Row 2 — Type filters */}
+  <div className="filter-tabs">
+    {[50, 90, 80, 95].map((w, i) => (
+      <SkeletonBlock key={i} width={`${w}px`} height="32px" borderRadius="20px" />
+    ))}
+  </div>
+</div>
 
       {/* Task cards */}
       <div className="task-list">
@@ -66,14 +73,10 @@ export function RosterSkeleton() {
         <SkeletonBlock width="60px" height="16px" borderRadius="4px" />
       </div>
 
-      {/* Create list form card */}
-      <div className="form-card" style={{ marginBottom: '16px' }}>
-        <SkeletonBlock width="110px" height="14px" borderRadius="4px" style={{ marginBottom: '12px' }} />
-        <div className="roster-align">
-          <SkeletonBlock width="100%" height="40px" borderRadius="8px" />
-          <SkeletonBlock width="120px" height="40px" borderRadius="15px" style={{ flexShrink: 0 }} />
-        </div>
-      </div>
+      {/* Create list button */}
+<div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+  <SkeletonBlock width="120px" height="36px" borderRadius="15px" />
+</div>
 
       {/* Class list cards */}
       <div className="task-list">
