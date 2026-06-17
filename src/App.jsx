@@ -40,7 +40,7 @@ function App() {
           whiteSpace: 'nowrap',
           boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
         }}>
-          <span>✨ New version available — refresh to get the latest fixes and features</span>
+          <span>✨ New updates available</span>
           <button
             onClick={() => updateServiceWorker(true)}
             style={{
