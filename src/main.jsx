@@ -41,7 +41,7 @@ function Root() {
     })
 
     // 2. Let Supabase handle the incoming recovery URL automatically
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       
       if (event === 'PASSWORD_RECOVERY') {
         setIsRecovery(true)
@@ -64,14 +64,14 @@ function Root() {
     const pendingRef = localStorage.getItem('roundup_ref')
 if (pendingRef && pendingRef !== currentSession.user.id) {
   try {
-    const { data: existing } = supabase
+    const { data: existing } = await supabase
       .from('referrals')
       .select('id')
       .eq('referred_id', currentSession.user.id)
       .maybeSingle()
 
     if (!existing) {
-      const { error } = supabase.from('referrals').insert({
+      const { error } = await supabase.from('referrals').insert({
         referrer_id: pendingRef,
         referred_id: currentSession.user.id
       })
