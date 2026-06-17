@@ -87,7 +87,7 @@ function Invite() {
           <p className="invite-referrals-title light-bold">People you invited</p>
           {stats.referrals.map((r, i) => (
             <div key={i} className="invite-referral-row">
-              <p className="invite-referral-name">Rep {i + 1}</p>
+              <p className="invite-referral-name">User {i + 1}</p>
               <span className={`invite-referral-badge ${r.activated_at ? 'invite-referral-badge-active' : 'invite-referral-badge-pending'}`}>
                 {r.activated_at ? 'Active' : 'Signed up'}
               </span>
