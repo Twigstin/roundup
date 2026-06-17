@@ -62,23 +62,38 @@ function Root() {
 
     // Capture referral if present
     const pendingRef = localStorage.getItem('roundup_ref')
+console.log('pendingRef:', pendingRef)
+console.log('currentSession.user.id:', currentSession.user.id)
+
 if (pendingRef && pendingRef !== currentSession.user.id) {
   try {
-    const { data: existing } = await supabase
+    console.log('Attempting referral capture...')
+    
+    const { data: existing, error: selectError } = await supabase
       .from('referrals')
       .select('id')
       .eq('referred_id', currentSession.user.id)
       .maybeSingle()
 
+    console.log('existing:', existing)
+    console.log('selectError:', selectError)
+
     if (!existing) {
-      const { error } = await supabase.from('referrals').insert({
-        referrer_id: pendingRef,
-        referred_id: currentSession.user.id
-      })
-      if (!error) {
+      console.log('Inserting referral...')
+      const { data: insertData, error: insertError } = await supabase
+        .from('referrals')
+        .insert({
+          referrer_id: pendingRef,
+          referred_id: currentSession.user.id
+        })
+        .select()
+
+      console.log('insertData:', insertData)
+      console.log('insertError:', insertError)
+
+      if (!insertError) {
         posthog.capture('referral_signup', { referrer_id: pendingRef })
-      } else {
-        console.error('Referral insert error:', error)
+        console.log('Referral captured successfully')
       }
     }
   } catch (err) {
