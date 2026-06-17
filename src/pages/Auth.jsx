@@ -28,7 +28,18 @@ export const Auth = () => {
     setMessage("");
 
     if (isSignUp) {
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const pendingRef = localStorage.getItem('roundup_ref')
+const redirectUrl = pendingRef
+  ? `https://getroundup.app?ref=${pendingRef}`
+  : 'https://getroundup.app'
+
+const { data, error } = await supabase.auth.signUp({
+  email,
+  password,
+  options: {
+    emailRedirectTo: redirectUrl
+  }
+})
   if (error) {
     setError(error.message)
   } else if (data?.user?.identities?.length === 0) {
