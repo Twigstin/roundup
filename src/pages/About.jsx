@@ -123,7 +123,7 @@ function About() {
           </div>
         </div>
 
-        <div className="menu-section">
+        {/* <div className="menu-section">
           <p className="menu-section-label">Contributors</p>
           <div className="menu-list">
             {contributors.map((contributor, index) => (
@@ -142,7 +142,7 @@ function About() {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   )
