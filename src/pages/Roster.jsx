@@ -418,7 +418,7 @@ function Roster() {
                 style={{ display: 'inline-block', marginTop: '16px' }}
                 onClick={() => setActiveTab('lists')}
               >
-                Go to Class lists →
+                Go to Class lists<span style={{ fontSize: '10px', paddingTop: '2px' , marginLeft: '3px'}}><FontAwesomeIcon icon={faArrowRight} /></span>
               </button>
             </div>
           ) : coursesLoading ? (
