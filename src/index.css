@@ -709,6 +709,27 @@ button {
   gap: 10px;
 }
 
+
+
+
+
+
+
+
+
+
+
+.create-classlist-modal {
+  padding: 16px 24px;
+  border-top: 1px solid #e5e5e5;
+  display: flex;
+  gap: 8px;
+  background: #fff;
+}
+
+
+
+
 .btn-danger-solid {
   background: #c0392b;
   color: #fff;
@@ -2705,6 +2726,18 @@ button:active {
   animation: fadeIn 0.2s ease;
 }
 
+@media (max-width: 530px) {
+  #modal-card {
+    width: 90%;
+  }
+}
+
+@media (max-width: 350px) {
+  #modal-card {
+    width: 95%;
+  }
+}
+
 @media (min-width: 769px) {
   
   #modal-card {
@@ -2736,13 +2769,13 @@ button:active {
   to { opacity: 1; transform: scale(1); }
 }
 
-@media (min-width: 769px) {
+/* @media (min-width: 769px) {
   #modal-card {
     animation: fadeIn 0.2s ease;
   }
 
   
-}
+} */
 
 
 

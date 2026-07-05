@@ -6,7 +6,7 @@ import Spinner from '../components/Spinner'
 import { RosterSkeleton } from '../components/Skeleton'
 import { supabase } from '../api/supabase'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTrashCan, faPenToSquare, faEllipsisVertical, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { faTrashCan, faPenToSquare, faEllipsisVertical, faSearch, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 
 function Roster() {
   const [activeTab, setActiveTab] = useState(() => {
@@ -566,18 +566,18 @@ function Roster() {
 
       {/* Create list modal */}
       {showCreateModal && (
-        <div className="modal-overlay" onClick={() => {
+        <div className="modal-overlay-new-list" onClick={() => {
           setShowCreateModal(false)
           setNewListName('')
           setError('')
         }}>
-          <div className="modal-card" id="modal-card" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-card-new-list" id="modal-card" onClick={(e) => e.stopPropagation()}>
             <div style={{ padding: '24px' }}>
               <h2 className="page-title bold" style={{ fontSize: '16px', marginBottom: '8px' }}>
                 Name your class list
               </h2>
               <p style={{ fontSize: '13px', color: '#888', marginBottom: '20px' }}>
-                e.g. CSC 301 List, Main Class List…
+                e.g. Main Class List, FRN 102 Class List…
               </p>
               {error && <p className="form-error">{error}</p>}
               <input
@@ -590,20 +590,14 @@ function Roster() {
                 autoFocus
               />
             </div>
-            <div style={{
-              padding: '16px 24px',
-              borderTop: '1px solid #e5e5e5',
-              display: 'flex',
-              gap: '8px',
-              background: '#fff'
-            }}>
+            <div className="create-classlist-modal">
               <button
                 className="btn-primary"
                 style={{ flex: 1, padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                 onClick={handleCreateList}
                 disabled={creating}
               >
-                {creating ? <><Spinner size={14} />Creating...</> : 'Create list →'}
+                {creating ? <><Spinner size={14} />Creating...</> : (<span>Create list<span style={{ fontSize: '10px', paddingTop: '2px' , marginLeft: '3px'}}><FontAwesomeIcon icon={faArrowRight} /></span></span>)}
               </button>
               <button
                 className="btn-secondary"
