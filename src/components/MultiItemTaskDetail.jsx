@@ -7,7 +7,7 @@ import { supabase } from '../api/supabase'
 import {
   getTaskItems, createTaskItems, getCourses,
   getItemEntries, addItemEntry, updateItemEntry, removeItemEntry,
-  updateTask, getStudentsByClassList
+  updateTask, getStudentsByClassList, deleteTaskItem
 } from '../api/index'
 
 const MAX_DOTS = 5
@@ -57,20 +57,53 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
       ])
       setStudents(studentData)
 
-      if (courses.length === 0) {
-        setNoCourses(true)
-        setLoading(false)
-        return
-      }
+      // Three-way fork
+if (existingItems.length === 0 && courses.length === 0) {
+  // Genuine empty state — no history, no outline courses
+  setNoCourses(true)
+  setLoading(false)
+  return
+}
 
-      const existingNames = existingItems.map(i => i.name)
-      const newCourses = courses.filter(c => !existingNames.includes(c.name))
-      let items = existingItems
-      if (newCourses.length > 0) {
-        const created = await createTaskItems(task.id, newCourses.map(c => c.name))
-        items = [...existingItems, ...created]
-      }
-      setTaskItems(items)
+// Normalize helper — strips special chars, lowercases for dedup comparison
+const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '').trim()
+
+const courseNormalized = courses.map(c => normalize(c.name))
+const existingNormalized = existingItems.map(i => normalize(i.name))
+
+// Add new courses from outline not yet in task_items
+const newCourses = courses.filter(c => !existingNormalized.includes(normalize(c.name)))
+let items = existingItems
+if (newCourses.length > 0) {
+  const created = await createTaskItems(task.id, newCourses.map(c => c.name))
+  items = [...existingItems, ...created]
+}
+
+// Fetch all entries for this task once
+const allEntries = await getItemEntries(task.id)
+
+// Remove virgin task_items no longer in outline
+// Virgin = not in current outline AND has zero item_entries
+const itemsToRemove = items.filter(item => {
+  const inOutline = courseNormalized.includes(normalize(item.name))
+  const hasEntries = allEntries.some(e => e.task_item_id === item.id)
+  return !inOutline && !hasEntries
+})
+
+if (itemsToRemove.length > 0) {
+  await Promise.all(itemsToRemove.map(item => deleteTaskItem(item.id)))
+  items = items.filter(i => !itemsToRemove.some(r => r.id === i.id))
+}
+
+// Handle genuine empty state after cleanup
+if (items.length === 0 && courses.length === 0) {
+  setNoCourses(true)
+  setLoading(false)
+  return
+}
+
+setTaskItems(items)
+setItemEntries(allEntries.filter(e => items.some(i => i.id === e.task_item_id)))
 
       const entries = await getItemEntries(task.id)
       setItemEntries(entries)

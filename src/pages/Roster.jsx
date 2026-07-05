@@ -462,7 +462,7 @@ function Roster() {
               {/* Course list */}
               
               {courses.length === 0 ? (
-                <div className="empty-state">cd rou
+                <div className="empty-state">
                   <p className="empty-title">No courses yet</p>
                   <p className="empty-subtitle">
                     Add the courses your class is offering this semester
