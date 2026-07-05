@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, Link, useLocation } from 'react-router-dom'
 import { getTasks, getEntries, getStudents, getStudentsByClassList, createEntry, updateEntry, populateTaskEntries, updateTask, getRosterMeta, syncTaskRoster } from '../api/index'
 import Spinner from '../components/Spinner'
+import MultiItemTaskDetail from '../components/MultiItemTaskDetail'
 import { TaskDetailSkeleton } from '../components/Skeleton'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faArrowRight, faSearch, faPenToSquare, faDownload, faUserCheck, faFileCircleCheck, faCreditCard } from '@fortawesome/free-solid-svg-icons'
@@ -206,6 +207,15 @@ const filteredEntries = enrichedEntries.filter(entry => {
   if (!task) {
     return <p className="loading-text">Task not found.</p>
   }
+
+  if (task.payment_mode === 'multi') {
+  return (
+    <MultiItemTaskDetail
+      task={task}
+      onTitleUpdate={(newTitle) => setTask(prev => ({ ...prev, title: newTitle }))}
+    />
+  )
+}
 
 const handleStatusUpdate = async (entryId, currentStatus) => {
   let newStatus

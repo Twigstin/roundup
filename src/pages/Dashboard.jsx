@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { getTasks, deleteTask, getClassLists } from '../api/index'
+import { getTasks, deleteTask, getClassLists, getCourses } from '../api/index'
 import ConfirmModal from '../components/ConfirmModal'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLayerGroup, faArrowUp, faArrowDown, faBook, faSearch, faClipboardList, faTrashCan, faArrowRight, faCreditCard, faFileCircleCheck, faUserCheck, faEllipsisVertical } from '@fortawesome/free-solid-svg-icons'
@@ -26,6 +26,7 @@ function Dashboard() {
   const [showTutorialBanner, setShowTutorialBanner] = useState(false)
   const [showArchived, setShowArchived] = useState(false)
   const [archivingTaskId, setArchivingTaskId] = useState(null)
+  const [hasCourses, setHasCourses] = useState(false)
 
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
 
@@ -95,44 +96,97 @@ function Dashboard() {
 
   useEffect(() => {
   const fetchData = async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    const userId = session?.user?.id
-    const meta = session?.user?.user_metadata || {}
-    setUserFirstName(meta.first_name || '')
-    
-    const hasCompletedOnboarding = meta.onboarding_complete || false
+  const { data: { session } } = await supabase.auth.getSession()
+  const userId = session?.user?.id
+  const meta = session?.user?.user_metadata || {}
+  setUserFirstName(meta.first_name || '')
 
-    const onboardingChoice = localStorage.getItem('roundup_onboarding')
-    if (!onboardingChoice) setShowTutorialBanner(true)
-    if (!meta.first_name) {
-      const dismissed = localStorage.getItem('roundup_profile_banner_dismissed')
-      if (!dismissed) setShowProfileBanner(true)
-    }
+  const { data: studentCountData } = await supabase
+  .from('students')
+  .select('class_list_id')
 
-    const [tasks, entriesData, lists] = await Promise.all([
-      getTasks(),
-      fetchAllEntries(userId),
-      getClassLists()
-    ])
+let classListStudentCounts = {}
+if (studentCountData) {
+  studentCountData.forEach(row => {
+    classListStudentCounts[row.class_list_id] = (classListStudentCounts[row.class_list_id] || 0) + 1
+  })
+}
 
-    setTasks(tasks)
-    setAllEntries(entriesData)
-    setHasClassList(lists.length > 0)
-    setLoading(false)
+  const hasCompletedOnboarding = meta.onboarding_complete || false
 
-    
-    if (!hasCompletedOnboarding && (tasks.length > 0)) {
-      await supabase.auth.updateUser({
-        data: { onboarding_complete: true }
-      })
-      return
-    }
-
-    // Genuinely new user
-    if (!hasCompletedOnboarding) {
-      setIsNewUser(true)
-    }
+  const onboardingChoice = localStorage.getItem('roundup_onboarding')
+  if (!onboardingChoice) setShowTutorialBanner(true)
+  if (!meta.first_name) {
+    const dismissed = localStorage.getItem('roundup_profile_banner_dismissed')
+    if (!dismissed) setShowProfileBanner(true)
   }
+
+  // Fetch everything in parallel
+  const [tasks, entriesData, lists, courses] = await Promise.all([
+    getTasks(),
+    fetchAllEntries(userId),
+    getClassLists(),
+    getCourses()
+  ])
+
+  setHasCourses(courses.length > 0)
+  setHasClassList(lists.length > 0)
+  setAllEntries(entriesData)
+
+  // Fetch course counts for multi-item tasks
+  const multiItemTaskIds = tasks
+    .filter(t => t.payment_mode === 'multi')
+    .map(t => t.id)
+
+  let courseCounts = {}
+let taskPaidCounts = {}
+let taskCollectedCounts = {}
+
+if (multiItemTaskIds.length > 0) {
+  const [{ data: itemData }, { data: itemEntryData }] = await Promise.all([
+    supabase.from('task_items').select('task_id').in('task_id', multiItemTaskIds),
+    supabase.from('item_entries').select('task_id, collected').in('task_id', multiItemTaskIds)
+  ])
+
+  if (itemData) {
+    itemData.forEach(row => {
+      courseCounts[row.task_id] = (courseCounts[row.task_id] || 0) + 1
+    })
+  }
+
+  if (itemEntryData) {
+    itemEntryData.forEach(row => {
+      taskPaidCounts[row.task_id] = (taskPaidCounts[row.task_id] || 0) + 1
+      if (row.collected) {
+        taskCollectedCounts[row.task_id] = (taskCollectedCounts[row.task_id] || 0) + 1
+      }
+    })
+  }
+}
+
+  // Attach courseCount to each task
+  const tasksWithMeta = tasks.map(t => ({
+  ...t,
+  courseCount: courseCounts[t.id] || 0,
+  totalPaid: taskPaidCounts[t.id] || 0,
+  totalCollected: taskCollectedCounts[t.id] || 0,
+  studentCount: classListStudentCounts[t.class_list_id] || 0
+}))
+
+  setTasks(tasksWithMeta)
+  setLoading(false)
+
+  if (!hasCompletedOnboarding && tasks.length > 0) {
+    await supabase.auth.updateUser({
+      data: { onboarding_complete: true }
+    })
+    return
+  }
+
+  if (!hasCompletedOnboarding) {
+    setIsNewUser(true)
+  }
+}
 
   fetchData()
 
@@ -235,6 +289,10 @@ function Dashboard() {
   }
 
 
+
+
+
+
   const archivedCount = tasks.filter(t => t.is_archived).length
 
 useEffect(() => {
@@ -316,53 +374,71 @@ const filteredTasks = tasks.filter(task => {
     </div>
 
       {isNewUser && (
-        <div className="onboarding-banner">
-          <div className="onboarding-steps">
-            <div className="onboarding-header">
-              <h2 className="onboarding-title bold">Welcome to Roundup 👋</h2>
-              <p className="onboarding-subtitle">
-                Get started in two steps. It takes less than 2 minutes.
-              </p>
-            </div>
+  <div className="onboarding-banner">
+    <div className="onboarding-header">
+      <p className="onboarding-title bold">Welcome to Roundup 👋</p>
+      <p className="onboarding-subtitle">Get started in two steps. It takes less than 5 minutes.</p>
+    </div>
+    <div className="onboarding-steps">
 
-            <div className="onboarding-step">
-              <div className={`onboarding-step-number ${hasClassList ? 'onboarding-step-done' : ''}`}>
-                {hasClassList ? '✓' : '1'}
-              </div>
-              <div className="onboarding-step-content">
-                <p className="onboarding-step-title light-bold" style={{ color: hasClassList ? '#999' : '#111' }}>
-                  Add your class list
-                </p>
-                <p className="onboarding-step-desc">
-                  Create and Import your class list so Roundup can track it automatically.
-                </p>
-                {!hasClassList && (
-                  <Link to="/roster" className="btn-primary" style={{ display: 'inline-block', marginTop: '10px', textAlign: 'center', fontSize: '13px', padding: '8px 14px' }}>
-                    Go to Roster <FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowRight} />
-                  </Link>
-                )}
-              </div>
-            </div>
-
-            <div className="onboarding-step">
-              <div className={`onboarding-step-number ${!hasClassList ? 'onboarding-step-number-muted' : ''}`}>2</div>
-              <div className="onboarding-step-content">
-                <p className="onboarding-step-title light-bold" style={{ color: hasClassList ? '#111' : '#999' }}>
-                  Create your first task
-                </p>
-                <p className="onboarding-step-desc">
-                  Track payments, submissions or attendance for your class.
-                </p>
-                {hasClassList && (
-                  <Link to="/tasks/new" className="btn-primary" style={{ display: 'inline-block', marginTop: '10px', textAlign: 'center', fontSize: '13px', padding: '8px 14px' }}>
-                    Create task <FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowRight} />
-                  </Link>
-                )}
-              </div>
-            </div>
-          </div>
+      {/* Step 1 — Class list */}
+      <div className="onboarding-step">
+        <div className={`onboarding-step-number ${hasClassList ? 'onboarding-step-done' : ''}`}>
+          {hasClassList ? '✓' : '1'}
         </div>
-      )}
+        <div className="onboarding-step-content">
+          <p className="onboarding-step-title light-bold">Add your class list</p>
+          <p className="onboarding-step-desc">Import your student roster so Roundup can track entries for each student.</p>
+          {!hasClassList && (
+            <button className="btn-primary" style={{ marginTop: '10px', fontSize: '13px', padding: '8px 14px' }} onClick={() => navigate('/roster')}>
+              Go to Roster →
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Step 2 — Courses */}
+      <div className="onboarding-step">
+        <div className={`onboarding-step-number ${hasCourses ? 'onboarding-step-done' : !hasClassList ? 'onboarding-step-number-muted' : ''}`}>
+          {hasCourses ? '✓' : '2'}
+        </div>
+        <div className="onboarding-step-content">
+          <p className="onboarding-step-title light-bold">Add your courses</p>
+          <p className="onboarding-step-desc">Add the courses your class is offering this semester. Roundup uses these for multi-item payment tracking.</p>
+          {hasClassList && !hasCourses && (
+            <button
+              className="btn-primary"
+              style={{ marginTop: '10px', fontSize: '13px', padding: '8px 14px' }}
+              onClick={() => {
+                sessionStorage.setItem('roster_tab', 'courses')
+                navigate('/roster')
+              }}
+            >
+              Add courses →
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Step 3 — Create task */}
+      <div className="onboarding-step">
+        <div className={`onboarding-step-number ${tasks.filter(t => !t.is_archived).length > 0 ? 'onboarding-step-done' : !hasClassList ? 'onboarding-step-number-muted' : ''}`}>
+          {tasks.filter(t => !t.is_archived).length > 0 ? '✓' : '3'}
+        </div>
+        <div className="onboarding-step-content">
+          <p className="onboarding-step-title light-bold">Create your first task</p>
+          <p className="onboarding-step-desc">Track payments, submissions or attendance for your class.</p>
+          {hasClassList && tasks.filter(t => !t.is_archived).length === 0 && (
+            <button className="btn-primary" style={{ marginTop: '10px', fontSize: '13px', padding: '8px 14px' }} onClick={() => navigate('/tasks/new')}>
+              + New task
+            </button>
+          )}
+        </div>
+      </div>
+
+    </div>
+  </div>
+)}
 
       {showProfileBanner && !isNewUser && (
   <div className="profile-setup-banner">
@@ -551,7 +627,40 @@ const filteredTasks = tasks.filter(task => {
                 <div className='task-card-right'>
                   {total > 0 && (
                     <div className="task-card-stats">
-                      {isPayment ? (
+                      {isPayment ? task.payment_mode === 'multi' ? (
+  <div className="task-card-stats">
+  
+                          
+  <div className="task-stat">
+    <span className="task-stat-num success successy">{task.totalPaid || 0}</span>
+    <span className="task-stat-label">paid</span>
+  </div>
+  <div className="task-stat-divider" />
+  <div className="task-stat">
+    <span className="task-stat-num warning warningy">{task.courseCount || 0}</span>
+    <span className="task-stat-label">courses</span>
+  </div>
+  <div className="task-stat-divider" />
+  <div className="task-stat">
+    <span className="task-stat-num danger dangery">
+      {((task.courseCount || 0) * (task.studentCount || 0)) - (task.totalPaid || 0)}
+    </span>
+    <span className="task-stat-label">not paid</span>
+  </div>
+  <div className="task-stat-divider" />
+  <div className="task-stat">
+    <span className="task-stat-num successy" style={{ color: '#27500A' }}>{task.totalCollected || 0}</span>
+    <span className="task-stat-label">collected</span>
+  </div>
+  <div className="task-stat-divider not-collectedy" />
+  <div className="task-stat" id="not-collected">
+    <span className="task-stat-num danger dangery">{(task.totalPaid || 0) - (task.totalCollected || 0)}</span>
+    <span className="task-stat-label">not collected</span>
+  </div>
+                        
+  </div>
+) : (
+  
                         <>
                           <div className="task-stat">
                             <span className="task-stat-num success successy">{doneCount}</span>
@@ -578,7 +687,8 @@ const filteredTasks = tasks.filter(task => {
                             <span className="task-stat-label">not collected</span>
                           </div>
                         </>
-                      ) : (
+                      
+) : (
                         <>
                           <div className="task-stat">
                             <span className="task-stat-num success successy">{doneCount}</span>

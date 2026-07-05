@@ -582,8 +582,8 @@ const handleCancelEdit = () => {
 
       <div className="form-card">
         <div className="class-list-title">
-  <p>Student list</p>
-</div>
+          <p>Student list</p>
+        </div>
 
 {incompleteStudents.length > 0 && !bannerDismissed && (
   <div className="incomplete-import-banner">

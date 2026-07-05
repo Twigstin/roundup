@@ -353,3 +353,145 @@ export const markReferralActivated = async (userId) => {
     .eq('referred_id', userId)
     .is('activated_at', null)
 }
+
+
+
+// ─── TASK ITEMS ───────────────────────────────────────────────────────────────
+
+export const getTaskItems = async (taskId) => {
+  const { data, error } = await supabase
+    .from('task_items')
+    .select('*')
+    .eq('task_id', taskId)
+    .order('position', { ascending: true })
+  if (error) throw error
+  return data
+}
+
+export const createTaskItems = async (taskId, itemNames) => {
+  const userId = await getUserId()
+  const items = itemNames.map((name, index) => ({
+    task_id: taskId,
+    user_id: userId,
+    name: name.trim(),
+    position: index
+  }))
+  const { data, error } = await supabase
+    .from('task_items')
+    .insert(items)
+    .select()
+  if (error) throw error
+  return data
+}
+
+export const deleteTaskItem = async (itemId) => {
+  const { error } = await supabase
+    .from('task_items')
+    .delete()
+    .eq('id', itemId)
+  if (error) throw error
+}
+
+// ─── ITEM ENTRIES ─────────────────────────────────────────────────────────────
+
+export const getItemEntries = async (taskId) => {
+  const { data, error } = await supabase
+    .from('item_entries')
+    .select('*')
+    .eq('task_id', taskId)
+  if (error) throw error
+  return data
+}
+
+export const addItemEntry = async (entry) => {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('item_entries')
+    .insert([{ ...entry, user_id: userId }])
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export const bulkAddItemEntries = async (entries) => {
+  const userId = await getUserId()
+  const withUser = entries.map(e => ({ ...e, user_id: userId }))
+  const { data, error } = await supabase
+    .from('item_entries')
+    .insert(withUser)
+    .select()
+  if (error) throw error
+  return data
+}
+
+export const updateItemEntry = async (entryId, updates) => {
+  const { data, error } = await supabase
+    .from('item_entries')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', entryId)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export const removeItemEntry = async (taskItemId, studentId) => {
+  const { error } = await supabase
+    .from('item_entries')
+    .delete()
+    .eq('task_item_id', taskItemId)
+    .eq('student_id', studentId)
+  if (error) throw error
+}
+
+
+
+
+
+
+
+
+
+// ─── COURSES ───────────────────────────────────────────────────────
+
+export const getCourses = async () => {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('class_list_courses')
+    .select('*')
+    .eq('user_id', userId)
+    .order('position', { ascending: true })
+  if (error) throw error
+  return data
+}
+
+export const createCourse = async (name, position) => {
+  const userId = await getUserId()
+  const { data, error } = await supabase
+    .from('class_list_courses')
+    .insert([{ user_id: userId, name, position }])
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export const updateCourse = async (courseId, name) => {
+  const { data, error } = await supabase
+    .from('class_list_courses')
+    .update({ name })
+    .eq('id', courseId)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export const deleteCourse = async (courseId) => {
+  const { error } = await supabase
+    .from('class_list_courses')
+    .delete()
+    .eq('id', courseId)
+  if (error) throw error
+}

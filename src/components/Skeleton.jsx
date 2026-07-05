@@ -289,3 +289,36 @@ export function InviteSkeleton() {
     </div>
   )
 }
+
+
+// ─── COURSE STATS LIST SKELETON ───────────────────────────────────────────────
+export function CourseStatsListSkeleton() {
+  return (
+    <div>
+      {/* Header */}
+      <div className="page-header">
+        <SkeletonBlock width="80px" height="16px" borderRadius="4px" />
+      </div>
+ 
+      {/* Title + subtitle */}
+      <SkeletonBlock width="160px" height="26px" borderRadius="8px" style={{ marginBottom: '6px' }} />
+      <SkeletonBlock width="200px" height="13px" borderRadius="4px" style={{ marginBottom: '20px' }} />
+ 
+      {/* Search */}
+      <SkeletonBlock width="100%" height="42px" borderRadius="8px" style={{ marginBottom: '16px' }} />
+ 
+      {/* Grid of course stat cards — 2 columns on mobile */}
+      <div className="course-stats-grid">
+        {[1, 2, 3, 4, 5, 6].map(i => (
+          <div key={i} style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '10px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <SkeletonBlock width="80%" height="14px" borderRadius="4px" />
+            <SkeletonBlock width="100%" height="11px" borderRadius="4px" />
+            <SkeletonBlock width="100%" height="11px" borderRadius="4px" />
+            <SkeletonBlock width="100%" height="11px" borderRadius="4px" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+ 
