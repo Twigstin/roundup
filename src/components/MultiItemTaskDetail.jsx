@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faSearch, faPenToSquare, faDownload, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faSearch, faPenToSquare, faDownload, faPlus, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import Spinner from './Spinner'
 import { supabase } from '../api/supabase'
 import {
@@ -359,7 +359,7 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
 
         {/* View all courses — always visible */}
         <button className="multi-item-view-all" onClick={() => navigate(`/tasks/${task.id}/courses`)}>
-          View all {taskItems.length} course{taskItems.length !== 1 ? 's' : ''} →
+          View all {taskItems.length} course{taskItems.length !== 1 ? 's' : ''} <span style={{ fontSize: '10px', paddingTop: '2px' , marginLeft: '3px'}}><FontAwesomeIcon icon={faArrowRight} /></span>
         </button>
       </div>
 
@@ -453,9 +453,9 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
 
       {/* Long press remove */}
       {showRemoveConfirm && (
-        <div className="modal-overlay" onClick={() => setShowRemoveConfirm(null)}>
+        <div className="confirm-modal-overlay" onClick={() => setShowRemoveConfirm(null)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <p className="modal-message">Remove <strong>{taskItems.find(i => i.id === showRemoveConfirm.task_item_id)?.name}</strong> from this student's record?</p>
+            <p className="modal-message">Do you want to remove <strong>{taskItems.find(i => i.id === showRemoveConfirm.task_item_id)?.name}</strong> from this student's record?</p>
             <div className="modal-actions">
               <button className="btn-secondary" onClick={() => setShowRemoveConfirm(null)}>Cancel</button>
               <button className="btn-danger-solid" onClick={handleConfirmRemoveChip}>Remove</button>

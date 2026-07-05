@@ -2655,6 +2655,16 @@ button:active {
   z-index: 300;
 }
 
+.modal-overlay-remove-course {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 300;
+}
+
 .modal-overlay-new-list {
   position: fixed;
   inset: 0;
@@ -2703,6 +2713,10 @@ button:active {
   }
 
   .modal-overlay {
+    align-items: center;
+  }
+
+  .modal-overlay-remove-course {
     align-items: center;
   }
 
