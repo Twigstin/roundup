@@ -495,3 +495,14 @@ export const deleteCourse = async (courseId) => {
     .eq('id', courseId)
   if (error) throw error
 }
+
+
+
+export const getEntriesByTask = async (taskId) => {
+  const { data, error } = await supabase
+    .from('entries')
+    .select('*')
+    .eq('task_id', taskId)
+  if (error) throw error
+  return data
+}

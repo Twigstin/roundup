@@ -151,7 +151,14 @@ if (session?.user?.id) {
       state: { showEmptyPrompt: true }
     })
   } else {
-    navigate('/')
+    if (type === 'payment' && paymentMode === 'multi') {
+  const courses = await getCourses()
+  if (courses.length > 0) {
+    await createTaskItems(newTask.id, courses.map(c => c.name))
+  }
+}
+
+navigate('/', { state: { refetch: true } })
   }
 }
 

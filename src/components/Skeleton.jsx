@@ -321,4 +321,39 @@ export function CourseStatsListSkeleton() {
     </div>
   )
 }
- 
+
+
+export function CoursesSkeleton() {
+  return (
+    <div>
+      {/* Add course form card */}
+      <div className="form-card" style={{ marginBottom: '16px' }}>
+        <SkeletonBlock width="100px" height="13px" borderRadius="4px" style={{ marginBottom: '12px' }} />
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <SkeletonBlock width="100%" height="40px" borderRadius="8px" />
+          <SkeletonBlock width="64px" height="40px" borderRadius="15px" style={{ flexShrink: 0 }} />
+        </div>
+        <SkeletonBlock width="240px" height="11px" borderRadius="4px" style={{ marginTop: '8px' }} />
+      </div>
+
+      {/* Course list card */}
+      <div className="form-card">
+        {/* Header row */}
+        <div className="course-list-header" style={{ marginBottom: '8px' }}>
+          <SkeletonBlock width="24px" height="10px" borderRadius="4px" />
+          <SkeletonBlock width="100px" height="10px" borderRadius="4px" />
+          <span />
+        </div>
+
+        {/* Course rows */}
+        {[1, 2, 3, 4, 5].map(i => (
+          <div key={i} className="course-row">
+            <SkeletonBlock width="20px" height="13px" borderRadius="4px" />
+            <SkeletonBlock width={`${50 + (i * 8)}%`} height="14px" borderRadius="4px" />
+            <SkeletonBlock width="24px" height="24px" borderRadius="6px" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { getClassLists, createClassList, deleteClassList, updateClassList, getCourses, createCourse, updateCourse, deleteCourse } from '../api/index'
 import ConfirmModal from '../components/ConfirmModal'
 import Spinner from '../components/Spinner'
-import { RosterSkeleton } from '../components/Skeleton'
+import { RosterSkeleton, CoursesSkeleton } from '../components/Skeleton'
 import { supabase } from '../api/supabase'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrashCan, faPenToSquare, faEllipsisVertical, faSearch, faArrowRight } from '@fortawesome/free-solid-svg-icons'
@@ -17,6 +17,14 @@ function Roster() {
   }
   return 'lists'
 })
+
+useEffect(() => {
+  const saved = sessionStorage.getItem('roster_tab')
+  if (saved) {
+    sessionStorage.removeItem('roster_tab')
+    setActiveTab(saved)
+  }
+}, [])
 
   // ─── Class lists state ────────────────────────────────────────────────────
   const [classLists, setClassLists] = useState([])
@@ -48,6 +56,7 @@ function Roster() {
   const [showDeleteCourseWarning, setShowDeleteCourseWarning] = useState(false)
   const [courseToDelete, setCourseToDelete] = useState(null)
   const [deletingCourse, setDeletingCourse] = useState(false)
+  const [coursesLoaded, setCoursesLoaded] = useState(false)
 
   const navigate = useNavigate()
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
@@ -130,17 +139,15 @@ function Roster() {
 
   // ─── Fetch courses when tab switches ─────────────────────────────────────
   useEffect(() => {
-  if (activeTab !== 'courses') return
-  if (!primaryClassListId) {
-    setCoursesLoading(false)
-    return
-  }
+  if (activeTab !== 'courses' || !primaryClassListId) return
+  if (coursesLoaded) return
 
   const fetchCourses = async () => {
     setCoursesLoading(true)
     try {
       const data = await getCourses()
       setCourses(data)
+      setCoursesLoaded(true)
     } catch (e) {
       console.error('Failed to fetch courses:', e)
     }
@@ -148,7 +155,7 @@ function Roster() {
   }
 
   fetchCourses()
-}, [activeTab, primaryClassListId])
+}, [activeTab, primaryClassListId, coursesLoaded])
 
   // ─── Class list handlers ──────────────────────────────────────────────────
   const handleCreateList = async () => {
@@ -422,9 +429,7 @@ function Roster() {
               </button>
             </div>
           ) : coursesLoading ? (
-            <div className="loading-container" style={{ position: 'relative', height: '200px' }}>
-              <Spinner size={32} />
-            </div>
+            <CoursesSkeleton />
           ) : (
             <>
               {/* Add course input */}
@@ -571,7 +576,7 @@ function Roster() {
           setNewListName('')
           setError('')
         }}>
-          <div className="modal-card-new-list" id="modal-card" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-card-new-list" id="modal-cardy" onClick={(e) => e.stopPropagation()}>
             <div style={{ padding: '24px' }}>
               <h2 className="page-title bold" style={{ fontSize: '16px', marginBottom: '8px' }}>
                 Name your class list

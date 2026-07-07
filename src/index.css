@@ -2727,20 +2727,20 @@ button:active {
 }
 
 @media (max-width: 530px) {
-  #modal-card {
+  #modal-cardy {
     width: 90%;
   }
 }
 
 @media (max-width: 350px) {
-  #modal-card {
+  #modal-cardy {
     width: 95%;
   }
 }
 
 @media (min-width: 769px) {
   
-  #modal-card {
+  #modal-cardy {
     border-bottom-left-radius: 16px !important;
     border-bottom-right-radius: 16px !important;
   }
@@ -2769,17 +2769,10 @@ button:active {
   to { opacity: 1; transform: scale(1); }
 }
 
-/* @media (min-width: 769px) {
-  #modal-card {
-    animation: fadeIn 0.2s ease;
-  }
-
-  
-} */
 
 
 
- 
+
 .tutorial-list-card {
   width: 100%;
   background: #fff;

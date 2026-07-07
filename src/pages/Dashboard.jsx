@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { getTasks, deleteTask, getClassLists, getCourses } from '../api/index'
 import ConfirmModal from '../components/ConfirmModal'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -35,6 +35,7 @@ function Dashboard() {
     document.addEventListener('click', handleClickOutside)
     return () => document.removeEventListener('click', handleClickOutside)
   }, [])
+  
 
   const handleDeleteClick = (e, taskId) => {
     e.stopPropagation()
@@ -94,7 +95,6 @@ function Dashboard() {
     return results.flatMap(r => r.data || [])
   }
 
-  useEffect(() => {
   const fetchData = async () => {
   const { data: { session } } = await supabase.auth.getSession()
   const userId = session?.user?.id
@@ -188,7 +188,8 @@ if (multiItemTaskIds.length > 0) {
   }
 }
 
-  fetchData()
+  useEffect(() => {
+    fetchData()
 
   const tasksSub = supabase
     .channel(`tasks-changes-${channelId.current}`)
@@ -309,19 +310,15 @@ const filteredTasks = tasks.filter(task => {
 })
 
 
-  /*
-  const filteredTasks = tasks.filter(task => {
-  if (showArchived) return task.is_archived
-  if (!showArchived) return !task.is_archived
-  const matchesSearch = task.title.toLowerCase().includes(search.toLowerCase())
-  const matchesType = typeFilter === 'all' || task.type === typeFilter
-  return matchesSearch && matchesType
-}).filter(task => {
-  const matchesSearch = task.title.toLowerCase().includes(search.toLowerCase())
-  const matchesType = typeFilter === 'all' || task.type === typeFilter
-  return matchesSearch && matchesType
-})
-  */
+  const location = useLocation()
+
+useEffect(() => {
+  if (location.state?.refetch) {
+    fetchData()
+    // Clear the state so it doesn't refetch on every render
+    window.history.replaceState({}, document.title)
+  }
+}, [location.state])
 
   if (loading) return <DashboardSkeleton />
 
