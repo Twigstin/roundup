@@ -363,7 +363,8 @@ const isValidRegNumber = (reg) => {
   const val = reg.toString().trim()
   const futoPattern = /^\d{10,12}$/
   const otherUniPattern = /^(?:PG\/)?[A-Z0-9]{2,4}[\/\-\.]?[A-Z0-9]{2,4}[\/\-\.]?[A-Z0-9]{2,4}[\/\-\.]?\d{3,6}$/i
-  return futoPattern.test(val) || otherUniPattern.test(val)
+  const unnSerialPattern = /^\d{2}\/\d{3,6}$/  // e.g. 23/4530 — YY/serial style
+  return futoPattern.test(val) || otherUniPattern.test(val) || unnSerialPattern.test(val)
 }
 
 

@@ -15,7 +15,8 @@ const isValidRegNumber = (reg) => {
   const val = reg.toString().trim()
   const futoPattern = /^\d{10,12}$/
   const otherUniPattern = /^(?:PG\/)?[A-Z0-9]{2,4}[\/\-\.]?[A-Z0-9]{2,4}[\/\-\.]?[A-Z0-9]{2,4}[\/\-\.]?\d{3,6}$/i
-  return futoPattern.test(val) || otherUniPattern.test(val)
+  const unnSerialPattern = /^\d{2}\/\d{3,6}$/  // e.g. 23/4530 — YY/serial style
+  return futoPattern.test(val) || otherUniPattern.test(val) || unnSerialPattern.test(val)
 }
 
 function RosterDetail() {
@@ -187,7 +188,7 @@ const cleanSerial = (val) => {
 const findHeaderRow = (rows, getCols) => {
   const nameKeywords = ['name', 'names', 'fullname', 'studentname',
     'candidatesname', 'candidatename']
-  const regKeywords = ['regno', 'regnumber', 'matric', 'matricnumber',
+  const regKeywords = ['regno', 'regnumber', 'matric', 'matricno', 'matricnum', 'matricnumber',
     'registrationnumber', 'registrationno']
 
   for (let i = 0; i < Math.min(15, rows.length); i++) {
@@ -214,7 +215,7 @@ const extractStudents = (rows, getCols) => {
     ['name', 'names', 'fullname', 'studentname', 'candidatesname', 'candidatename'].includes(h)
   )
   const regIndex = headerCols.findIndex(h =>
-    ['regno', 'regnumber', 'matric', 'matricnumber', 'registrationnumber', 'registrationno'].includes(h)
+    ['regno', 'regnumber', 'matric', 'matricno', 'matricnum', 'matricnumber', 'registrationnumber', 'registrationno'].includes(h)
   )
   const serialIndex = headerCols.findIndex(h =>
     ['sn', 'sno', 'serial', 'serialnumber', 'no', 'number'].includes(h)
