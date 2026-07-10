@@ -7,7 +7,7 @@ import { supabase } from '../api/supabase'
 import {
   getTaskItems, createTaskItems, getCourses,
   getItemEntries, addItemEntry, updateItemEntry, removeItemEntry,
-  updateTask, getStudentsByClassList, deleteTaskItem
+  updateTask, getStudentsByClassList, deleteTaskItem, updateTaskItem
 } from '../api/index'
 
 const MAX_DOTS = 5
@@ -49,66 +49,130 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
   // ─── Load ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     const init = async () => {
-      setLoading(true)
-      const [studentData, existingItems, courses] = await Promise.all([
-        getStudentsByClassList(task.class_list_id),
-        getTaskItems(task.id),
-        getCourses()
-      ])
-      setStudents(studentData)
+  setLoading(true)
 
-      // Three-way fork
-if (existingItems.length === 0 && courses.length === 0) {
-  // Genuine empty state — no history, no outline courses
-  setNoCourses(true)
-  setLoading(false)
-  return
-}
+  const [studentData, existingItems, courses] = await Promise.all([
+    getStudentsByClassList(task.class_list_id),
+    getTaskItems(task.id),
+    getCourses()
+  ])
 
-// Normalize helper — strips special chars, lowercases for dedup comparison
-const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '').trim()
+  setStudents(studentData)
 
-const courseNormalized = courses.map(c => normalize(c.name))
-const existingNormalized = existingItems.map(i => normalize(i.name))
+  const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '').trim()
+  const courseNormalized = courses.map(c => normalize(c.name))
 
-// Add new courses from outline not yet in task_items
-const newCourses = courses.filter(c => !existingNormalized.includes(normalize(c.name)))
-let items = existingItems
-if (newCourses.length > 0) {
-  const created = await createTaskItems(task.id, newCourses.map(c => c.name))
-  items = [...existingItems, ...created]
-}
+  let items = existingItems
 
-// Fetch all entries for this task once
-const allEntries = await getItemEntries(task.id)
-
-// Remove virgin task_items no longer in outline
-// Virgin = not in current outline AND has zero item_entries
-const itemsToRemove = items.filter(item => {
-  const inOutline = courseNormalized.includes(normalize(item.name))
-  const hasEntries = allEntries.some(e => e.task_item_id === item.id)
-  return !inOutline && !hasEntries
-})
-
-if (itemsToRemove.length > 0) {
-  await Promise.all(itemsToRemove.map(item => deleteTaskItem(item.id)))
-  items = items.filter(i => !itemsToRemove.some(r => r.id === i.id))
-}
-
-// Handle genuine empty state after cleanup
-if (items.length === 0 && courses.length === 0) {
-  setNoCourses(true)
-  setLoading(false)
-  return
-}
-
-setTaskItems(items)
-setItemEntries(allEntries.filter(e => items.some(i => i.id === e.task_item_id)))
-
-      const entries = await getItemEntries(task.id)
-      setItemEntries(entries)
+  if (existingItems.length === 0) {
+    // First visit — create from outline with course IDs
+    if (courses.length === 0) {
+      setNoCourses(true)
       setLoading(false)
+      return
     }
+    const created = await createTaskItems(
+      task.id,
+      courses.map(c => ({ name: c.name, courseId: c.id }))
+    )
+    items = created
+
+    const entries = await getItemEntries(task.id)
+    setTaskItems(items)
+    setItemEntries(entries)
+    setLoading(false)
+    return
+  }
+
+  // ── Existing task path ─────────────────────────────────────────────────────
+  const allEntries = await getItemEntries(task.id)
+
+  // Step 1 — Backfill missing class_list_course_ids by matching name
+  const itemsNeedingBackfill = items.filter(i => !i.class_list_course_id)
+  if (itemsNeedingBackfill.length > 0) {
+    const backfillUpdates = []
+    for (const item of itemsNeedingBackfill) {
+      const matchingCourse = courses.find(c => normalize(c.name) === normalize(item.name))
+      if (matchingCourse) {
+        backfillUpdates.push({ taskItemId: item.id, courseId: matchingCourse.id })
+      }
+    }
+    if (backfillUpdates.length > 0) {
+      await Promise.all(backfillUpdates.map(({ taskItemId, courseId }) =>
+        supabase
+          .from('task_items')
+          .update({ class_list_course_id: courseId })
+          .eq('id', taskItemId)
+      ))
+      // Update local items to reflect backfill before any further checks
+      items = items.map(item => {
+        const backfill = backfillUpdates.find(b => b.taskItemId === item.id)
+        return backfill ? { ...item, class_list_course_id: backfill.courseId } : item
+      })
+    }
+  }
+
+  // Step 2 — Detect and apply renames using class_list_course_id
+  const renames = []
+  for (const item of items) {
+    if (!item.class_list_course_id) continue
+    const matchingCourse = courses.find(c => c.id === item.class_list_course_id)
+    if (matchingCourse && normalize(matchingCourse.name) !== normalize(item.name)) {
+      renames.push({ taskItemId: item.id, newName: matchingCourse.name })
+    }
+  }
+
+  if (renames.length > 0) {
+  await Promise.allSettled(renames.map(r => updateTaskItem(r.taskItemId, r.newName)))
+  items = items.map(item => {
+    const rename = renames.find(r => r.taskItemId === item.id)
+    return rename ? { ...item, name: rename.newName } : item
+  })
+}
+
+  // Step 3 — Append genuinely new courses
+  // Built from post-backfill items so IDs and names are accurate
+  const existingCourseIds = new Set(items.map(i => i.class_list_course_id).filter(Boolean))
+  const existingNormalizedNames = new Set(items.map(i => normalize(i.name)))
+
+  const trulyNewCourses = courses.filter(c =>
+    !existingCourseIds.has(c.id) &&
+    !existingNormalizedNames.has(normalize(c.name))
+  )
+
+  if (trulyNewCourses.length > 0) {
+    const created = await createTaskItems(
+      task.id,
+      trulyNewCourses.map(c => ({ name: c.name, courseId: c.id }))
+    )
+    items = [...items, ...created]
+  }
+
+  // Step 4 — Remove virgin items no longer in outline
+  const itemsToRemove = items.filter(item => {
+    const inOutline = item.class_list_course_id
+      ? courses.some(c => c.id === item.class_list_course_id)
+      : courseNormalized.includes(normalize(item.name))
+    const hasEntries = allEntries.some(e => e.task_item_id === item.id)
+    return !inOutline && !hasEntries
+  })
+
+  if (itemsToRemove.length > 0) {
+    await Promise.all(itemsToRemove.map(item => deleteTaskItem(item.id)))
+    items = items.filter(i => !itemsToRemove.some(r => r.id === i.id))
+  }
+
+  // Step 5 — Handle empty state after cleanup
+  if (items.length === 0 && courses.length === 0) {
+    setNoCourses(true)
+    setLoading(false)
+    return
+  }
+
+  setTaskItems(items)
+  setItemEntries(allEntries.filter(e => items.some(i => i.id === e.task_item_id)))
+  setLoading(false)
+}
     init()
 
     const sub = supabase
@@ -121,6 +185,21 @@ setItemEntries(allEntries.filter(e => items.some(i => i.id === e.task_item_id)))
       .subscribe()
     return () => supabase.removeChannel(sub)
   }, [task.id, task.class_list_id])
+
+
+
+  useEffect(() => {
+  if (activeModal) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
+  return () => {
+    document.body.style.overflow = ''
+  }
+}, [activeModal])
+
+
 
   // ─── Scroll centering check ────────────────────────────────────────────────
   useEffect(() => {
@@ -462,11 +541,15 @@ setItemEntries(allEntries.filter(e => items.some(i => i.id === e.task_item_id)))
       {activeModal && (
         <div className="modal-overlay" onClick={() => setActiveModal(null)}>
           <div className="modal-card" id="modal-card" onClick={(e) => e.stopPropagation()}>
-            <div style={{ padding: '24px 24px 0 24px' }}>
-              <p className="page-title bold" style={{ fontSize: '15px', marginBottom: '4px' }}>What did {activeModal.name.split(' ')[0]} pay for?</p>
-              <p style={{ fontSize: '13px', color: '#888', marginBottom: '20px' }}>Select all items this student paid for</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '16px' }}>
-                {taskItems.map(item => (
+  <div style={{ padding: '24px 24px 0 24px', overflowY: 'auto', flex: 1 }}>
+    <p className="page-title bold" style={{ fontSize: '15px', marginBottom: '4px' }}>
+      What did {activeModal.name.split(' ')[0]} pay for?
+    </p>
+    <p style={{ fontSize: '13px', color: '#888', marginBottom: '20px' }}>
+      Select all items this student paid for
+    </p>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '16px' }}>
+      {taskItems.map(item => (
                   <label key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', border: `1px solid ${modalSelections[item.id] ? '#111' : '#e5e5e5'}`, borderRadius: '8px', cursor: 'pointer', background: modalSelections[item.id] ? '#f5f5f5' : '#fff', fontSize: '14px', color: '#111', transition: 'all 0.15s' }}>
                     <input type="checkbox" checked={modalSelections[item.id] || false} onChange={() => setModalSelections(prev => ({ ...prev, [item.id]: !prev[item.id] }))} style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
                     {item.name}
@@ -474,7 +557,7 @@ setItemEntries(allEntries.filter(e => items.some(i => i.id === e.task_item_id)))
                 ))}
               </div>
             </div>
-            <div style={{ padding: '16px 24px', borderTop: '1px solid #e5e5e5', display: 'flex', gap: '8px', background: '#fff' }}>
+            <div style={{ padding: '16px 24px', borderTop: '1px solid #e5e5e5', display: 'flex', gap: '8px', background: '#fff', flexShrink: 0 }}>
               <button className="btn-primary" style={{ flex: 1, padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} onClick={handleModalConfirm} disabled={modalSaving}>
                 {modalSaving ? <><Spinner size={14} /> Saving...</> : 'Confirm'}
               </button>

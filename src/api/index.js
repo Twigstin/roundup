@@ -45,6 +45,17 @@ export const updateTask = async (taskId, updates) => {
   return data
 }
 
+export const updateTaskItem = async (taskItemId, name) => {
+  const { data, error } = await supabase
+    .from('task_items')
+    .update({ name })
+    .eq('id', taskItemId)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
 export const deleteTask = async (taskId) => {
   const { error } = await supabase
     .from('tasks')
@@ -368,12 +379,14 @@ export const getTaskItems = async (taskId) => {
   return data
 }
 
-export const createTaskItems = async (taskId, itemNames) => {
+export const createTaskItems = async (taskId, courses) => {
+  // courses is now [{name, courseId}] instead of just names
   const userId = await getUserId()
-  const items = itemNames.map((name, index) => ({
+  const items = courses.map((course, index) => ({
     task_id: taskId,
     user_id: userId,
-    name: name.trim(),
+    name: course.name,
+    class_list_course_id: course.courseId || null,
     position: index
   }))
   const { data, error } = await supabase

@@ -154,7 +154,7 @@ if (session?.user?.id) {
     if (type === 'payment' && paymentMode === 'multi') {
   const courses = await getCourses()
   if (courses.length > 0) {
-    await createTaskItems(newTask.id, courses.map(c => c.name))
+    await createTaskItems(newTask.id, courses.map(c => ({ name: c.name, courseId: c.id })))
   }
 }
 
