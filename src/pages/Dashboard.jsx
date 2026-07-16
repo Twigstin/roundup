@@ -374,7 +374,7 @@ useEffect(() => {
   <div className="onboarding-banner">
     <div className="onboarding-header">
       <p className="onboarding-title bold">Welcome to Roundup 👋</p>
-      <p className="onboarding-subtitle">Get started in two steps. It takes less than 5 minutes.</p>
+      <p className="onboarding-subtitle">Get started in three steps. It takes less than 5 minutes.</p>
     </div>
     <div className="onboarding-steps">
 
