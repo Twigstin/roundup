@@ -450,7 +450,7 @@ useEffect(() => {
                   <input
                     className="form-input"
                     type="text"
-                    placeholder="e.g. Organic Chemistry, Engineering Maths…"
+                    placeholder="e.g. MTH 102, GST 211..."
                     value={newCourseName}
                     onChange={(e) => setNewCourseName(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleAddCourse() }}
