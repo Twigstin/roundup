@@ -280,7 +280,7 @@ if (checkingLimits) return <NewTaskSkeleton />
       ))}
     </select>
   )}
-  <span className="form-hint">Choose which class list to track for this task</span>
+  <span className="form-hint">{classLists.length > 1 ? "Choose which class list to track for this task" : "Your class list will be used automatically"}</span>
 </div>
 
         <button
