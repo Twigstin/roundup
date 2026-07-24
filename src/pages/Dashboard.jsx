@@ -385,7 +385,7 @@ useEffect(() => {
         </div>
         <div className="onboarding-step-content">
           <p className="onboarding-step-title light-bold">Add your class list</p>
-          <p className="onboarding-step-desc">Import your student roster so Roundup can track entries for each student.</p>
+          <p className="onboarding-step-desc">Import your class list so Roundup can track entries for each student.</p>
           {!hasClassList && (
             <button className="btn-primary" style={{ marginTop: '10px', fontSize: '13px', padding: '8px 14px' }} onClick={() => navigate('/roster')}>
               Go to Roster<span style={{ fontSize: '10px', paddingTop: '2px' , marginLeft: '3px'}}><FontAwesomeIcon icon={faArrowRight} /></span>
