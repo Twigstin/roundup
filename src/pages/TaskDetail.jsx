@@ -44,6 +44,8 @@ function TaskDetail() {
   const [exportType, setExportType] = useState('basic') // 'basic' | 'full' | 'custom'
   const [customStatusCols, setCustomStatusCols] = useState([])
   const [exportSortBy, setExportSortBy] = useState('default') // 'default' | 'az' | 'recent'
+  const [duplicateWarning, setDuplicateWarning] = useState(null)
+  const [pendingStudent, setPendingStudent] = useState(null)
 
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
 
@@ -56,6 +58,18 @@ function TaskDetail() {
 useEffect(() => {
   setIsOnTotalFilter(filter === 'total' && search === '')
 }, [filter, search])
+
+useEffect(() => {
+  if (showExportModal || showAddStudent) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
+
+  return () => {
+    document.body.style.overflow = ''
+  }
+}, [showExportModal, showAddStudent])
 
 useEffect(() => {
   if (showExportModal) {
@@ -321,21 +335,24 @@ const handleDismissRosterUpdate = async () => {
 
 
 
-const handleAddStudentToTask = async () => {
-   if (!newStudentName.trim() && !newStudentReg.trim()) {
-    setAddStudentError('Please enter both a name and reg number')
-    return
-  }
+const handleAddStudentToTask = async (force = false) => {
   if (!newStudentName.trim()) {
     setAddStudentError('Please enter the student name')
     return
   }
-  if (!newStudentReg.trim()) {
-    setAddStudentError('Please enter the reg number')
-    return
+
+  if (!force) {
+    const duplicate = detectDuplicate(newStudentName.trim(), newStudentReg.trim())
+    if (duplicate) {
+      setDuplicateWarning(duplicate)
+      setPendingStudent({ name: newStudentName.trim(), reg: newStudentReg.trim() })
+      return
+    }
   }
 
   setAddingStudent(true)
+  setDuplicateWarning(null)
+  setPendingStudent(null)
 
   const newEntry = {
     id: crypto.randomUUID(),
@@ -604,6 +621,35 @@ const handleExport = async () => {
   setIsExportingData(false)
 }
 
+const detectDuplicate = (name, reg) => {
+  const normalizeStr = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+  const tokenize = (s) => (s || '').toLowerCase().split(/[\s\-_.,]+/).filter(Boolean)
+
+  const normName = normalizeStr(name)
+  const normReg = normalizeStr(reg)
+  const nameTokens = tokenize(name)
+
+  for (const entry of entries) {
+    if (reg && entry.student_reg_number) {
+      if (normalizeStr(entry.student_reg_number) === normReg) {
+        return { entry, reason: 'reg number' }
+      }
+    }
+
+    if (normalizeStr(entry.student_name) === normName) {
+      return { entry, reason: 'name' }
+    }
+
+    const existingTokens = tokenize(entry.student_name)
+    const matchingTokens = nameTokens.filter(t => existingTokens.includes(t))
+    if (nameTokens.length >= 2 && matchingTokens.length >= 2) {
+      return { entry, reason: 'similar name' }
+    }
+  }
+
+  return null
+}
+
 
 
   return (
@@ -819,59 +865,123 @@ const handleExport = async () => {
                    />
                  </div>
   <button
-    className="btn-secondary"
-    style={{ alignSelf: 'flex-start', fontSize: '13px', padding: '8px 14px' }}
-    onClick={() => setShowAddStudent(prev => !prev)}
-  >
-    {showAddStudent ? 'Cancel' : '+ Add student'}
-  </button>
+  className="btn-secondary"
+  style={{ alignSelf: 'flex-start', fontSize: '13px', padding: '8px 14px' }}
+  onClick={() => setShowAddStudent(true)}
+>
+  + Add student
+</button>
 </div>
 
 {showAddStudent && (
-  
-  <div className="form-card" style={{ marginBottom: '12px' }}>
-    {addStudentError && <p className="form-error">{addStudentError}</p>}
-    
-    <p className="form-label" style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '500' }}>
-      Add student to this task only
-    </p>
-    <p style={{ fontSize: '12px', color: '#888', marginBottom: '12px' }}>
-      This student will only appear in this task, not in your general roster.
-    </p>
-    <div id='form-input-ctn-two' className="form-input-ctn">
-      <input
-        className="form-input"
-        type="text"
-        placeholder="Full name"
-        value={newStudentName}
-        onChange={(e) => setNewStudentName(e.target.value)}
-      />
-      <input
-        className="form-input"
-        type="text"
-        placeholder="Reg number"
-        value={newStudentReg}
-        onChange={(e) => setNewStudentReg(e.target.value)}
-      />
-    </div>
-    <button
-      className="btn-primary"
-      onClick={handleAddStudentToTask}
-      disabled={addingStudent}
-      style={{
-        opacity: addingStudent ? 0.6 : 1,
+  <div className="modal-overlay" onClick={() => {
+    setShowAddStudent(false)
+    setDuplicateWarning(null)
+    setPendingStudent(null)
+    setAddStudentError('')
+  }}>
+    <div className="modal-card" id="modal-card" onClick={(e) => e.stopPropagation()}>
+      <div style={{ padding: '24px 24px 0 24px' }}>
+        <p className="page-title bold" style={{ fontSize: '15px', marginBottom: '4px' }}>
+          Add student
+        </p>
+        <p style={{ fontSize: '13px', color: '#888', marginBottom: '20px' }}>
+          This student will only appear in this task, not in your general roster.
+        </p>
+
+        {addStudentError && <p className="form-error">{addStudentError}</p>}
+
+        {duplicateWarning && (
+          <div style={{
+            background: '#FAEEDA',
+            border: '1px solid #EF9F27',
+            borderRadius: '8px',
+            padding: '12px 14px',
+            marginBottom: '16px',
+            fontSize: '13px',
+            color: '#633806',
+            lineHeight: 1.5
+          }}>
+            ⚠️ A student with a similar {duplicateWarning.reason} already exists in this task:
+            <strong> "{duplicateWarning.entry.student_name}"</strong>.
+            Are you sure you want to add this student?
+            <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+              <button
+                className="btn-danger-solid"
+                style={{ fontSize: '12px', padding: '6px 12px' }}
+                onClick={() => handleAddStudentToTask(true)}
+              >
+                Add anyway
+              </button>
+              <button
+                className="btn-secondary"
+                style={{ fontSize: '12px', padding: '6px 12px' }}
+                onClick={() => {
+                  setDuplicateWarning(null)
+                  setPendingStudent(null)
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="form-field">
+          <label className="form-label">Full name</label>
+          <input
+            className="form-input"
+            type="text"
+            placeholder="e.g. Austin Aniobi"
+            value={newStudentName}
+            onChange={(e) => setNewStudentName(e.target.value)}
+          />
+        </div>
+
+        <div className="form-field">
+          <label className="form-label">Reg number <span style={{ color: '#999', fontSize: '12px' }}>(optional)</span></label>
+          <input
+            className="form-input"
+            type="text"
+            placeholder="e.g. 20251234567"
+            value={newStudentReg}
+            onChange={(e) => setNewStudentReg(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div style={{
+        padding: '16px 24px',
+        borderTop: '1px solid #e5e5e5',
         display: 'flex',
-        alignItems: 'center',
-        gap: '8px'
-      }}
-    >
-      {addingStudent ? (
-        <>
-          <Spinner size={14} />
-          Adding...
-        </>
-      ) : '+ Add to this task'}
-    </button>
+        gap: '8px',
+        background: '#fff',
+        flexShrink: 0
+      }}>
+        <button
+          className="btn-primary"
+          style={{ flex: 1, padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+          onClick={() => handleAddStudentToTask(false)}
+          disabled={addingStudent}
+        >
+          {addingStudent ? <><Spinner size={14} /> Adding...</> : 'Add student'}
+        </button>
+        <button
+          className="btn-secondary"
+          style={{ flex: 1, padding: '10px' }}
+          onClick={() => {
+            setShowAddStudent(false)
+            setDuplicateWarning(null)
+            setPendingStudent(null)
+            setAddStudentError('')
+            setNewStudentName('')
+            setNewStudentReg('')
+          }}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
   </div>
 )}
 

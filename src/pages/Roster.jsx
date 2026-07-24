@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { getClassLists, createClassList, deleteClassList, updateClassList, getCourses, createCourse, updateCourse, deleteCourse } from '../api/index'
 import ConfirmModal from '../components/ConfirmModal'
 import Spinner from '../components/Spinner'
@@ -9,7 +9,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrashCan, faPenToSquare, faEllipsisVertical, faSearch, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 
 function Roster() {
-  const [activeTab, setActiveTab] = useState(() => {
+  const [searchParams] = useSearchParams()
+
+const [activeTab, setActiveTab] = useState(() => {
+  const tabParam = searchParams.get('tab')
+  if (tabParam === 'courses') return 'courses'
   const saved = sessionStorage.getItem('roster_tab')
   if (saved) {
     sessionStorage.removeItem('roster_tab')
@@ -19,12 +23,16 @@ function Roster() {
 })
 
 useEffect(() => {
+  const tabParam = searchParams.get('tab')
+  if (tabParam === 'courses') {
+    setActiveTab('courses')
+  }
   const saved = sessionStorage.getItem('roster_tab')
   if (saved) {
     sessionStorage.removeItem('roster_tab')
     setActiveTab(saved)
   }
-}, [])
+}, [searchParams])
 
   // ─── Class lists state ────────────────────────────────────────────────────
   const [classLists, setClassLists] = useState([])

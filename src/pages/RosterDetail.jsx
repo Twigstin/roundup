@@ -57,6 +57,18 @@ function RosterDetail() {
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
 
   useEffect(() => {
+  if (location.state?.showEmptyPrompt) {
+    window.history.replaceState({}, document.title)
+  }
+}, [])
+
+useEffect(() => {
+  if (students.length > 0) {
+    setShowUploadPrompt(false)
+  }
+}, [students])
+
+  useEffect(() => {
   if (!error) return
   const timer = setTimeout(() => setError(''), 4000)
   return () => clearTimeout(timer)

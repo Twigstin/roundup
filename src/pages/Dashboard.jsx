@@ -406,10 +406,7 @@ useEffect(() => {
             <button
               className="btn-primary"
               style={{ marginTop: '10px', fontSize: '13px', padding: '8px 14px' }}
-              onClick={() => {
-                sessionStorage.setItem('roster_tab', 'courses')
-                navigate('/roster')
-              }}
+              onClick={() => navigate('/roster?tab=courses')}
             >
               Add courses<span style={{ fontSize: '10px', paddingTop: '2px' , marginLeft: '3px'}}><FontAwesomeIcon icon={faArrowRight} /></span>
             </button>
@@ -426,7 +423,10 @@ useEffect(() => {
           <p className="onboarding-step-title light-bold">Create your first task</p>
           <p className="onboarding-step-desc">Track payments, submissions or attendance for your class.</p>
           {hasClassList && tasks.filter(t => !t.is_archived).length === 0 && (
-            <button className="btn-primary" style={{ marginTop: '10px', fontSize: '13px', padding: '8px 14px' }} onClick={() => navigate('/tasks/new')}>
+            <button className="btn-primary"
+              style={{ marginTop: '10px', fontSize: '13px', padding: '8px 14px' }}
+              onClick={() => navigate('/tasks/new')}
+            >
               Create new task<span style={{ fontSize: '10px', paddingTop: '2px' , marginLeft: '3px'}}><FontAwesomeIcon icon={faArrowRight} /></span>
             </button>
           )}

@@ -68,6 +68,9 @@ useEffect(() => {
   if (students.length === 0) setRosterEmpty(true)
   if (tasks.length >= 15) setTaskLimitReached(true)
   setClassLists(lists)
+  if (lists.length === 1) {
+    setSelectedClassListId(lists[0].id)
+  }
   setCheckingLimits(false)
 }
   checkLimits()
@@ -249,10 +252,22 @@ if (checkingLimits) return <NewTaskSkeleton />
 
         <div className="form-field">
   <label className="form-label">Class list</label>
-  {classLists.length === 0 ? (
-    <p style={{ fontSize: '13px', color: '#888' }}>
-      No class lists found. <Link to="/roster">Create one first <FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowRight} /></Link>
-    </p>
+  {classLists.length === 1 ? (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '10px 14px',
+      background: '#f5f5f5',
+      border: '1px solid #e5e5e5',
+      borderRadius: '8px',
+      fontSize: '14px',
+      color: '#111'
+    }}>
+      <span>{classLists[0].name}</span>
+      <span className="classlist-auto-select-msg">Auto-selected ✓</span>
+      <span className="my-auto-select-msg">✓</span>
+    </div>
   ) : (
     <select
       className="form-input"
@@ -265,9 +280,7 @@ if (checkingLimits) return <NewTaskSkeleton />
       ))}
     </select>
   )}
-  {classLists.length === 0 ? "" : (
-    <span className="form-hint">Choose which class list to track for this task</span>
-  )}  
+  <span className="form-hint">Choose which class list to track for this task</span>
 </div>
 
         <button

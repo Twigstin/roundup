@@ -2705,7 +2705,7 @@ button:active {
   padding: 0;
   width: 100%;
   max-width: 500px;
-  max-height: 80vh;
+  max-height: 90vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -3704,4 +3704,28 @@ button:active {
 
 .multi-item-dot-active {
   background: #111;
+}
+
+/* style={{ fontSize: '12px', color: '#27500A', fontFamily: 'montserrat-regular, sans-serif' }}*/
+.classlist-auto-select-msg {
+  font-size: 12px;
+  color: #27500A;
+  font-family: 'montserrat-regular', sans-serif;
+}
+
+.my-auto-select-msg {
+  font-size: 12px;
+  color: #27500A;
+  font-family: 'montserrat-regular', sans-serif;
+  display: none;
+}
+
+@media (max-width: 355px) {
+  .classlist-auto-select-msg {
+    display: none;
+  }
+
+  .my-auto-select-msg {
+    display: flex;
+  }
 }

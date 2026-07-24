@@ -20,6 +20,13 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [noCourses, setNoCourses] = useState(false)
+  const [showAddStudent, setShowAddStudent] = useState(false)
+  const [newStudentName, setNewStudentName] = useState('')
+  const [newStudentReg, setNewStudentReg] = useState('')
+  const [addingStudent, setAddingStudent] = useState(false)
+  const [addStudentError, setAddStudentError] = useState('')
+  const [duplicateWarning, setDuplicateWarning] = useState(null)
+  const [pendingStudent, setPendingStudent] = useState(null)
 
   // Scroll + dots
   const scrollRef = useRef(null)
@@ -187,6 +194,18 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
   }, [task.id, task.class_list_id])
 
 
+  useEffect(() => {
+  if (activeModal || showAddStudent) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
+  return () => {
+    document.body.style.overflow = ''
+  }
+}, [activeModal, showAddStudent])
+
+
 
   useEffect(() => {
   if (activeModal) {
@@ -252,6 +271,69 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
   }
 
   const getStudentItems = (studentId) => itemEntries.filter(e => e.student_id === studentId)
+
+
+  //─── adding students ─────────────────────────────────────────────────────────────────
+  const handleAddStudent = async (force = false) => {
+  setAddStudentError('')
+
+  if (!newStudentName.trim()) {
+    setAddStudentError('Please enter a name')
+    return
+  }
+
+  if (!force) {
+    const duplicate = detectDuplicate(newStudentName.trim(), newStudentReg.trim())
+    if (duplicate) {
+      setDuplicateWarning(duplicate)
+      setPendingStudent({ name: newStudentName.trim(), reg: newStudentReg.trim() })
+      return
+    }
+  }
+
+  setAddingStudent(true)
+  setDuplicateWarning(null)
+  setPendingStudent(null)
+
+  try {
+    const { data: newStudent, error } = await supabase
+      .from('students')
+      .insert([{
+        name: newStudentName.trim(),
+        reg_number: newStudentReg.trim(),
+        class_list_id: task.class_list_id,
+        user_id: (await supabase.auth.getSession()).data.session.user.id
+      }])
+      .select()
+      .single()
+
+    if (error) throw error
+
+    // Create regular entry for roster sync
+    const { createEntry } = await import('../api/index')
+    await createEntry({
+      id: crypto.randomUUID(),
+      task_id: task.id,
+      student_id: newStudent.id,
+      student_name: newStudent.name,
+      student_reg_number: newStudent.reg_number,
+      status: 'not_paid',
+      collected: false,
+      note: '',
+      updated_at: new Date().toISOString()
+    })
+
+    setStudents(prev => [...prev, newStudent])
+    setNewStudentName('')
+    setNewStudentReg('')
+    setShowAddStudent(false)
+  } catch (e) {
+    setAddStudentError('Failed to add student. Please try again.')
+    console.error(e)
+  }
+
+  setAddingStudent(false)
+}
 
   // ─── Modal ─────────────────────────────────────────────────────────────────
   const openModal = (student) => {
@@ -343,6 +425,39 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
     (s.reg_number || '').toLowerCase().includes(search.toLowerCase())
   )
 
+
+  const detectDuplicate = (name, reg) => {
+  const normalizeStr = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+  const tokenize = (s) => (s || '').toLowerCase().split(/[\s\-_.,]+/).filter(Boolean)
+
+  const normName = normalizeStr(name)
+  const normReg = normalizeStr(reg)
+  const nameTokens = tokenize(name)
+
+  for (const student of students) {
+    // Level 1 — reg number exact match
+    if (reg && student.reg_number) {
+      if (normalizeStr(student.reg_number) === normReg) {
+        return { student, reason: 'reg number' }
+      }
+    }
+
+    // Level 2 — full normalized name match
+    if (normalizeStr(student.name) === normName) {
+      return { student, reason: 'name' }
+    }
+
+    // Level 3 — token subset match
+    const existingTokens = tokenize(student.name)
+    const matchingTokens = nameTokens.filter(t => existingTokens.includes(t))
+    if (nameTokens.length >= 2 && matchingTokens.length >= 2) {
+      return { student, reason: 'similar name' }
+    }
+  }
+
+  return null
+}
+
   // ─── Loading skeleton ──────────────────────────────────────────────────────
   if (loading) {
     return (
@@ -379,7 +494,7 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
         <div className="empty-state">
           <p className="empty-title">No courses added yet</p>
           <p className="empty-subtitle">Go to Roster → My courses and add your courses for this semester. Roundup will load them automatically when you come back.</p>
-          <Link to="/roster" className="btn-primary" style={{ display: 'inline-block', marginTop: '16px' }} onClick={() => sessionStorage.setItem('roster_tab', 'courses')}>
+          <Link to="/roster?tab=courses" className="btn-primary" style={{ display: 'inline-block', marginTop: '16px' }}>
             Go to My courses →
           </Link>
         </div>
@@ -480,6 +595,16 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
         <FontAwesomeIcon icon={faSearch} className="input-icon" />
         <input className="form-input search-icon" type="text" placeholder="Search by name or reg number…" value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
+      
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+  <button
+    className="btn-secondary"
+    style={{ whiteSpace: 'nowrap', fontSize: '13px', padding: '8px 14px' }}
+    onClick={() => setShowAddStudent(true)}
+  >
+    + Add student
+  </button>
+</div>
 
       {/* Student list */}
       <div className="form-card">
@@ -579,6 +704,119 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
           </div>
         </div>
       )}
+      {showAddStudent && (
+  <div className="modal-overlay" onClick={() => {
+    setShowAddStudent(false)
+    setDuplicateWarning(null)
+    setPendingStudent(null)
+    setAddStudentError('')
+  }}>
+    <div className="modal-card" id="modal-card" onClick={(e) => e.stopPropagation()}>
+      <div style={{ padding: '24px 24px 0 24px' }}>
+        <p className="page-title bold" style={{ fontSize: '15px', marginBottom: '4px' }}>
+          Add student
+        </p>
+        <p style={{ fontSize: '13px', color: '#888', marginBottom: '20px' }}>
+          Student will be added to this task and the class list
+        </p>
+
+        {addStudentError && (
+          <p className="form-error">{addStudentError}</p>
+        )}
+
+        {duplicateWarning && (
+          <div style={{
+            background: '#FAEEDA',
+            border: '1px solid #EF9F27',
+            borderRadius: '8px',
+            padding: '12px 14px',
+            marginBottom: '16px',
+            fontSize: '13px',
+            color: '#633806',
+            lineHeight: 1.5
+          }}>
+            ⚠️ A student with a similar {duplicateWarning.reason} already exists:
+            <strong> "{duplicateWarning.student.name}"</strong>.
+            Are you sure you want to add this student?
+            <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+              <button
+                className="btn-danger-solid"
+                style={{ fontSize: '12px', padding: '6px 12px' }}
+                onClick={() => handleAddStudent(true)}
+              >
+                Add anyway
+              </button>
+              <button
+                className="btn-secondary"
+                style={{ fontSize: '12px', padding: '6px 12px' }}
+                onClick={() => {
+                  setDuplicateWarning(null)
+                  setPendingStudent(null)
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="form-field">
+          <label className="form-label">Full name</label>
+          <input
+            className="form-input"
+            type="text"
+            placeholder="e.g. Austin Aniobi"
+            value={newStudentName}
+            onChange={(e) => setNewStudentName(e.target.value)}
+          />
+        </div>
+
+        <div className="form-field">
+          <label className="form-label">Reg number <span style={{ color: '#999', fontSize: '12px' }}>(optional)</span></label>
+          <input
+            className="form-input"
+            type="text"
+            placeholder="e.g. 20251234567"
+            value={newStudentReg}
+            onChange={(e) => setNewStudentReg(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div style={{
+        padding: '16px 24px',
+        borderTop: '1px solid #e5e5e5',
+        display: 'flex',
+        gap: '8px',
+        background: '#fff',
+        flexShrink: 0
+      }}>
+        <button
+          className="btn-primary"
+          style={{ flex: 1, padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+          onClick={() => handleAddStudent(false)}
+          disabled={addingStudent}
+        >
+          {addingStudent ? <><Spinner size={14} /> Adding...</> : 'Add student'}
+        </button>
+        <button
+          className="btn-secondary"
+          style={{ flex: 1, padding: '10px' }}
+          onClick={() => {
+            setShowAddStudent(false)
+            setDuplicateWarning(null)
+            setPendingStudent(null)
+            setAddStudentError('')
+            setNewStudentName('')
+            setNewStudentReg('')
+          }}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   )
 }
