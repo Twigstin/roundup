@@ -643,7 +643,7 @@ const detectDuplicate = (name, reg) => {
     const existingTokens = tokenize(entry.student_name)
     const matchingTokens = nameTokens.filter(t => existingTokens.includes(t))
     if (nameTokens.length >= 2 && matchingTokens.length >= 2) {
-      return { entry, reason: 'similar name' }
+      return { entry, reason: 'name' }
     }
   }
 

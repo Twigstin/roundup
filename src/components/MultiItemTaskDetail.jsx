@@ -451,7 +451,7 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
     const existingTokens = tokenize(student.name)
     const matchingTokens = nameTokens.filter(t => existingTokens.includes(t))
     if (nameTokens.length >= 2 && matchingTokens.length >= 2) {
-      return { student, reason: 'similar name' }
+      return { student, reason: 'name' }
     }
   }
 
