@@ -22,6 +22,8 @@ const isValidRegNumber = (reg) => {
 function RosterDetail() {
   const { id } = useParams()
   const { state } = useLocation()
+  const backTo = state?.from || '/roster'
+  const backLabel = state?.fromLabel || 'Class lists'
   const [showUploadPrompt, setShowUploadPrompt] = useState(state?.showEmptyPrompt || false)
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
@@ -508,7 +510,9 @@ const handleCancelEdit = () => {
   </div>
 )}
       <div className="page-header">
-        <Link to="/roster" className="back-link"><FontAwesomeIcon icon={faChevronLeft}/> Class lists</Link>
+        <Link to={backTo} state={state?.fromState} className="back-link">
+          <FontAwesomeIcon icon={faChevronLeft}/> {backLabel}
+        </Link>
         <span className="roster-count">{students.length} student{students.length !== 1 ? 's' : ''}</span>
       </div>
 

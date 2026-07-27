@@ -150,10 +150,15 @@ if (session?.user?.id) {
   }
 
   if (students.length === 0) {
-    navigate(`/roster/${selectedClassListId}`, {
-      state: { showEmptyPrompt: true }
-    })
-  } else {
+  navigate(`/roster/${selectedClassListId}`, {
+    state: {
+      showEmptyPrompt: true,
+      from: `/tasks/${newTask.id}`,
+      fromLabel: newTask.title,
+      fromState: { task: newTask }
+    }
+  })
+} else {
     if (type === 'payment' && paymentMode === 'multi') {
   const courses = await getCourses()
   if (courses.length > 0) {

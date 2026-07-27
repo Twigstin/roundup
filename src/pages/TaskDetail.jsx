@@ -998,7 +998,7 @@ const detectDuplicate = (name, reg) => {
           </p>
           <Link 
   to={`/roster/${task.class_list_id}`}
-  state={{ showEmptyPrompt: true }}
+  state={{ showEmptyPrompt: true, from: `/tasks/${task.id}`, fromLabel: task.title, fromState: { task } }}
   className="btn-primary" 
   style={{ display: 'inline-block', marginTop: '16px' }}
 >

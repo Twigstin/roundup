@@ -779,9 +779,14 @@ const handleRosterSync = async () => {
         <p className="task-limit-subtitle">
           Upload your student list to start tracking. Tap the button below to go there now — it only takes a few seconds.
         </p>
-        <Link to={`/roster/${task.class_list_id}`} className="btn-primary" style={{ display: 'inline-block', marginTop: '16px', textDecoration: 'none' }}>
-          Upload class list →
-        </Link>
+        <Link
+  to={`/roster/${task.class_list_id}`}
+  state={{ showEmptyPrompt: true, from: `/tasks/${task.id}`, fromLabel: task.title, fromState: { task } }}
+  className="btn-primary"
+  style={{ display: 'inline-block', marginTop: '16px', textDecoration: 'none' }}
+>
+  Upload class list <FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowRight} />
+</Link>
       </>
     )}
   </div>
