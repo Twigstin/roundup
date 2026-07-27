@@ -101,17 +101,6 @@ function Dashboard() {
   const meta = session?.user?.user_metadata || {}
   setUserFirstName(meta.first_name || '')
 
-  const { data: studentCountData } = await supabase
-  .from('students')
-  .select('class_list_id')
-
-let classListStudentCounts = {}
-if (studentCountData) {
-  studentCountData.forEach(row => {
-    classListStudentCounts[row.class_list_id] = (classListStudentCounts[row.class_list_id] || 0) + 1
-  })
-}
-
   const hasCompletedOnboarding = meta.onboarding_complete || false
 
   const onboardingChoice = localStorage.getItem('roundup_onboarding')
@@ -122,16 +111,42 @@ if (studentCountData) {
   }
 
   // Fetch everything in parallel
-  const [tasks, entriesData, lists, courses] = await Promise.all([
+  const [tasks, entriesData, lists, courses, studentCountData] = await Promise.all([
     getTasks(),
     fetchAllEntries(userId),
     getClassLists(),
-    getCourses()
+    getCourses(),
+    supabase.from('students').select('class_list_id').then(({ data }) => data || [])
   ])
 
   setHasCourses(courses.length > 0)
   setHasClassList(lists.length > 0)
   setAllEntries(entriesData)
+
+  // Build class list student counts
+  let classListStudentCounts = {}
+  studentCountData.forEach(row => {
+    classListStudentCounts[row.class_list_id] = (classListStudentCounts[row.class_list_id] || 0) + 1
+  })
+
+  // For tasks whose class list was deleted, count from entries table
+  const nullClassListTaskIds = tasks
+    .filter(t => !t.class_list_id && t.payment_mode === 'multi')
+    .map(t => t.id)
+
+  let taskStudentCounts = {}
+  if (nullClassListTaskIds.length > 0) {
+    const { data: entryCountData } = await supabase
+      .from('entries')
+      .select('task_id')
+      .in('task_id', nullClassListTaskIds)
+
+    if (entryCountData) {
+      entryCountData.forEach(row => {
+        taskStudentCounts[row.task_id] = (taskStudentCounts[row.task_id] || 0) + 1
+      })
+    }
+  }
 
   // Fetch course counts for multi-item tasks
   const multiItemTaskIds = tasks
@@ -139,39 +154,41 @@ if (studentCountData) {
     .map(t => t.id)
 
   let courseCounts = {}
-let taskPaidCounts = {}
-let taskCollectedCounts = {}
+  let taskPaidCounts = {}
+  let taskCollectedCounts = {}
 
-if (multiItemTaskIds.length > 0) {
-  const [{ data: itemData }, { data: itemEntryData }] = await Promise.all([
-    supabase.from('task_items').select('task_id').in('task_id', multiItemTaskIds),
-    supabase.from('item_entries').select('task_id, collected').in('task_id', multiItemTaskIds)
-  ])
+  if (multiItemTaskIds.length > 0) {
+    const [{ data: itemData }, { data: itemEntryData }] = await Promise.all([
+      supabase.from('task_items').select('task_id').in('task_id', multiItemTaskIds),
+      supabase.from('item_entries').select('task_id, collected').in('task_id', multiItemTaskIds)
+    ])
 
-  if (itemData) {
-    itemData.forEach(row => {
-      courseCounts[row.task_id] = (courseCounts[row.task_id] || 0) + 1
-    })
+    if (itemData) {
+      itemData.forEach(row => {
+        courseCounts[row.task_id] = (courseCounts[row.task_id] || 0) + 1
+      })
+    }
+
+    if (itemEntryData) {
+      itemEntryData.forEach(row => {
+        taskPaidCounts[row.task_id] = (taskPaidCounts[row.task_id] || 0) + 1
+        if (row.collected) {
+          taskCollectedCounts[row.task_id] = (taskCollectedCounts[row.task_id] || 0) + 1
+        }
+      })
+    }
   }
 
-  if (itemEntryData) {
-    itemEntryData.forEach(row => {
-      taskPaidCounts[row.task_id] = (taskPaidCounts[row.task_id] || 0) + 1
-      if (row.collected) {
-        taskCollectedCounts[row.task_id] = (taskCollectedCounts[row.task_id] || 0) + 1
-      }
-    })
-  }
-}
-
-  // Attach courseCount to each task
+  // Attach meta to each task
   const tasksWithMeta = tasks.map(t => ({
-  ...t,
-  courseCount: courseCounts[t.id] || 0,
-  totalPaid: taskPaidCounts[t.id] || 0,
-  totalCollected: taskCollectedCounts[t.id] || 0,
-  studentCount: classListStudentCounts[t.class_list_id] || 0
-}))
+    ...t,
+    courseCount: courseCounts[t.id] || 0,
+    totalPaid: taskPaidCounts[t.id] || 0,
+    totalCollected: taskCollectedCounts[t.id] || 0,
+    studentCount: t.class_list_id
+      ? (classListStudentCounts[t.class_list_id] || 0)
+      : (taskStudentCounts[t.id] || 0)
+  }))
 
   setTasks(tasksWithMeta)
   setLoading(false)
@@ -325,7 +342,7 @@ useEffect(() => {
   return (
     
     <div>
-      {showTutorialBanner && (
+      {/* showTutorialBanner && (
       <div className="tutorial-banner">
         <div className="tutorial-banner-text">
           <p className="tutorial-banner-title light-bold">New to Roundup? 👋</p>
@@ -357,8 +374,8 @@ useEffect(() => {
           </button>
         </div>
       </div>
-    )}
-       <div className="page-header">
+    ) */}
+      {!isNewUser && (<div className="page-header">
       <div>
         {!isNewUser && userFirstName && (
           <p className="dashboard-greeting">
@@ -368,7 +385,7 @@ useEffect(() => {
         <h1 className="page-title bold">Your tasks</h1>
       </div>
       <Link to="/tasks/new" className="btn-primary">+ New task</Link>
-    </div>
+    </div>)}
 
       {isNewUser && (
   <div className="onboarding-banner">
@@ -526,7 +543,7 @@ useEffect(() => {
   </div>
 )}
 
-      {filteredTasks.length === 0 ? (
+      {filteredTasks.length === 0 ? (!isNewUser && (
   <div className="empty-state">
     <p className="empty-title">
       {showArchived ? 'No archived tasks' : tasks.filter(t => !t.is_archived).length === 0 ? 'No tasks yet' : 'No tasks found'}
@@ -539,7 +556,7 @@ useEffect(() => {
         : 'Try a different search or filter'}
     </p>
   </div>
-) : (
+)) : (
         <div className="task-list">
           {filteredTasks.map(task => {
             const { total, doneCount, pendingCount, partPaidCount, collectedCount, notCollectedCount, isPayment } = getTaskStats(task.id, task.type)
@@ -670,7 +687,9 @@ useEffect(() => {
                           </div>
                           <div className="task-stat-divider" />
                           <div className="task-stat">
-                            <span className="task-stat-num danger dangery">{pendingCount}</span>
+                            <span className="task-stat-num danger dangery">
+                              {pendingCount}
+                            </span>
                             <span className="task-stat-label">not paid</span>
                           </div>
                           <div className="task-stat-divider" />

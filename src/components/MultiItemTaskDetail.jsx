@@ -7,7 +7,7 @@ import { supabase } from '../api/supabase'
 import {
   getTaskItems, createTaskItems, getCourses,
   getItemEntries, addItemEntry, updateItemEntry, removeItemEntry,
-  updateTask, getStudentsByClassList, deleteTaskItem, updateTaskItem
+  updateTask, getStudentsByClassList, getRosterMeta, deleteTaskItem, updateTaskItem, getEntriesByTask
 } from '../api/index'
 
 const MAX_DOTS = 5
@@ -27,6 +27,10 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
   const [addStudentError, setAddStudentError] = useState('')
   const [duplicateWarning, setDuplicateWarning] = useState(null)
   const [pendingStudent, setPendingStudent] = useState(null)
+  const [savingStudentName, setSavingStudentName] = useState(null)
+  const [showRosterUpdate, setShowRosterUpdate] = useState(false)
+const [rosterDiff, setRosterDiff] = useState({ added: 0, removed: 0 })
+const [syncingRoster, setSyncingRoster] = useState(false)
 
   // Scroll + dots
   const scrollRef = useRef(null)
@@ -58,13 +62,35 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
     const init = async () => {
   setLoading(true)
 
-  const [studentData, existingItems, courses] = await Promise.all([
-    getStudentsByClassList(task.class_list_id),
-    getTaskItems(task.id),
-    getCourses()
-  ])
+  const [entriesData, existingItems, courses, rosterMeta] = await Promise.all([
+  getEntriesByTask(task.id),
+  getTaskItems(task.id),
+  getCourses(),
+  getRosterMeta()
+])
 
-  setStudents(studentData)
+// Build student list from entries — class list independent, exactly like single tasks
+const resolvedStudents = entriesData.map(e => ({
+  id: e.student_id,
+  name: e.student_name,
+  reg_number: e.student_reg_number,
+  serial_number: e.serial_number || null
+}))
+
+setStudents(resolvedStudents)
+
+// Detect roster changes
+if (task.class_list_id && rosterMeta) {
+  const currentCount = resolvedStudents.length
+  const rosterCount = rosterMeta.student_count || 0
+  if (rosterCount !== currentCount) {
+    setRosterDiff({
+      added: Math.max(0, rosterCount - currentCount),
+      removed: Math.max(0, currentCount - rosterCount)
+    })
+    setShowRosterUpdate(true)
+  }
+}
 
   const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '').trim()
   const courseNormalized = courses.map(c => normalize(c.name))
@@ -270,8 +296,13 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
     return { paid, collected, notPaid: students.length - paid, notCollected }
   }
 
-  const getStudentItems = (studentId) => itemEntries.filter(e => e.student_id === studentId)
+  //const getStudentItems = (studentId) => itemEntries.filter(e => e.student_id === studentId)
 
+  const getStudentItems = (studentId, studentName) =>
+  itemEntries.filter(e =>
+    (e.student_id && e.student_id === studentId) ||
+    (!e.student_id && e.student_name === studentName)
+  )
 
   //─── adding students ─────────────────────────────────────────────────────────────────
   const handleAddStudent = async (force = false) => {
@@ -296,34 +327,37 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
   setPendingStudent(null)
 
   try {
-    const { data: newStudent, error } = await supabase
-      .from('students')
+    const { data: { session } } = await supabase.auth.getSession()
+    const userId = session.user.id
+
+    // Create entry directly — no student record, no class list involvement
+    const entryId = crypto.randomUUID()
+    const studentId = crypto.randomUUID()
+
+    const { error: entryError } = await supabase
+      .from('entries')
       .insert([{
-        name: newStudentName.trim(),
-        reg_number: newStudentReg.trim(),
-        class_list_id: task.class_list_id,
-        user_id: (await supabase.auth.getSession()).data.session.user.id
+        id: entryId,
+        task_id: task.id,
+        student_name: newStudentName.trim(),
+        student_reg_number: newStudentReg.trim(),
+        status: 'not_paid',
+        collected: false,
+        note: '',
+        user_id: userId,
+        updated_at: new Date().toISOString()
       }])
-      .select()
-      .single()
 
-    if (error) throw error
+    if (entryError) throw entryError
 
-    // Create regular entry for roster sync
-    const { createEntry } = await import('../api/index')
-    await createEntry({
-      id: crypto.randomUUID(),
-      task_id: task.id,
-      student_id: newStudent.id,
-      student_name: newStudent.name,
-      student_reg_number: newStudent.reg_number,
-      status: 'not_paid',
-      collected: false,
-      note: '',
-      updated_at: new Date().toISOString()
-    })
-
-    setStudents(prev => [...prev, newStudent])
+    // Add to local students state only
+    const newStudent = {
+  id: studentId,
+  name: newStudentName.trim(),
+  reg_number: newStudentReg.trim(),
+  _isManual: true // flag this as manually added
+}
+setStudents(prev => [...prev, newStudent])
     setNewStudentName('')
     setNewStudentReg('')
     setShowAddStudent(false)
@@ -337,7 +371,7 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
 
   // ─── Modal ─────────────────────────────────────────────────────────────────
   const openModal = (student) => {
-    const existing = getStudentItems(student.id)
+    const existing = getStudentItems(student.id, student.name)
     const selections = {}
     taskItems.forEach(item => { selections[item.id] = existing.some(e => e.task_item_id === item.id) })
     setModalSelections(selections)
@@ -345,26 +379,57 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
   }
 
   const handleModalConfirm = async () => {
-    const student = activeModal
-    setModalSaving(true)
-    const existing = getStudentItems(student.id)
+  const student = activeModal
+  setSavingStudentId(student.id)
+  setSavingStudentName(student.name)
+  setActiveModal(null)
+
+  try {
+    const existing = getStudentItems(student.id, student.name)
     const existingItemIds = existing.map(e => e.task_item_id)
-    const toAdd = taskItems.filter(item => modalSelections[item.id] && !existingItemIds.includes(item.id))
+
+    const toAdd = taskItems.filter(item =>
+      modalSelections[item.id] && !existingItemIds.includes(item.id)
+    )
     const toRemove = existing.filter(e => !modalSelections[e.task_item_id])
-    setSavingStudentId(student.id)
-    setActiveModal(null)
+
+    // Add new entries
     for (const item of toAdd) {
-      const newEntry = { id: crypto.randomUUID(), task_id: task.id, task_item_id: item.id, student_id: student.id, student_name: student.name, student_reg_number: student.reg_number, collected: false, updated_at: new Date().toISOString() }
+      const newEntry = {
+        id: crypto.randomUUID(),
+        task_id: task.id,
+        task_item_id: item.id,
+        student_id: (task.class_list_id && !student._isManual) ? student.id : null,
+        student_name: student.name,
+        student_reg_number: student.reg_number,
+        collected: false,
+        updated_at: new Date().toISOString()
+      }
       const saved = await addItemEntry(newEntry)
       setItemEntries(prev => [...prev, saved])
     }
+
+    // Remove entries — use entry.id directly, not student.id
     for (const entry of toRemove) {
-      await removeItemEntry(entry.task_item_id, student.id)
+      await supabase
+        .from('item_entries')
+        .delete()
+        .eq('id', entry.id)
       setItemEntries(prev => prev.filter(e => e.id !== entry.id))
     }
+
+    // Refresh to get accurate state
+    const freshEntries = await getItemEntries(task.id)
+    setItemEntries(freshEntries)
+
+  } catch (e) {
+    console.error('Modal confirm error:', e)
+  } finally {
     setSavingStudentId(null)
+    setSavingStudentName(null)
     setModalSaving(false)
   }
+}
 
   const handleChipTap = async (entry) => {
     const newCollected = !entry.collected
@@ -398,7 +463,7 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
       const XLSX = await import('xlsx-js-style')
       const colHeaders = ['S/N', 'Name', 'Reg Number', ...taskItems.map(i => i.name)]
       const rows = students.map((student, idx) => {
-        const studentEntries = getStudentItems(student.id)
+        const studentEntries = getStudentItems(student.id, student.name)
         const row = [idx + 1, student.name, student.reg_number]
         taskItems.forEach(item => {
           const entry = studentEntries.find(e => e.task_item_id === item.id)
@@ -456,6 +521,50 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
   }
 
   return null
+}
+
+const handleRosterSync = async () => {
+  setSyncingRoster(true)
+  try {
+    const freshStudents = await getStudentsByClassList(task.class_list_id)
+    const existingEntries = await getEntriesByTask(task.id)
+    const existingStudentIds = new Set(existingEntries.map(e => e.student_id))
+
+    const newStudents = freshStudents.filter(s => !existingStudentIds.has(s.id))
+
+    if (newStudents.length > 0) {
+      const { data: { session } } = await supabase.auth.getSession()
+      const userId = session.user.id
+
+      const newEntries = newStudents.map(s => ({
+        id: crypto.randomUUID(),
+        task_id: task.id,
+        student_id: s.id,
+        student_name: s.name,
+        student_reg_number: s.reg_number,
+        status: 'not_paid',
+        collected: false,
+        note: '',
+        user_id: userId,
+        updated_at: new Date().toISOString()
+      }))
+
+      await supabase.from('entries').insert(newEntries)
+    }
+
+    const updatedEntries = await getEntriesByTask(task.id)
+    const updatedStudents = updatedEntries.map(e => ({
+      id: e.student_id,
+      name: e.student_name,
+      reg_number: e.student_reg_number
+    }))
+
+    setStudents(updatedStudents)
+    setShowRosterUpdate(false)
+  } catch (e) {
+    console.error('Roster sync failed:', e)
+  }
+  setSyncingRoster(false)
 }
 
   // ─── Loading skeleton ──────────────────────────────────────────────────────
@@ -606,6 +715,60 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
   </button>
 </div>
 
+{/* Empty students state */}
+{students.length === 0 && !noCourses && (
+  <div className="roster-warning" style={{ marginBottom: '16px' }}>
+    <div>
+      <p className="roster-warning-text" style={{ fontWeight: '500', marginBottom: '4px' }}>
+        No students in this class list yet
+      </p>
+      <p className="roster-warning-text">
+        Go to Roster and add students to your class list first.
+      </p>
+    </div>
+    <Link
+      to={`/roster/${task.class_list_id}`}
+      className="roster-warning-link"
+    >
+      Go to Roster →
+    </Link>
+  </div>
+)}
+
+{/* Roster update banner */}
+{showRosterUpdate && task.class_list_id && (
+  <div className="roster-update-banner" style={{ marginBottom: '16px' }}>
+    <div className="roster-update-text">
+      <p className="roster-update-title">Class list has been updated</p>
+      <p className="roster-update-subtitle">
+        {rosterDiff.added > 0 && `${rosterDiff.added} new student${rosterDiff.added !== 1 ? 's' : ''} added to your class list. `}
+        {rosterDiff.removed > 0 && `${rosterDiff.removed} student${rosterDiff.removed !== 1 ? 's' : ''} removed. `}
+        Sync to update this task.
+      </p>
+    </div>
+    <div className="roster-update-actions">
+      <button
+        className="btn-primary"
+        style={{ fontSize: '13px', padding: '8px 14px', whiteSpace: 'nowrap' }}
+        onClick={handleRosterSync}
+        disabled={syncingRoster}
+      >
+        {syncingRoster
+          ? <><Spinner size={12} /><span style={{ marginLeft: '6px' }}>Syncing...</span></>
+          : 'Sync now'
+        }
+      </button>
+      <button
+        className="btn-secondary"
+        style={{ fontSize: '13px', padding: '8px 14px' }}
+        onClick={() => setShowRosterUpdate(false)}
+      >
+        Dismiss
+      </button>
+    </div>
+  </div>
+)}
+
       {/* Student list */}
       <div className="form-card">
         {filteredStudents.length === 0 ? (
@@ -616,10 +779,13 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
         ) : (
           <div className="entry-list">
             {filteredStudents.map(student => {
-              const studentItems = getStudentItems(student.id)
-              const isSaving = savingStudentId === student.id
+  const studentKey = student.id || student.name
+              const studentItems = getStudentItems(student.id, student.name)
+              const isSaving = student.id
+  ? savingStudentId === student.id
+  : savingStudentName === student.name
               return (
-                <div key={student.id} className="multi-entry-row-wrapper">
+                <div key={student.id || student.name} className="multi-entry-row-wrapper">
                   <div className="multi-entry-student">
                     <p className="entry-name">{student.name}</p>
                     <p className="entry-reg">{student.reg_number}</p>
@@ -683,7 +849,10 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
               </div>
             </div>
             <div style={{ padding: '16px 24px', borderTop: '1px solid #e5e5e5', display: 'flex', gap: '8px', background: '#fff', flexShrink: 0 }}>
-              <button className="btn-primary" style={{ flex: 1, padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} onClick={handleModalConfirm} disabled={modalSaving}>
+              <button className="btn-primary" style={{ flex: 1, padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} onClick={() => {
+  console.log('confirm clicked')
+  handleModalConfirm()
+}} disabled={modalSaving}>
                 {modalSaving ? <><Spinner size={14} /> Saving...</> : 'Confirm'}
               </button>
               <button className="btn-secondary" style={{ flex: 1, padding: '10px' }} onClick={() => setActiveModal(null)}>Cancel</button>
@@ -717,7 +886,7 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
           Add student
         </p>
         <p style={{ fontSize: '13px', color: '#888', marginBottom: '20px' }}>
-          Student will be added to this task and the class list
+          This student will only appear in this task, not in your general roster.
         </p>
 
         {addStudentError && (

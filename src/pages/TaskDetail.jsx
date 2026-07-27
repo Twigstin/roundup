@@ -1070,7 +1070,7 @@ const detectDuplicate = (name, reg) => {
     <p className="entry-note">{entry.note}</p>
   )}
 
-  {editingNoteId === entry.id ? (
+  {isPayment && (editingNoteId === entry.id ? (
     <div className="note-editor">
       <input
         className="form-input"
@@ -1122,7 +1122,7 @@ const detectDuplicate = (name, reg) => {
     >
       {entry.note ? 'Edit note' : 'Add note'}
     </button>
-  )}
+  ))}
 </div>
       ))}
     </div>

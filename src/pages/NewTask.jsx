@@ -209,7 +209,7 @@ if (checkingLimits) return <NewTaskSkeleton />
           <input
             className="form-input"
             type="text"
-            placeholder="e.g. Assignment 3, Textbook payment…"
+            placeholder="e.g. All Textbook Payments, MTH 102 Manuals…"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />

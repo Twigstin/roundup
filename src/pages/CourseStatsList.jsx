@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faSearch, faChevronRight } from '@fortawesome/free-solid-svg-icons'
-import { getTaskItems, getItemEntries, getStudentsByClassList, getTasks } from '../api/index'
+import { getTaskItems, getItemEntries, getEntriesByTask, getStudentsByClassList, getTasks } from '../api/index'
 import Spinner from '../components/Spinner'
 import { CourseStatsListSkeleton } from '../components/Skeleton'
 
@@ -20,15 +20,29 @@ function CourseStatsList() {
     const init = async () => {
       const [allTasks, items] = await Promise.all([getTasks(), getTaskItems(id)])
       const foundTask = allTasks.find(t => t.id === id)
+
+      // temp log
+const testEntries = await getEntriesByTask(id)
+console.log('getEntriesByTask result:', testEntries.length)
       if (!foundTask) { setLoading(false); return }
       setTask(foundTask)
       setTaskItems(items)
-      const [entries, studentData] = await Promise.all([
-        getItemEntries(id),
-        getStudentsByClassList(foundTask.class_list_id)
-      ])
-      setItemEntries(entries)
-      setStudents(studentData)
+
+const [entries, studentData] = await Promise.all([
+  getItemEntries(id),
+  foundTask.class_list_id
+    ? getStudentsByClassList(foundTask.class_list_id)
+    : getEntriesByTask(id).then(taskEntries =>
+        taskEntries.map(e => ({
+          id: e.student_id,
+          name: e.student_name,
+          reg_number: e.student_reg_number
+        }))
+      )
+])
+
+setItemEntries(entries)
+setStudents(studentData)
       setLoading(false)
     }
     init()
@@ -38,8 +52,9 @@ function CourseStatsList() {
     const entries = itemEntries.filter(e => e.task_item_id === taskItemId)
     const paid = entries.length
     const collected = entries.filter(e => e.collected).length
+    const notPaid = students.length - paid
     const notCollected = entries.filter(e => !e.collected).length
-    return { paid, collected, notPaid: students.length - paid, notCollected }
+    return { paid, collected, notPaid, notCollected }
   }
 
   const filteredItems = taskItems.filter(item =>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useParams, useLocation } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faSearch, faDownload } from '@fortawesome/free-solid-svg-icons'
-import { getTaskItems, getItemEntries, getStudentsByClassList, getTasks, updateItemEntry, addItemEntry, removeItemEntry } from '../api/index'
+import { getTaskItems, getItemEntries, getEntriesByTask, getStudentsByClassList, getTasks, updateItemEntry, addItemEntry, removeItemEntry } from '../api/index'
 import { TaskDetailSkeleton } from '../components/Skeleton'
 import Spinner from '../components/Spinner'
 
@@ -47,32 +47,55 @@ const [exportBlockedMsg, setExportBlockedMsg] = useState('')
       setTask(foundTask)
       setTaskItem(foundItem)
 
-      const [entries, studentData] = await Promise.all([
-        getItemEntries(id),
-        getStudentsByClassList(foundTask.class_list_id)
-      ])
+      const [allItemEntries, studentData] = await Promise.all([
+  getItemEntries(id),
+  foundTask.class_list_id
+    ? getStudentsByClassList(foundTask.class_list_id)
+    : getEntriesByTask(id).then(entries =>
+        entries
+          .filter((e, i, arr) => e.student_id && arr.findIndex(x => x.student_id === e.student_id) === i)
+          .map(e => ({ id: e.student_id, name: e.student_name, reg_number: e.student_reg_number }))
+      )
+])
 
-      setItemEntries(entries.filter(e => e.task_item_id === itemId))
-      setStudents(studentData)
+
+setItemEntries(allItemEntries.filter(e => e.task_item_id === itemId))
+setStudents(studentData)
       setLoading(false)
     }
     init()
   }, [id, itemId])
 
   // ─── Derived ───────────────────────────────────────────────────────────────
-  const paidStudentIds = new Set(itemEntries.map(e => e.student_id))
-  const paidCount = paidStudentIds.size
-  const collectedCount = itemEntries.filter(e => e.collected).length
-  const notPaidCount = students.length - paidCount
-  const notCollectedCount = paidCount - collectedCount
-  const totalCount = students.length
+  //const relevantEntries = itemEntries // already filtered to this itemId
+// Match entries to students by student_id first, fall back to student_name
+const getEntryForStudent = (student) =>
+  itemEntries.find(e =>
+    (e.student_id && e.student_id === student.id) ||
+    (!e.student_id && e.student_name === student.name)
+  )
+
+const paidCount = students.filter(s => !!getEntryForStudent(s)).length
+const collectedCount = students.filter(s => {
+  const entry = getEntryForStudent(s)
+  return entry?.collected
+}).length
+const notPaidCount = students.length - paidCount
+const notCollectedCount = paidCount - collectedCount
+const totalCount = students.length
+
+
+
+const paidStudentIds = new Set(
+  students.filter(s => !!getEntryForStudent(s)).map(s => s.id)
+)
 
 
   const getAvailableStatuses = () => [
   { key: 'paid', label: 'Paid' },
   { key: 'collected', label: 'Collected' }
 ]
- 
+
 const openExportModal = () => {
   if (filteredStudents.length === 0) {
     setExportBlockedMsg('⚠️ Nothing to export — your current filter has no students.')
@@ -91,7 +114,7 @@ const openExportModal = () => {
 
   // ─── Optimistic toggle paid ────────────────────────────────────────────────
   const handleTogglePaid = async (student) => {
-    const existingEntry = itemEntries.find(e => e.student_id === student.id)
+    const existingEntry = getEntryForStudent(student)
 
     if (existingEntry) {
       // Optimistic remove
@@ -108,7 +131,7 @@ const openExportModal = () => {
         id: crypto.randomUUID(),
         task_id: id,
         task_item_id: itemId,
-        student_id: student.id,
+        student_id: task?.class_list_id ? student.id : null,
         student_name: student.name,
         student_reg_number: student.reg_number,
         collected: false,
@@ -144,23 +167,23 @@ const openExportModal = () => {
 
   // ─── Filter ────────────────────────────────────────────────────────────────
   const filteredStudents = students.filter(student => {
-    const matchesSearch =
-      student.name.toLowerCase().includes(search.toLowerCase()) ||
-      (student.reg_number || '').toLowerCase().includes(search.toLowerCase())
+  const matchesSearch =
+    student.name.toLowerCase().includes(search.toLowerCase()) ||
+    (student.reg_number || '').toLowerCase().includes(search.toLowerCase())
 
-    const isPaid = paidStudentIds.has(student.id)
-    const entry = itemEntries.find(e => e.student_id === student.id)
-    const isCollected = entry?.collected || false
+  const entry = getEntryForStudent(student)
+  const isPaid = !!entry
+  const isCollected = entry?.collected || false
 
-    const matchesFilter =
-      activeFilter === 'total' ? true :
-      activeFilter === 'paid' ? isPaid :
-      activeFilter === 'not_paid' ? !isPaid :
-      activeFilter === 'collected' ? isCollected :
-      activeFilter === 'not_collected' ? (isPaid && !isCollected) : true
+  const matchesFilter =
+    activeFilter === 'total' ? true :
+    activeFilter === 'paid' ? isPaid :
+    activeFilter === 'not_paid' ? !isPaid :
+    activeFilter === 'collected' ? isCollected :
+    activeFilter === 'not_collected' ? (isPaid && !isCollected) : true
 
-    return matchesSearch && matchesFilter
-  })
+  return matchesSearch && matchesFilter
+})
 
   // ─── Missing data detection ────────────────────────────────────────────────
   const missingRegCount = students.filter(s => !s.reg_number || s.reg_number.trim() === '').length
@@ -204,7 +227,7 @@ const openExportModal = () => {
   }
  
   const buildRow = (student, index) => {
-    const entry = itemEntries.find(e => e.student_id === student.id)
+    const entry = getEntryForStudent(student)
     const isPaid = !!entry
     const isCollected = entry?.collected || false
     const fixedReg = regNumberFixes[student.id]
@@ -433,7 +456,7 @@ const openExportModal = () => {
         ) : (
           <div className="entry-list">
             {filteredStudents.map(student => {
-              const entry = itemEntries.find(e => e.student_id === student.id)
+              const entry = getEntryForStudent(student)
               const isPaid = !!entry
               const isCollected = entry?.collected || false
 
