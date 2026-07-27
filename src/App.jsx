@@ -69,7 +69,6 @@ function App() {
         <Route path="/roster" element={<Roster />} />
         <Route path="/roster/:id" element={<RosterDetail />} />
         <Route path="/menu" element={<Menu />} />
-        <Route path="/menu" element={<Menu />} />
         <Route path="/about" element={<About />} />
         <Route path="/account" element={<Account />} />
         <Route path="/account/profile" element={<EditProfile />} />

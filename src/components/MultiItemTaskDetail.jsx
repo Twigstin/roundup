@@ -5,14 +5,14 @@ import { faChevronLeft, faSearch, faPenToSquare, faDownload, faPlus, faArrowRigh
 import Spinner from './Spinner'
 import { supabase } from '../api/supabase'
 import {
-  getTaskItems, createTaskItems, getCourses,
+  getTaskItems, createTaskItems, getCourses, syncTaskRoster, populateTaskEntries,
   getItemEntries, addItemEntry, updateItemEntry, removeItemEntry,
   updateTask, getStudentsByClassList, getRosterMeta, deleteTaskItem, updateTaskItem, getEntriesByTask
 } from '../api/index'
 
 const MAX_DOTS = 5
 
-function MultiItemTaskDetail({ task, onTitleUpdate }) {
+function MultiItemTaskDetail({ task, onTitleUpdate, onRosterSync }) {
   const navigate = useNavigate()
   const [taskItems, setTaskItems] = useState([])
   const [itemEntries, setItemEntries] = useState([])
@@ -29,8 +29,10 @@ function MultiItemTaskDetail({ task, onTitleUpdate }) {
   const [pendingStudent, setPendingStudent] = useState(null)
   const [savingStudentName, setSavingStudentName] = useState(null)
   const [showRosterUpdate, setShowRosterUpdate] = useState(false)
-const [rosterDiff, setRosterDiff] = useState({ added: 0, removed: 0 })
-const [syncingRoster, setSyncingRoster] = useState(false)
+  const [rosterDiff, setRosterDiff] = useState({ added: 0, removed: 0 })
+  const [syncingRoster, setSyncingRoster] = useState(false)
+  const [classListHasStudents, setClassListHasStudents] = useState(false)
+  const [populatingRoster, setPopulatingRoster] = useState(false)
 
   // Scroll + dots
   const scrollRef = useRef(null)
@@ -69,6 +71,11 @@ const [syncingRoster, setSyncingRoster] = useState(false)
   getRosterMeta()
 ])
 
+if (task.class_list_id) {
+  const classListStudents = await getStudentsByClassList(task.class_list_id)
+  setClassListHasStudents(classListStudents.length > 0)
+}
+
 // Build student list from entries — class list independent, exactly like single tasks
 const resolvedStudents = entriesData.map(e => ({
   id: e.student_id,
@@ -80,14 +87,25 @@ const resolvedStudents = entriesData.map(e => ({
 setStudents(resolvedStudents)
 
 // Detect roster changes
-if (task.class_list_id && rosterMeta) {
-  const currentCount = resolvedStudents.length
-  const rosterCount = rosterMeta.student_count || 0
-  if (rosterCount !== currentCount) {
-    setRosterDiff({
-      added: Math.max(0, rosterCount - currentCount),
-      removed: Math.max(0, currentCount - rosterCount)
-    })
+console.log('[roster-detect]', {
+  task_class_list_id: task.class_list_id,
+  task_roster_synced_at: task.roster_synced_at,
+  rosterMeta,
+  resolvedStudentsCount: resolvedStudents.length
+})
+if (
+  task.class_list_id &&
+  rosterMeta?.updated_at &&
+  rosterMeta.change_type === 'added' &&
+  rosterMeta.class_list_id === task.class_list_id &&
+  (!task.roster_synced_at || new Date(rosterMeta.updated_at) > new Date(task.roster_synced_at))
+) {
+  const freshClassListStudents = await getStudentsByClassList(task.class_list_id)
+  const existingRegNumbers = resolvedStudents.map(s => s.reg_number)
+  const newOnes = freshClassListStudents.filter(s => !existingRegNumbers.includes(s.reg_number))
+
+  if (newOnes.length > 0 && resolvedStudents.length > 0) {
+    setRosterDiff({ added: newOnes.length, removed: 0 })
     setShowRosterUpdate(true)
   }
 }
@@ -431,6 +449,28 @@ setStudents(prev => [...prev, newStudent])
   }
 }
 
+
+
+const handleLoadRoster = async () => {
+  setPopulatingRoster(true)
+  try {
+    const classListStudents = await getStudentsByClassList(task.class_list_id)
+    await populateTaskEntries(task.id, task.type, classListStudents)
+    const freshEntries = await getEntriesByTask(task.id)
+    setStudents(freshEntries.map(e => ({
+      id: e.student_id,
+      name: e.student_name,
+      reg_number: e.student_reg_number
+    })))
+    onRosterSync?.()
+  } catch (e) {
+    console.error('Failed to load roster:', e)
+  }
+  setPopulatingRoster(false)
+}
+
+
+
   const handleChipTap = async (entry) => {
     const newCollected = !entry.collected
     setItemEntries(prev => prev.map(e => e.id === entry.id ? { ...e, collected: newCollected } : e))
@@ -528,9 +568,9 @@ const handleRosterSync = async () => {
   try {
     const freshStudents = await getStudentsByClassList(task.class_list_id)
     const existingEntries = await getEntriesByTask(task.id)
-    const existingStudentIds = new Set(existingEntries.map(e => e.student_id))
+    const existingRegNumbers = existingEntries.map(e => e.student_reg_number)
 
-    const newStudents = freshStudents.filter(s => !existingStudentIds.has(s.id))
+    const newStudents = freshStudents.filter(s => !existingRegNumbers.includes(s.reg_number))
 
     if (newStudents.length > 0) {
       const { data: { session } } = await supabase.auth.getSession()
@@ -548,18 +588,18 @@ const handleRosterSync = async () => {
         user_id: userId,
         updated_at: new Date().toISOString()
       }))
-
       await supabase.from('entries').insert(newEntries)
     }
 
+    await syncTaskRoster(task.id) // persist roster_synced_at
+    onRosterSync?.()              // tell parent to update local task state
+
     const updatedEntries = await getEntriesByTask(task.id)
-    const updatedStudents = updatedEntries.map(e => ({
+    setStudents(updatedEntries.map(e => ({
       id: e.student_id,
       name: e.student_name,
       reg_number: e.student_reg_number
-    }))
-
-    setStudents(updatedStudents)
+    })))
     setShowRosterUpdate(false)
   } catch (e) {
     console.error('Roster sync failed:', e)
@@ -716,22 +756,34 @@ const handleRosterSync = async () => {
 </div>
 
 {/* Empty students state */}
-{students.length === 0 && !noCourses && (
-  <div className="roster-warning" style={{ marginBottom: '16px' }}>
-    <div>
-      <p className="roster-warning-text" style={{ fontWeight: '500', marginBottom: '4px' }}>
-        No students in this class list yet
-      </p>
-      <p className="roster-warning-text">
-        Go to Roster and add students to your class list first.
-      </p>
-    </div>
-    <Link
-      to={`/roster/${task.class_list_id}`}
-      className="roster-warning-link"
-    >
-      Go to Roster →
-    </Link>
+{students.length === 0 && !noCourses && task.class_list_id && (
+  <div className="task-limit-banner" style={{ marginBottom: '16px' }}>
+    {classListHasStudents ? (
+      <>
+        <p className="task-limit-title">Your class list isn't loaded into this task yet</p>
+        <p className="task-limit-subtitle">
+          Your students are ready but haven't been pulled into this task. Load them in now to start tracking.
+        </p>
+        <button
+          className="btn-primary"
+          style={{ marginTop: '16px' }}
+          onClick={handleLoadRoster}
+          disabled={populatingRoster}
+        >
+          {populatingRoster ? <><Spinner size={14} /><span style={{ marginLeft: '10px' }}>Loading...</span></> : 'Load class list into this task →'}
+        </button>
+      </>
+    ) : (
+      <>
+        <p className="task-limit-title">Your class list is empty</p>
+        <p className="task-limit-subtitle">
+          Upload your student list to start tracking. Tap the button below to go there now — it only takes a few seconds.
+        </p>
+        <Link to={`/roster/${task.class_list_id}`} className="btn-primary" style={{ display: 'inline-block', marginTop: '16px', textDecoration: 'none' }}>
+          Upload class list →
+        </Link>
+      </>
+    )}
   </div>
 )}
 
@@ -739,23 +791,24 @@ const handleRosterSync = async () => {
 {showRosterUpdate && task.class_list_id && (
   <div className="roster-update-banner" style={{ marginBottom: '16px' }}>
     <div className="roster-update-text">
-      <p className="roster-update-title">Class list has been updated</p>
+      <p className="roster-update-title">
+        Class list updated
+      </p>
       <p className="roster-update-subtitle">
-        {rosterDiff.added > 0 && `${rosterDiff.added} new student${rosterDiff.added !== 1 ? 's' : ''} added to your class list. `}
-        {rosterDiff.removed > 0 && `${rosterDiff.removed} student${rosterDiff.removed !== 1 ? 's' : ''} removed. `}
-        Sync to update this task.
+        {rosterDiff.added > 0 && `${rosterDiff.added} new student${rosterDiff.added !== 1 ? 's were' : ' was'} added to your classlist since this task was created.
+        Would you like to load them into this task?`}
       </p>
     </div>
     <div className="roster-update-actions">
       <button
         className="btn-primary"
-        style={{ fontSize: '13px', padding: '8px 14px', whiteSpace: 'nowrap' }}
+        style={{ fontSize: '13px', padding: '8px 14px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '6px' }}
         onClick={handleRosterSync}
         disabled={syncingRoster}
       >
         {syncingRoster
-          ? <><Spinner size={12} /><span style={{ marginLeft: '6px' }}>Syncing...</span></>
-          : 'Sync now'
+          ? <><Spinner size={12} /> Syncing...</>
+          : 'Yes'
         }
       </button>
       <button
@@ -763,14 +816,14 @@ const handleRosterSync = async () => {
         style={{ fontSize: '13px', padding: '8px 14px' }}
         onClick={() => setShowRosterUpdate(false)}
       >
-        Dismiss
+        No
       </button>
     </div>
   </div>
 )}
 
       {/* Student list */}
-      <div className="form-card">
+      {students.length !== 0 && (<div className="form-card">
         {filteredStudents.length === 0 ? (
           <div className="empty-state" style={{ border: 'none', padding: '24px' }}>
             <p className="empty-title">No students found</p>
@@ -826,7 +879,7 @@ const handleRosterSync = async () => {
             })}
           </div>
         )}
-      </div>
+      </div>)}
 
       {/* Add items modal */}
       {activeModal && (

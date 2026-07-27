@@ -227,6 +227,7 @@ const filteredEntries = enrichedEntries.filter(entry => {
     <MultiItemTaskDetail
       task={task}
       onTitleUpdate={(newTitle) => setTask(prev => ({ ...prev, title: newTitle }))}
+      onRosterSync={() => setTask(prev => ({ ...prev, roster_synced_at: new Date().toISOString() }))}
     />
   )
 }
