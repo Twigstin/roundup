@@ -150,8 +150,15 @@ function Dashboard() {
 
   // Fetch course counts for multi-item tasks
   const multiItemTaskIds = tasks
-    .filter(t => t.payment_mode === 'multi')
-    .map(t => t.id)
+  .filter(t => t.payment_mode === 'multi')
+  .map(t => t.id)
+
+let taskEntryCounts = {}
+entriesData.forEach(row => {
+  if (multiItemTaskIds.includes(row.task_id)) {
+    taskEntryCounts[row.task_id] = (taskEntryCounts[row.task_id] || 0) + 1
+  }
+})
 
   let courseCounts = {}
   let taskPaidCounts = {}
@@ -185,9 +192,11 @@ function Dashboard() {
     courseCount: courseCounts[t.id] || 0,
     totalPaid: taskPaidCounts[t.id] || 0,
     totalCollected: taskCollectedCounts[t.id] || 0,
-    studentCount: t.class_list_id
-      ? (classListStudentCounts[t.class_list_id] || 0)
-      : (taskStudentCounts[t.id] || 0)
+    studentCount: t.payment_mode === 'multi'
+  ? (taskEntryCounts[t.id] || 0)
+  : t.class_list_id
+    ? (classListStudentCounts[t.class_list_id] || 0)
+    : (taskStudentCounts[t.id] || 0)
   }))
 
   setTasks(tasksWithMeta)
@@ -228,8 +237,18 @@ function Dashboard() {
         setTasks(prev => prev.filter(t => t.id !== payload.old.id))
       }
       if (payload.eventType === 'UPDATE') {
-        setTasks(prev => prev.map(t => t.id === payload.new.id ? payload.new : t))
-      }
+  setTasks(prev => prev.map(t =>
+    t.id === payload.new.id
+      ? {
+          ...payload.new,
+          courseCount: t.courseCount,
+          totalPaid: t.totalPaid,
+          totalCollected: t.totalCollected,
+          studentCount: t.studentCount
+        }
+      : t
+  ))
+}
     })
     .subscribe()
 

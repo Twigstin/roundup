@@ -413,19 +413,26 @@ setStudents(prev => [...prev, newStudent])
 
     // Add new entries
     for (const item of toAdd) {
-      const newEntry = {
-        id: crypto.randomUUID(),
-        task_id: task.id,
-        task_item_id: item.id,
-        student_id: (task.class_list_id && !student._isManual) ? student.id : null,
-        student_name: student.name,
-        student_reg_number: student.reg_number,
-        collected: false,
-        updated_at: new Date().toISOString()
-      }
-      const saved = await addItemEntry(newEntry)
-      setItemEntries(prev => [...prev, saved])
-    }
+  const newEntry = {
+    id: crypto.randomUUID(),
+    task_id: task.id,
+    task_item_id: item.id,
+    student_id: (task.class_list_id && !student._isManual) ? student.id : null,
+    student_name: student.name,
+    student_reg_number: student.reg_number,
+    collected: false,
+    updated_at: new Date().toISOString()
+  }
+  let saved
+  try {
+    saved = await addItemEntry(newEntry)
+  } catch (e) {
+    // student_id likely stale (source student row no longer exists) — retry without it
+    saved = await addItemEntry({ ...newEntry, student_id: null })
+    console.error(e)
+  }
+  setItemEntries(prev => [...prev, saved])
+}
 
     // Remove entries — use entry.id directly, not student.id
     for (const entry of toRemove) {

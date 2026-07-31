@@ -17,36 +17,31 @@ function CourseStatsList() {
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    const init = async () => {
-      const [allTasks, items] = await Promise.all([getTasks(), getTaskItems(id)])
-      const foundTask = allTasks.find(t => t.id === id)
+  const init = async () => {
+    const [allTasks, items, taskEntries] = await Promise.all([
+      getTasks(),
+      getTaskItems(id),
+      getEntriesByTask(id)
+    ])
+    const foundTask = allTasks.find(t => t.id === id)
+    if (!foundTask) { setLoading(false); return }
 
-      // temp log
-const testEntries = await getEntriesByTask(id)
-console.log('getEntriesByTask result:', testEntries.length)
-      if (!foundTask) { setLoading(false); return }
-      setTask(foundTask)
-      setTaskItems(items)
+    setTask(foundTask)
+    setTaskItems(items)
 
-const [entries, studentData] = await Promise.all([
-  getItemEntries(id),
-  foundTask.class_list_id
-    ? getStudentsByClassList(foundTask.class_list_id)
-    : getEntriesByTask(id).then(taskEntries =>
-        taskEntries.map(e => ({
-          id: e.student_id,
-          name: e.student_name,
-          reg_number: e.student_reg_number
-        }))
-      )
-])
+    const entries = await getItemEntries(id)
+    const studentData = taskEntries.map(e => ({
+      id: e.student_id,
+      name: e.student_name,
+      reg_number: e.student_reg_number
+    }))
 
-setItemEntries(entries)
-setStudents(studentData)
-      setLoading(false)
-    }
-    init()
-  }, [id])
+    setItemEntries(entries)
+    setStudents(studentData)
+    setLoading(false)
+  }
+  init()
+}, [id])
 
   const getItemStats = (taskItemId) => {
     const entries = itemEntries.filter(e => e.task_item_id === taskItemId)

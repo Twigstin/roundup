@@ -5,6 +5,7 @@ import { faChevronLeft, faSearch, faDownload } from '@fortawesome/free-solid-svg
 import { getTaskItems, getItemEntries, getEntriesByTask, getStudentsByClassList, getTasks, updateItemEntry, addItemEntry, removeItemEntry } from '../api/index'
 import { TaskDetailSkeleton } from '../components/Skeleton'
 import Spinner from '../components/Spinner'
+import { supabase } from '../api/supabase'
 
 function CourseDetail() {
   const { id, itemId } = useParams()
@@ -19,6 +20,7 @@ function CourseDetail() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [activeFilter, setActiveFilter] = useState('total')
+  const [pendingPaidIds, setPendingPaidIds] = useState(new Set())
   
 
   // Export
@@ -47,17 +49,17 @@ const [exportBlockedMsg, setExportBlockedMsg] = useState('')
       setTask(foundTask)
       setTaskItem(foundItem)
 
-      const [allItemEntries, studentData] = await Promise.all([
+      const [allItemEntries, taskEntries] = await Promise.all([
   getItemEntries(id),
-  foundTask.class_list_id
-    ? getStudentsByClassList(foundTask.class_list_id)
-    : getEntriesByTask(id).then(entries =>
-        entries
-          .filter((e, i, arr) => e.student_id && arr.findIndex(x => x.student_id === e.student_id) === i)
-          .map(e => ({ id: e.student_id, name: e.student_name, reg_number: e.student_reg_number }))
-      )
+  getEntriesByTask(id)
 ])
 
+const studentData = taskEntries
+  .filter((e, i, arr) => e.student_id
+    ? arr.findIndex(x => x.student_id === e.student_id) === i
+    : arr.findIndex(x => !x.student_id && x.student_name === e.student_name) === i
+  )
+  .map(e => ({ id: e.student_id, name: e.student_name, reg_number: e.student_reg_number }))
 
 setItemEntries(allItemEntries.filter(e => e.task_item_id === itemId))
 setStudents(studentData)
@@ -114,39 +116,52 @@ const openExportModal = () => {
 
   // ─── Optimistic toggle paid ────────────────────────────────────────────────
   const handleTogglePaid = async (student) => {
-    const existingEntry = getEntryForStudent(student)
+  const existingEntry = getEntryForStudent(student)
 
-    if (existingEntry) {
-      // Optimistic remove
-      setItemEntries(prev => prev.filter(e => e.id !== existingEntry.id))
+  if (existingEntry) {
+    setItemEntries(prev => prev.filter(e => e.id !== existingEntry.id))
+    try {
+      const { error } = await supabase.from('item_entries').delete().eq('id', existingEntry.id)
+      if (error) throw error
+    } catch (e) {
+      console.error('Failed to remove entry:', e)
+      setItemEntries(prev => [...prev, existingEntry])
+    }
+  } else {
+    const newEntry = {
+      id: crypto.randomUUID(),
+      task_id: id,
+      task_item_id: itemId,
+      student_id: task?.class_list_id ? student.id : null,
+      student_name: student.name,
+      student_reg_number: student.reg_number,
+      collected: false,
+      updated_at: new Date().toISOString()
+    }
+    setItemEntries(prev => [...prev, newEntry])
+    setPendingPaidIds(prev => new Set(prev).add(student.id || student.name))
+
+    try {
+      let saved
       try {
-        await removeItemEntry(existingEntry.task_item_id, student.id)
-      } catch {
-        // Rollback
-        setItemEntries(prev => [...prev, existingEntry])
+        saved = await addItemEntry(newEntry)
+      } catch (e) {
+        console.error('Insert failed, retrying with null student_id:', e)
+        saved = await addItemEntry({ ...newEntry, student_id: null })
       }
-    } else {
-      // Optimistic add
-      const newEntry = {
-        id: crypto.randomUUID(),
-        task_id: id,
-        task_item_id: itemId,
-        student_id: task?.class_list_id ? student.id : null,
-        student_name: student.name,
-        student_reg_number: student.reg_number,
-        collected: false,
-        updated_at: new Date().toISOString()
-      }
-      setItemEntries(prev => [...prev, newEntry])
-      try {
-        const saved = await addItemEntry(newEntry)
-        setItemEntries(prev => prev.map(e => e.id === newEntry.id ? saved : e))
-      } catch {
-        // Rollback
-        setItemEntries(prev => prev.filter(e => e.id !== newEntry.id))
-      }
+      setItemEntries(prev => prev.map(e => e.id === newEntry.id ? saved : e))
+    } catch (e2) {
+      console.error('Retry also failed:', e2)
+      setItemEntries(prev => prev.filter(e => e.id !== newEntry.id))
+    } finally {
+      setPendingPaidIds(prev => {
+        const next = new Set(prev)
+        next.delete(student.id || student.name)
+        return next
+      })
     }
   }
+}
 
   // ─── Optimistic toggle collected ──────────────────────────────────────────
   const handleToggleCollected = async (entry) => {
@@ -486,14 +501,15 @@ const openExportModal = () => {
                       </button>
 
                       {/* Mark collected toggle — only when paid, optimistic */}
-                      {isPaid && (
-                        <button
-                          className={`collected-btn ${isCollected ? 'collected-active' : ''}`}
-                          onClick={() => handleToggleCollected(entry)}
-                        >
-                          {isCollected ? 'Collected ✓' : 'Mark collected'}
-                        </button>
-                      )}
+                      {(isPaid && !(pendingPaidIds.has(student.id || student.name))) && (
+                          <button
+                            className={`collected-btn ${isCollected ? 'collected-active' : ''}`}
+                            onClick={() => handleToggleCollected(entry)}
+                            disabled={pendingPaidIds.has(student.id || student.name)}
+                          >
+                            {isCollected ? 'Collected ✓' : 'Mark collected'}
+                          </button>
+                        )}
                     </div>
                   </div>
                 </div>
