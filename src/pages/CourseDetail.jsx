@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useParams, useLocation } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faSearch, faDownload } from '@fortawesome/free-solid-svg-icons'
-import { getTaskItems, getItemEntries, getEntriesByTask, getStudentsByClassList, getTasks, updateItemEntry, addItemEntry, removeItemEntry } from '../api/index'
+import { getTaskItems, touchTask, getItemEntries, getEntriesByTask, getStudentsByClassList, getTasks, updateItemEntry, addItemEntry, removeItemEntry } from '../api/index'
 import { TaskDetailSkeleton } from '../components/Skeleton'
 import Spinner from '../components/Spinner'
 import { supabase } from '../api/supabase'
@@ -123,6 +123,7 @@ const openExportModal = () => {
     try {
       const { error } = await supabase.from('item_entries').delete().eq('id', existingEntry.id)
       if (error) throw error
+      touchTask(id)
     } catch (e) {
       console.error('Failed to remove entry:', e)
       setItemEntries(prev => [...prev, existingEntry])
@@ -150,6 +151,7 @@ const openExportModal = () => {
         saved = await addItemEntry({ ...newEntry, student_id: null })
       }
       setItemEntries(prev => prev.map(e => e.id === newEntry.id ? saved : e))
+      touchTask(id)
     } catch (e2) {
       console.error('Retry also failed:', e2)
       setItemEntries(prev => prev.filter(e => e.id !== newEntry.id))
@@ -166,13 +168,11 @@ const openExportModal = () => {
   // ─── Optimistic toggle collected ──────────────────────────────────────────
   const handleToggleCollected = async (entry) => {
     const newCollected = !entry.collected
-    // Optimistic update
-    setItemEntries(prev =>
-      prev.map(e => e.id === entry.id ? { ...e, collected: newCollected } : e)
-    )
-    try {
-      await updateItemEntry(entry.id, { collected: newCollected })
-    } catch {
+  setItemEntries(prev => prev.map(e => e.id === entry.id ? { ...e, collected: newCollected } : e))
+  try {
+    await updateItemEntry(entry.id, { collected: newCollected })
+    touchTask(id) // `id` is the task id from useParams here
+  } catch {
       // Rollback
       setItemEntries(prev =>
         prev.map(e => e.id === entry.id ? { ...e, collected: entry.collected } : e)

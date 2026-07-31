@@ -5,7 +5,7 @@ import { faChevronLeft, faSearch, faPenToSquare, faDownload, faPlus, faArrowRigh
 import Spinner from './Spinner'
 import { supabase } from '../api/supabase'
 import {
-  getTaskItems, createTaskItems, getCourses, syncTaskRoster, populateTaskEntries,
+  getTaskItems, touchTask, createTaskItems, getCourses, syncTaskRoster, populateTaskEntries,
   getItemEntries, addItemEntry, updateItemEntry, removeItemEntry,
   updateTask, getStudentsByClassList, getRosterMeta, deleteTaskItem, updateTaskItem, getEntriesByTask
 } from '../api/index'
@@ -443,6 +443,8 @@ setStudents(prev => [...prev, newStudent])
       setItemEntries(prev => prev.filter(e => e.id !== entry.id))
     }
 
+    if (toAdd.length > 0 || toRemove.length > 0) touchTask(task.id)
+
     // Refresh to get accurate state
     const freshEntries = await getItemEntries(task.id)
     setItemEntries(freshEntries)
@@ -481,7 +483,10 @@ const handleLoadRoster = async () => {
   const handleChipTap = async (entry) => {
     const newCollected = !entry.collected
     setItemEntries(prev => prev.map(e => e.id === entry.id ? { ...e, collected: newCollected } : e))
-    try { await updateItemEntry(entry.id, { collected: newCollected }) }
+    try {
+      await updateItemEntry(entry.id, { collected: newCollected })
+      touchTask(task.id)
+    }
     catch { setItemEntries(prev => prev.map(e => e.id === entry.id ? { ...e, collected: entry.collected } : e)) }
   }
 
@@ -489,11 +494,12 @@ const handleLoadRoster = async () => {
   const handleChipLongPressEnd = () => { if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null } }
 
   const handleConfirmRemoveChip = async () => {
-    const entry = showRemoveConfirm
-    setShowRemoveConfirm(null)
-    setItemEntries(prev => prev.filter(e => e.id !== entry.id))
-    await removeItemEntry(entry.task_item_id, entry.student_id)
-  }
+  const entry = showRemoveConfirm
+  setShowRemoveConfirm(null)
+  setItemEntries(prev => prev.filter(e => e.id !== entry.id))
+  await removeItemEntry(entry.task_item_id, entry.student_id)
+  touchTask(task.id)
+}
 
   const handleSaveTitle = async () => {
     if (!titleText.trim()) return

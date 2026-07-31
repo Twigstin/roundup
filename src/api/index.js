@@ -37,7 +37,7 @@ export const createTask = async (task) => {
 export const updateTask = async (taskId, updates) => {
   const { data, error } = await supabase
     .from('tasks')
-    .update(updates)
+    .update({ ...updates, updated_at: new Date().toISOString() })
     .eq('id', taskId)
     .select()
     .single()
@@ -518,4 +518,13 @@ export const getEntriesByTask = async (taskId) => {
     .eq('task_id', taskId)
   if (error) throw error
   return data
+}
+
+// task updates checker
+export const touchTask = async (taskId) => {
+  const { error } = await supabase
+    .from('tasks')
+    .update({ updated_at: new Date().toISOString() })
+    .eq('id', taskId)
+  if (error) console.error('Failed to touch task:', error)
 }

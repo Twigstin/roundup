@@ -673,13 +673,13 @@ useEffect(() => {
     <span className="task-stat-num warning warningy">{task.courseCount || 0}</span>
     <span className="task-stat-label">courses</span>
   </div>
-  <div className="task-stat-divider" />
-  <div className="task-stat">
+  {/*<div className="task-stat-divider" />*/}
+  {/*<div className="task-stat">
     <span className="task-stat-num danger dangery">
       {((task.courseCount || 0) * (task.studentCount || 0)) - (task.totalPaid || 0)}
     </span>
     <span className="task-stat-label">not paid</span>
-  </div>
+  </div>*/}
   <div className="task-stat-divider" />
   <div className="task-stat">
     <span className="task-stat-num successy" style={{ color: '#27500A' }}>{task.totalCollected || 0}</span>
