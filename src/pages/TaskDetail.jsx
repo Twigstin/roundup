@@ -995,7 +995,7 @@ const detectDuplicate = (name, reg) => {
         <>
           <p className="task-limit-title">Your class list is empty</p>
           <p className="task-limit-subtitle">
-            Upload your class list to start tracking. Tap the button below to go there now — it only takes a few seconds.
+            Upload your students' list to start tracking. Tap the button below to go there now — it only takes a few seconds.
           </p>
           <Link 
   to={`/roster/${task.class_list_id}`}

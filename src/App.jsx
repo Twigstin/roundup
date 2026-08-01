@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
+import { useEffect } from 'react'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import NewTask from './pages/NewTask'
@@ -21,45 +22,48 @@ import CourseDetail from './pages/CourseDetail'
 
 function App() {
   const { needRefresh, updateServiceWorker } = useRegisterSW()
+  /*
+  const needRefresh = [true, () => {}]
+const updateServiceWorker = () => alert('would refresh here')
+*/
+
+  useEffect(() => {
+  if (needRefresh[0]) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
+  return () => {
+    document.body.style.overflow = ''
+  }
+}, [needRefresh[0]])
   
   return (
     <>
       {needRefresh[0] && (
-        <div style={{
-          position: 'fixed',
-          bottom: '100px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: '#111',
-          color: '#fff',
-          padding: '10px 16px',
-          borderRadius: '10px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          fontSize: '13px',
-          zIndex: 200,
-          whiteSpace: 'nowrap',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
-        }}>
-          <span>✨ New updates available</span>
-          <button
-            onClick={() => updateServiceWorker(true)}
-            style={{
-              background: '#fff',
-              color: '#111',
-              border: 'none',
-              borderRadius: '6px',
-              padding: '4px 10px',
-              fontSize: '12px',
-              cursor: 'pointer',
-              fontFamily: 'inter, sans-serif'
-            }}
-          >
-            Refresh
-          </button>
-        </div>
-      )}
+  <div className="modal-overlay-new-list">
+    <div className="modal-card-new-list" id='update-banner' style={{ maxWidth: '400px' }}>
+      <div style={{ padding: '28px 24px 20px' }}>
+        <p className="page-title bold" style={{ fontSize: '18px', marginBottom: '10px' }}>
+          ✨ New updates available
+        </p>
+        <p style={{ fontSize: '14px', color: '#888', lineHeight: 1.6 }}>
+          Roundup has been updated with the latest fixes and improvements.
+          Tap below to refresh and start using the new version.
+        </p>
+      </div>
+      <div style={{ padding: '0 24px 24px' }}>
+        <button
+          className="btn-primary"
+          style={{ width: '100%', padding: '14px' }}
+          onClick={() => updateServiceWorker(true)}
+        >
+          Update now
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
     <Routes>
       <Route element={<Layout />}>
