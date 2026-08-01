@@ -5,7 +5,7 @@ import Spinner from '../components/Spinner'
 import MultiItemTaskDetail from '../components/MultiItemTaskDetail'
 import { TaskDetailSkeleton } from '../components/Skeleton'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faArrowRight, faSearch, faPenToSquare, faDownload, faUserCheck, faFileCircleCheck, faCreditCard } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faArrowRight, faSearch, faPenToSquare, faDownload, faUserCheck, faFileCircleCheck, faCreditCard, faArrowDown } from '@fortawesome/free-solid-svg-icons'
 import { supabase } from '../api/supabase'
 import posthog from 'posthog-js'
 
@@ -711,7 +711,7 @@ const detectDuplicate = (name, reg) => {
       <span className='export-no-data-msg'>{exportBlockedMsg}</span>
   </p>
 )}
-    <div className='task-details-header-action-btns'>
+    {total > 0 && (<div className='task-details-header-action-btns'>
       <button
         className="edit-title-btn"
         onClick={() => {
@@ -742,12 +742,13 @@ const detectDuplicate = (name, reg) => {
           }
         </span>        
       </button>
-    </div>
+    
+    </div>)}
     </div>
   )}
 </div>
 
-    <div className={`summary-grid ${isPayment ? 'summary-grid-4' : 'summary-grid-3'}`}>
+    {total > 0 && (<div className={`summary-grid ${isPayment ? 'summary-grid-4' : 'summary-grid-3'}`}>
   <div
     className={`summary-card ${filter === 'total' ? 'summary-card-active' : ''}`}
     onClick={() => setFilter('total')}
@@ -812,7 +813,7 @@ const detectDuplicate = (name, reg) => {
 </div>
     </>
   )}
-</div>
+</div>)}
     {showRosterUpdate && (
   <div className="roster-update-banner">
     <div className="roster-update-text">
@@ -841,7 +842,7 @@ const detectDuplicate = (name, reg) => {
     </div>
   </div>
 )}
-    <div className="toolbar">
+    {total > 0 && (<div className="toolbar">
 
       {/*
       <div className="input-wrapper">
@@ -872,7 +873,7 @@ const detectDuplicate = (name, reg) => {
 >
   + Add student
 </button>
-</div>
+</div>)}
 
 {showAddStudent && (
   <div className="modal-overlay" onClick={() => {
@@ -992,9 +993,9 @@ const detectDuplicate = (name, reg) => {
     {enrichedEntries.length === 0 ? (
       students.length === 0 ? (
         <>
-          <p className="empty-title">Your class list is empty</p>
-          <p className="empty-subtitle">
-            Upload your student list to start tracking. Tap the button below to go there now — it only takes a few seconds.
+          <p className="task-limit-title">Your class list is empty</p>
+          <p className="task-limit-subtitle">
+            Upload your class list to start tracking. Tap the button below to go there now — it only takes a few seconds.
           </p>
           <Link 
   to={`/roster/${task.class_list_id}`}
@@ -1007,8 +1008,8 @@ const detectDuplicate = (name, reg) => {
         </>
       ) : (
         <>
-          <p className="empty-title">Your class list isn't loaded into this task yet</p>
-          <p className="empty-subtitle">
+          <p className="task-limit-title">Your class list isn't loaded into this task yet</p>
+          <p className="task-limit-subtitle">
             Your students are ready but haven't been pulled into this task. Load them in now to start tracking.
           </p>
           <button
@@ -1017,7 +1018,7 @@ const detectDuplicate = (name, reg) => {
             onClick={handlePopulateFromRoster}
             disabled={populating}
           >
-            {populating ? <><Spinner size={14} /><span style={{ marginLeft: "10px" }}>Loading...</span></> : <span>Load class list into this task <FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowRight} /></span>}
+            {populating ? <><Spinner size={14} /><span style={{ marginLeft: "10px" }}>Loading...</span></> : <span>Load students <span><FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowDown} /></span></span>}
           </button>
         </>
       )

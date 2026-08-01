@@ -55,6 +55,7 @@ function RosterDetail() {
   const [bannerDismissed, setBannerDismissed] = useState(
   () => sessionStorage.getItem(`incomplete_dismissed_${id}`) === 'true'
 )
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false)
 
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
 
@@ -124,9 +125,11 @@ useEffect(() => {
   }, [id])
 
   const handleAddStudent = async () => {
+  setError('')
+
   if (!name.trim() || !regNumber.trim()) {
     setError('Both name and reg number are required')
-    return
+    return false
   }
 
   setAddingStudent(true)
@@ -138,17 +141,23 @@ useEffect(() => {
     serial_number: serialNumber.trim() || null
   }
 
-  await createStudent(newStudent, id)
-  const updated = await getStudentsByClassList(id)
-  setStudents(updated)
-  setName('')
-  setRegNumber('')
-  setSerialNumber('')
-  setError('')
-
-  posthog.capture('student_added_manually')
-
-  setAddingStudent(false)
+  try {
+    await createStudent(newStudent, id)
+    const updated = await getStudentsByClassList(id)
+    setStudents(updated)
+    setName('')
+    setRegNumber('')
+    setSerialNumber('')
+    setError('')
+    posthog.capture('student_added_manually')
+    setAddingStudent(false)
+    return true
+  } catch (e) {
+    setError('Failed to add student. Please try again.')
+    console.error(e)
+    setAddingStudent(false)
+    return false
+  }
 }
 
   const handleFileImport = async (e) => {
@@ -519,83 +528,49 @@ const handleCancelEdit = () => {
       <h1 className="page-title bold" style={{ marginBottom: '20px' }}>{classListName}</h1>
 
       <div className="form-card" style={{ marginBottom: '16px' }}>
-        <p className="form-label" style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '500' }}>
-          Add student manually
-        </p>
+  <div className="add-students-section">
+    <p className="add-students-section-title task-limit-title" style={{ textAlign: 'center' }}>Import a class list</p>
+    <p className="add-students-section-desc" style={{ textAlign: 'center' }}>
+      Fastest way — upload a CSV or Excel file with all your students' names and reg numbers.
+    </p>
+    <div className='students-add-btn'>
+    <button
+      className="btn-primary"
+      onClick={() => !importing && fileInputRef.current.click()}
+      disabled={importing}
+      style={{ opacity: importing ? 0.6 : 1, display: 'flex', alignItems: 'center', gap: '8px'}}
+    >
+      {importing ? <><Spinner size={14} />Importing...</> : (
+        <span><FontAwesomeIcon icon={faFileImport} /> Import list</span>
+      )}
+    </button>
+    </div>
+    <input
+      ref={fileInputRef}
+      accept=".csv, .xlsx, .xls"
+      type="file"
+      style={{ display: 'none' }}
+      onChange={handleFileImport}
+    />
+  </div>
 
-        {error && <p className="form-error">{error}</p>}
+  <div className="or-divider">
+    <span>OR</span>
+  </div>
 
-        <div className='form-input-ctn' id="form-input-ctn">
-          <input
-            className="form-input"
-            type="text"
-            placeholder="Full name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <input
-            className="form-input"
-            type="text"
-            placeholder="Reg number"
-            value={regNumber}
-            onChange={(e) => setRegNumber(e.target.value)}
-          />
-          <input
-            className="form-input"
-            type="text"
-            placeholder="Serial number (optional)"
-            value={serialNumber}
-            onChange={(e) => setSerialNumber(e.target.value)}
-          />
-        </div>
-
-        <div className="roster-action-btns">
-          <button
-            className="btn-primary"
-            onClick={handleAddStudent}
-            disabled={addingStudent || importing}
-            style={{
-              opacity: addingStudent || importing ? 0.6 : 1,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}
-          >
-            {addingStudent ? <><Spinner size={14} />Adding...</> : '+ Add student'}
-          </button>
-          <button
-            className="btn-secondary"
-            id='import-btn'
-            onClick={() => !importing && fileInputRef.current.click()}
-            disabled={importing}
-            style={{ opacity: importing ? 0.6 : 1, display: 'flex', alignItems: 'center', gap: '8px' }}
-          >
-            {importing ? <><Spinner size={14} />Importing...</> : (
-              <span><FontAwesomeIcon icon={faFileImport} /> Import list</span>
-            )}
-          </button>
-          <input
-            ref={fileInputRef}
-            accept=".csv, .xlsx, .xls"
-            type="file"
-            style={{ display: 'none' }}
-            onChange={handleFileImport}
-          />
-          {students.length > 0 && (
-            <div
-            className="btn-danger-clear-all"
-    id="btn-danger-all-clear">
-            <button
-              className="btn-danger-clear-all"
-              onClick={() => setShowClearWarning(true)}
-              disabled={importing}
-            >
-              <FontAwesomeIcon icon={faXmark} /> Clear List
-            </button>
-            </div>
-          )}
-        </div>
-      </div>
+  <div className="add-students-section">
+    <p className="add-students-section-title task-limit-title" style={{ textAlign: 'center' }}>Add student manually</p>
+    <p className="add-students-section-desc" style={{ textAlign: 'center' }}>For a quick single addition.</p>
+    <div className='students-add-btn'>
+    <button
+      className="btn-secondary"
+      onClick={() => setShowAddStudentModal(true)}
+    >
+      + Add student
+    </button>
+    </div>
+  </div>
+</div>
 
       <div className="form-card">
         <div className="class-list-title">
@@ -671,6 +646,7 @@ const handleCancelEdit = () => {
     ⚠️ Showing incomplete only <span className="incomplete-filter-clear">✕ Clear</span>
   </button>
 )}
+        <div className='classlist-action-btns'>
           <label className='list-details-filter'><span style={{ marginRight: "5px" }}>Sort by:</span>
             <select
             className="filter-input"
@@ -682,6 +658,18 @@ const handleCancelEdit = () => {
             <option value="name"><FontAwesomeIcon icon={faFilter} />A–Z</option>            
           </select>
           </label>
+          <div
+            className="btn-danger-clear-all"
+    id="btn-danger-all-clear">
+            <button
+              className="btn-danger-clear-all"
+              onClick={() => setShowClearWarning(true)}
+              disabled={importing}
+            >
+              <FontAwesomeIcon icon={faXmark} /> Clear List
+            </button>
+            </div>
+        </div>
         </div>
 
         {filteredStudents.length === 0 ? (
@@ -691,7 +679,7 @@ const handleCancelEdit = () => {
             </p>
             <p className="empty-subtitle">
               {students.length === 0
-                ? 'Add students manually or import a file'
+                ? 'Import your class list or add students manually'
                 : 'Try a different search'}
             </p>
           </div>
@@ -780,7 +768,80 @@ const handleCancelEdit = () => {
           </div>
         )}
       </div>
+      {showAddStudentModal && (
+  <div className="modal-overlay" onClick={() => { setShowAddStudentModal(false); setError('') }}>
+    <div className="modal-card" id="modal-card" onClick={(e) => e.stopPropagation()}>
+      <div style={{ padding: '24px 24px 0 24px' }}>
+        <p className="page-title bold" style={{ fontSize: '15px', marginBottom: '4px' }}>
+          Add student manually
+        </p>
+        <p style={{ fontSize: '13px', color: '#888', marginBottom: '20px' }}>
+          Add this student to your class list.
+        </p>
 
+        {error && <p className="form-error">{error}</p>}
+
+        <div className="form-field">
+          <label className="form-label">Full name</label>
+          <input
+            className="form-input"
+            type="text"
+            placeholder="Full name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
+        <div className="form-field">
+          <label className="form-label">Reg number</label>
+          <input
+            className="form-input"
+            type="text"
+            placeholder="Reg number"
+            value={regNumber}
+            onChange={(e) => setRegNumber(e.target.value)}
+          />
+        </div>
+        <div className="form-field">
+          <label className="form-label">Serial number <span style={{ color: '#999', fontSize: '12px' }}>(optional)</span></label>
+          <input
+            className="form-input"
+            type="text"
+            placeholder="Serial number"
+            value={serialNumber}
+            onChange={(e) => setSerialNumber(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div style={{ padding: '16px 24px', borderTop: '1px solid #e5e5e5', display: 'flex', gap: '8px', background: '#fff', flexShrink: 0 }}>
+        <button
+          className="btn-primary"
+          style={{ flex: 1, padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+          onClick={async () => {
+  const success = await handleAddStudent()
+  if (success) setShowAddStudentModal(false)
+}}
+          disabled={addingStudent}
+        >
+          {addingStudent ? <><Spinner size={14} /> Adding...</> : 'Add student'}
+        </button>
+        <button
+          className="btn-secondary"
+          style={{ flex: 1, padding: '10px' }}
+          onClick={() => {
+            setShowAddStudentModal(false)
+            setError('')
+            setName('')
+            setRegNumber('')
+            setSerialNumber('')
+          }}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
       {showImportWarning && (
         <ConfirmModal
           message="Students already exist in this list. Uploading will add to the existing list. Do you want to continue?"

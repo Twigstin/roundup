@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faSearch, faPenToSquare, faDownload, faPlus, faArrowRight } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faArrowDown, faSearch, faPenToSquare, faDownload, faPlus, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import Spinner from './Spinner'
 import { supabase } from '../api/supabase'
 import {
@@ -687,19 +687,21 @@ const handleRosterSync = async () => {
             <h1 className="page-title bold">{task.title}</h1>
             <span className="type-badge type-payment">multi-item</span>
           </div>
-          <div className="task-details-header-action-btns">
+          {students.length > 0 && (<div className="task-details-header-action-btns">
             <button className="edit-title-btn" onClick={() => { setTitleText(task.title); setEditingTitle(true) }}>
               <FontAwesomeIcon icon={faPenToSquare} /> Edit Name
             </button>
             <button className="task-details-export-btn" onClick={handleExport} disabled={isExporting}>
               {isExporting ? <><Spinner size={14} /><span style={{ marginLeft: '6px' }}>Exporting...</span></> : <><FontAwesomeIcon icon={faDownload} /> Export Data</>}
             </button>
-          </div>
+          </div>)}
         </div>
       )}
 
       {/* Stats scroll */}
-      <div className="multi-item-stats-section">
+      {students.length > 0 && (
+        <>
+        <div className="multi-item-stats-section">
         <div
           ref={scrollRef}
           className={`multi-item-stats-scroll ${isCentered ? 'multi-item-stats-centered' : ''}`}
@@ -751,14 +753,16 @@ const handleRosterSync = async () => {
           View all {taskItems.length} course{taskItems.length !== 1 ? 's' : ''} <span style={{ fontSize: '10px', paddingTop: '2px' , marginLeft: '3px'}}><FontAwesomeIcon icon={faArrowRight} /></span>
         </button>
       </div>
+      </>
+      )}
 
       {/* Search */}
-      <div className="input-wrapper" style={{ marginBottom: '12px' }}>
+      {students.length > 0 && (<div className="input-wrapper" style={{ marginBottom: '12px' }}>
         <FontAwesomeIcon icon={faSearch} className="input-icon" />
         <input className="form-input search-icon" type="text" placeholder="Search by name or reg number…" value={search} onChange={(e) => setSearch(e.target.value)} />
-      </div>
+      </div>)}
       
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+      {students.length > 0 && (<div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
   <button
     className="btn-secondary"
     style={{ whiteSpace: 'nowrap', fontSize: '13px', padding: '8px 14px' }}
@@ -766,7 +770,7 @@ const handleRosterSync = async () => {
   >
     + Add student
   </button>
-</div>
+</div>)}
 
 {/* Empty students state */}
 {students.length === 0 && !noCourses && task.class_list_id && (
@@ -783,14 +787,14 @@ const handleRosterSync = async () => {
           onClick={handleLoadRoster}
           disabled={populatingRoster}
         >
-          {populatingRoster ? <><Spinner size={14} /><span style={{ marginLeft: '10px' }}>Loading...</span></> : 'Load class list into this task →'}
+          {populatingRoster ? <><Spinner size={14} /><span style={{ marginLeft: '10px' }}>Loading...</span></> : <span>Load students <FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowDown} /></span>}
         </button>
       </>
     ) : (
       <>
         <p className="task-limit-title">Your class list is empty</p>
         <p className="task-limit-subtitle">
-          Upload your student list to start tracking. Tap the button below to go there now — it only takes a few seconds.
+          Upload your class list to start tracking. Tap the button below to go there now — it only takes a few seconds.
         </p>
         <Link
   to={`/roster/${task.class_list_id}`}

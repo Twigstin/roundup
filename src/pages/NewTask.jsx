@@ -114,83 +114,60 @@ useEffect(() => {
     updated_at: new Date().toISOString()
   }
 
+
   await createTask(newTask)
-  posthog.capture('task_created', { type: newTask.type })
+posthog.capture('task_created', { type: newTask.type })
 
-  if (type === 'payment' && paymentMode === 'multi') {
-  const selectedCourses = availableCourses.filter(c => selectedCourseIds.includes(c.id))
-  if (selectedCourses.length > 0) {
-    await createTaskItems(newTask.id, selectedCourses.map(c => c.name))
-  }
-}
-
-  const { data: { session } } = await supabase.auth.getSession()
+const { data: { session } } = await supabase.auth.getSession()
 if (session?.user?.id) {
   await markReferralActivated(session.user.id)
 }
 
-  const students = await getStudentsByClassList(selectedClassListId)
+const students = await getStudentsByClassList(selectedClassListId)
+const defaultStatus = type === 'payment' ? 'not_paid' : type === 'attendance' ? 'absent' : 'pending'
 
-  const defaultStatus = type === 'payment' ? 'not_paid' : type === 'attendance' ? 'absent' : 'pending'
+const newEntries = students.map(student => ({
+  id: crypto.randomUUID(),
+  task_id: newTask.id,
+  student_id: student.id,
+  student_name: student.name,
+  student_reg_number: student.reg_number,
+  status: defaultStatus,
+  collected: false,
+  note: '',
+  updated_at: new Date().toISOString()
+}))
 
-  const newEntries = students.map(student => ({
-    id: crypto.randomUUID(),
-    task_id: newTask.id,
-    student_id: student.id,
-    student_name: student.name,
-    student_reg_number: student.reg_number,
-    status: defaultStatus,
-    collected: false,
-    note: '',
-    updated_at: new Date().toISOString()
-  }))
+if (newEntries.length > 0) {
+  await bulkCreateEntries(newEntries)
+}
 
-  if (newEntries.length > 0) {
-    await bulkCreateEntries(newEntries)
-  }
-
-  if (students.length === 0) {
-  navigate(`/roster/${selectedClassListId}`, {
-    state: {
-      showEmptyPrompt: true,
-      from: `/tasks/${newTask.id}`,
-      fromLabel: newTask.title,
-      fromState: { task: newTask }
-    }
-  })
-} else {
-    if (type === 'payment' && paymentMode === 'multi') {
+if (type === 'payment' && paymentMode === 'multi') {
   const courses = await getCourses()
   if (courses.length > 0) {
     await createTaskItems(newTask.id, courses.map(c => ({ name: c.name, courseId: c.id })))
   }
 }
 
-navigate('/', { state: { refetch: true } })
-  }
+navigate(`/tasks/${newTask.id}`, { state: { task: newTask } })
 }
 
 if (checkingLimits) return <NewTaskSkeleton />
 
   return (
     <div>
-      
-      {classLists.length === 0 && (
-  <div className="roster-warning">
-    <p className="roster-warning-text">
-      You have no class lists yet. Create a class list first so students are automatically tracked when you create a task.
+      {classLists.length === 0 ? (
+  <div className="task-limit-banner">
+    <p className="task-limit-title">No class list yet</p>
+    <p className="task-limit-subtitle">
+      You need a class list before creating a task, so Roundup can automatically track your students.
+      Head over to Roster to create one — it only takes a few seconds.
     </p>
-    <Link to="/roster" className="roster-warning-link">
-      Create class list <FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowRight} />
+    <Link to="/roster" className="btn-primary" style={{ display: 'inline-block', marginTop: '16px' }}>
+      Go to Roster →
     </Link>
   </div>
-)}
-
-      <div className="page-header">
-        <Link to="/" className="back-link"><FontAwesomeIcon icon={faChevronLeft}/> Back</Link>
-      </div>
-
-      {taskLimitReached && (
+) : taskLimitReached ? (
   <div className="task-limit-banner">
     <p className="task-limit-title">Task limit reached</p>
     <p className="task-limit-subtitle">
@@ -201,9 +178,7 @@ if (checkingLimits) return <NewTaskSkeleton />
       ← Back to tasks
     </Link>
   </div>
-)}
-
-      {!taskLimitReached && (
+) : (
   <div className="form-card">
         <h1 className="page-title bold" style={{ marginBottom: '24px' }}>New task</h1>
 
@@ -304,6 +279,7 @@ if (checkingLimits) return <NewTaskSkeleton />
 )}
     </div>
   )
+
 }
 
 export default NewTask
