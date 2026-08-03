@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { getClassLists, createClassList, deleteClassList, updateClassList, getCourses, createCourse, updateCourse, deleteCourse } from '../api/index'
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
+import { getClassLists, buildRecordSignature, createClassList, deleteClassList, updateClassList, getCourses, createCourse, updateCourse, deleteCourse } from '../api/index'
 import ConfirmModal from '../components/ConfirmModal'
 import Spinner from '../components/Spinner'
 import { RosterSkeleton, CoursesSkeleton } from '../components/Skeleton'
 import { supabase } from '../api/supabase'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrashCan, faPenToSquare, faEllipsisVertical, faSearch, faArrowRight } from '@fortawesome/free-solid-svg-icons'
+import Tour from '../components/Tour'
 
 function Roster() {
   const [searchParams] = useSearchParams()
@@ -34,6 +35,7 @@ useEffect(() => {
   }
 }, [searchParams])
 
+  const { state } = useLocation()
   // ─── Class lists state ────────────────────────────────────────────────────
   const [classLists, setClassLists] = useState([])
   const [loading, setLoading] = useState(true)
@@ -66,6 +68,9 @@ useEffect(() => {
   const [deletingCourse, setDeletingCourse] = useState(false)
   const [coursesLoaded, setCoursesLoaded] = useState(false)
 
+  const [onboardingActive, setOnboardingActive] = useState(false)
+  const [showCoursesOnboardingBanner, setShowCoursesOnboardingBanner] = useState(false)
+
   const navigate = useNavigate()
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
 
@@ -83,6 +88,28 @@ useEffect(() => {
     const timer = setTimeout(() => setCourseError(''), 4000)
     return () => clearTimeout(timer)
   }, [courseError])
+
+  useEffect(() => {
+  const checkOnboarding = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    const complete = session?.user?.user_metadata?.onboarding_complete || false
+    setOnboardingActive(!complete)
+  }
+  checkOnboarding()
+}, [])
+
+useEffect(() => {
+  if (!onboardingActive || activeTab !== 'courses') return
+  if (courses.length === 0) {
+    setShowCoursesOnboardingBanner(false)
+    return
+  }
+  const currentSig = buildRecordSignature(courses, ['id', 'name'])
+  const dismissedSig = sessionStorage.getItem('onboarding_dismissed_courses_sig')
+  setShowCoursesOnboardingBanner(currentSig !== dismissedSig)
+}, [courses, onboardingActive, activeTab])
+
+
 
   useEffect(() => {
     const handleClickOutside = () => {
@@ -181,6 +208,15 @@ useEffect(() => {
     setShowCreateModal(false)
     navigate(`/roster/${saved.id}`, { state: { showEmptyPrompt: true } })
   }
+
+  const classListsTourSteps = [
+  { selector: '.roster-tabs', title: 'Switch between class lists and courses', text: 'Manage your class lists and courses from these two tabs.' },
+  { selector: '.create-classlist-btn', title: 'Create a class list', text: 'Start here to add a new class list for your students.' }
+]
+
+const coursesTourSteps = [
+  { selector: '.form-card', title: 'Add a course', text: 'Add each course your class is offering this semester — you\'ll use these when creating multi-item payment tasks.' }
+]
 
   const handleRenameList = async (listId) => {
     if (!editingName.trim()) return
@@ -283,6 +319,13 @@ useEffect(() => {
         </button>
       </div>
 
+      {activeTab === 'lists' && (
+  <Tour steps={classListsTourSteps} storageKey="roundup_tour_roster_classlists" onComplete={() => {}} />
+)}
+{activeTab === 'courses' && primaryClassListId && (
+  <Tour steps={coursesTourSteps} storageKey="roundup_tour_roster_courses" onComplete={() => {}} />
+)}
+
       {/* ─── CLASS LISTS TAB ─────────────────────────────────────────────── */}
       {activeTab === 'lists' && (
         <>
@@ -291,7 +334,7 @@ useEffect(() => {
               <p className="empty-title">No class lists yet</p>
               <p className="empty-subtitle">Create your first class list to start managing students</p>
               <button
-                className="btn-primary"
+                className="btn-primary create-classlist-btn"
                 style={{ display: 'inline-block', marginTop: '16px' }}
                 onClick={() => setShowCreateModal(true)}
               >
@@ -305,11 +348,11 @@ useEffect(() => {
                     <h1 className="page-title bold">Your lists</h1>
                   </div>
                   <button
-                    className="btn-primary"
-                    onClick={() => setShowCreateModal(true)}
-                  >
-                    + Create list
-                  </button>
+  className="btn-primary create-classlist-btn"
+  onClick={() => setShowCreateModal(true)}
+>
+  + Create list
+</button>
                 </div>
               
         <div className="input-wrapper" style={{ marginBottom: "20px" }}>
@@ -331,7 +374,11 @@ useEffect(() => {
               ) : (
                 <div className="task-list">
                   {filteredClassLists.map(list => (
-                    <div key={list.id} className="task-card" onClick={() => navigate(`/roster/${list.id}`)}>
+                    <div
+                      key={list.id}
+                      className="task-card"
+                      onClick={() => navigate(`/roster/${list.id}`, { state: { from: state?.from } })}
+                    >
                       <div className="task-card-left">
                         {editingId === list.id ? (
                           <div className="title-edit-row" onClick={(e) => e.stopPropagation()}>
@@ -440,6 +487,37 @@ useEffect(() => {
             <CoursesSkeleton />
           ) : (
             <>
+              {showCoursesOnboardingBanner && (
+  <div className="roster-update-banner">
+    <div className="roster-update-text">
+      <p className="roster-update-title">Courses looking good?</p>
+      <p className="roster-update-subtitle">
+        Once your course list is set, head back to finish setting up Roundup.
+      </p>
+    </div>
+    <div className="roster-update-actions">
+      <button
+        className="btn-primary"
+        style={{ fontSize: '13px', padding: '8px 14px', whiteSpace: 'nowrap' }}
+        onClick={() => navigate('/')}
+      >
+        Yes, continue
+      </button>
+      <button
+        className="btn-secondary"
+        style={{ fontSize: '13px', padding: '8px 14px' }}
+        onClick={() => {
+          const currentSig = buildRecordSignature(courses, ['id', 'name'])
+          sessionStorage.setItem('onboarding_dismissed_courses_sig', currentSig)
+          setShowCoursesOnboardingBanner(false)
+        }}
+      >
+        Not yet
+      </button>
+    </div>
+  </div>
+)}
+
               {/* Add course input */}
               <div className="form-card" style={{ marginBottom: '16px' }}>
                 <p className="form-label" style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '500' }}>
@@ -502,7 +580,8 @@ useEffect(() => {
                               type="text"
                               value={editingCourseName}
                               onChange={(e) => setEditingCourseName(e.target.value)}
-                              onKeyDown={(e) => {
+                              on
+                              KeyDown={(e) => {
                                 if (e.key === 'Enter') handleSaveCourse(course.id)
                                 if (e.key === 'Escape') setEditingCourseId(null)
                               }}

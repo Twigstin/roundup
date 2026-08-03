@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, Link, useLocation } from 'react-router-dom'
-import { getStudentsByClassList, createStudent, deleteStudent, bulkCreateStudents, clearAllStudents, updateClassList, updateStudent } from '../api/index'
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom'
+import { getStudentsByClassList, buildRecordSignature, createStudent, deleteStudent, bulkCreateStudents, clearAllStudents, updateClassList, updateStudent } from '../api/index'
 import ConfirmModal from '../components/ConfirmModal'
 import Spinner from '../components/Spinner'
 import { RosterDetailSkeleton } from '../components/Skeleton'
@@ -9,6 +9,7 @@ import * as XLSX from 'xlsx'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faPenToSquare, faFilter, faSearch, faFileImport, faXmark, faTrashCan } from '@fortawesome/free-solid-svg-icons'
 import posthog from 'posthog-js'
+import Tour from '../components/Tour'
 
 const isValidRegNumber = (reg) => {
   if (!reg || reg.toString().trim() === '' || reg === '-') return false
@@ -22,8 +23,6 @@ const isValidRegNumber = (reg) => {
 function RosterDetail() {
   const { id } = useParams()
   const { state } = useLocation()
-  const backTo = state?.from || '/roster'
-  const backLabel = state?.fromLabel || 'Class lists'
   const [showUploadPrompt, setShowUploadPrompt] = useState(state?.showEmptyPrompt || false)
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
@@ -56,14 +55,47 @@ function RosterDetail() {
   () => sessionStorage.getItem(`incomplete_dismissed_${id}`) === 'true'
 )
   const [showAddStudentModal, setShowAddStudentModal] = useState(false)
+  const [onboardingActive, setOnboardingActive] = useState(false)
+  const [showStudentsOnboardingBanner, setShowStudentsOnboardingBanner] = useState(false)
+  const cameFromOnboarding = state?.from === '/' && onboardingActive
+  const backTo = cameFromOnboarding ? '/' : (state?.from || '/roster')
+  const backLabel = cameFromOnboarding ? 'Back to setup' : (state?.fromLabel || 'Class lists')
 
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
+
+  const navigate = useNavigate()
+
+  const rosterDetailTourSteps = [
+  { selector: '.add-students-section', title: 'Import your class list', text: 'Fastest way to add everyone at once — upload a CSV or Excel file.' },
+  { selector: '.students-add-btn-manual', title: 'Add one student', text: 'Prefer adding students one at a time? Tap here for a quick single addition.' },
+  { selector: '#input-wrapper', title: 'Search students', text: 'Quickly find any student by name, reg number, or serial.' }
+]
 
   useEffect(() => {
   if (location.state?.showEmptyPrompt) {
     window.history.replaceState({}, document.title)
   }
 }, [])
+
+useEffect(() => {
+  const checkOnboarding = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    const complete = session?.user?.user_metadata?.onboarding_complete || false
+    setOnboardingActive(!complete)
+  }
+  checkOnboarding()
+}, [])
+
+useEffect(() => {
+  if (!onboardingActive) return
+  if (students.length === 0) {
+    setShowStudentsOnboardingBanner(false)
+    return
+  }
+  const currentSig = buildRecordSignature(students, ['id', 'name', 'reg_number'])
+  const dismissedSig = sessionStorage.getItem('onboarding_dismissed_students_sig')
+  setShowStudentsOnboardingBanner(currentSig !== dismissedSig)
+}, [students, onboardingActive])
 
 useEffect(() => {
   if (students.length > 0) {
@@ -518,6 +550,39 @@ const handleCancelEdit = () => {
     </div>
   </div>
 )}
+
+<Tour steps={rosterDetailTourSteps} storageKey="roundup_tour_roster_detail" onComplete={() => {}} />
+
+{showStudentsOnboardingBanner && (
+  <div className="roster-update-banner">
+    <div className="roster-update-text">
+      <p className="roster-update-title">Class list looking good?</p>
+      <p className="roster-update-subtitle">
+        Once you're happy with your student list, head back to finish setting up Roundup.
+      </p>
+    </div>
+    <div className="roster-update-actions">
+      <button
+        className="btn-primary"
+        style={{ fontSize: '13px', padding: '8px 14px', whiteSpace: 'nowrap' }}
+        onClick={() => navigate('/')}
+      >
+        Yes, continue
+      </button>
+      <button
+        className="btn-secondary"
+        style={{ fontSize: '13px', padding: '8px 14px' }}
+        onClick={() => {
+          const currentSig = buildRecordSignature(students, ['id', 'name', 'reg_number'])
+          sessionStorage.setItem('onboarding_dismissed_students_sig', currentSig)
+          setShowStudentsOnboardingBanner(false)
+        }}
+      >
+        Not yet
+      </button>
+    </div>
+  </div>
+)}
       <div className="page-header">
         <Link to={backTo} state={state?.fromState} className="back-link">
           <FontAwesomeIcon icon={faChevronLeft}/> {backLabel}
@@ -558,17 +623,17 @@ const handleCancelEdit = () => {
     <span>OR</span>
   </div>
 
-  <div className="add-students-section">
+  <div className="add-students-section students-add-btn-manual">
     <p className="add-students-section-title task-limit-title" style={{ textAlign: 'center' }}>Add student manually</p>
     <p className="add-students-section-desc" style={{ textAlign: 'center' }}>For a quick single addition.</p>
     <div className='students-add-btn'>
-    <button
-      className="btn-secondary"
-      onClick={() => setShowAddStudentModal(true)}
-    >
-      + Add student
-    </button>
-    </div>
+  <button
+    className="btn-secondary"
+    onClick={() => setShowAddStudentModal(true)}
+  >
+    + Add student
+  </button>
+</div>
   </div>
 </div>
 
@@ -627,7 +692,7 @@ const handleCancelEdit = () => {
             onChange={(e) => setSearch(e.target.value)}
                   />
                 </div>
-          <div id="btn-danger-clear-all-div">
+          {students.length > 0 && (<div id="btn-danger-clear-all-div">
           <button
             className="btn-danger-clear-my-all"
             id="btn-danger-clear-all"
@@ -636,7 +701,7 @@ const handleCancelEdit = () => {
           >
             <FontAwesomeIcon icon={faXmark} /> Clear List
         </button>
-        </div>
+        </div>)}
         </div>
         {showIncompleteOnly && (
   <button
@@ -658,7 +723,7 @@ const handleCancelEdit = () => {
             <option value="name"><FontAwesomeIcon icon={faFilter} />A–Z</option>            
           </select>
           </label>
-          <div
+          {students.length > 0 && (<div
             className="btn-danger-clear-all"
     id="btn-danger-all-clear">
             <button
@@ -668,7 +733,7 @@ const handleCancelEdit = () => {
             >
               <FontAwesomeIcon icon={faXmark} /> Clear List
             </button>
-            </div>
+            </div>)}
         </div>
         </div>
 

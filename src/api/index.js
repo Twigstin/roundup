@@ -528,3 +528,10 @@ export const touchTask = async (taskId) => {
     .eq('id', taskId)
   if (error) console.error('Failed to touch task:', error)
 }
+
+
+export const buildRecordSignature = (items, fields) =>
+  items
+    .map(item => fields.map(f => item[f] ?? '').join(':'))
+    .sort()
+    .join('|')

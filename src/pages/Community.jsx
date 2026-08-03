@@ -48,7 +48,7 @@ function Community() {
         rel="noopener noreferrer"
         className="btn-primary support-cta-btn"
       >
-        <FontAwesomeIcon icon={faWhatsapp} className="invite-whatsapp-icon" /> Join the community <FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowRight} />
+        <FontAwesomeIcon icon={faWhatsapp} className="invite-whatsapp-icon" /> Join the community
       </a>
     </div>
   )

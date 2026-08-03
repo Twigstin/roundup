@@ -2198,7 +2198,7 @@ button:active {
 .lightbox-image {
   width: 340px;
   height: 340px;
-  border-radius: 50%;
+  border-radius: 10px;
   object-fit: cover;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
@@ -2293,7 +2293,7 @@ button:active {
   border: 1px solid #e5e5e5;
   border-radius: 10px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  z-index: 50;
+  z-index: 150;
   min-width: 140px;
   overflow: hidden;
 }
@@ -2310,6 +2310,7 @@ button:active {
   font-size: 13px;
   color: #111;
   text-align: left;
+  z-index: 300 !important;
 }
 
 .kebab-menu-item:hover {
@@ -2729,7 +2730,7 @@ button:active {
   animation: fadeIn 0.2s ease;
 }
 
-#update-banner {
+.update-banner {
   background: #fff;
   border-top-left-radius: 16px;
   border-radius: 16px;
@@ -2744,7 +2745,7 @@ button:active {
 }
 
 @media (max-width: 430px) {
-  #update-banner {
+  .update-banner {
     width: 93%;
   }
 }
@@ -3808,4 +3809,112 @@ button:active {
 .students-add-btn > button {
   margin: auto;
   margin-top: 12px;
+}
+
+.onboarding-carousel-viewport {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+}
+
+.onboarding-carousel-track {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  transition: transform 0.3s ease;
+}
+
+.onboarding-slide {
+  width: 100%;
+  min-width: 100%;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.onboarding-banner {
+  overflow: hidden;
+}
+
+
+
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+}
+
+.tour-highlight {
+  position: fixed;
+  border-radius: 10px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65);
+  pointer-events: none;
+  transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
+}
+
+
+.tour-tooltip-title {
+  font-size: 14px;
+  color: #111;
+  margin-bottom: 6px;
+}
+
+.tour-tooltip-text {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.tour-tooltip-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tour-skip {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: #999;
+  cursor: pointer;
+  font-family: 'inter', sans-serif;
+  padding: 6px 4px;
+}
+
+.tour-skip:hover {
+  color: #555;
+}
+
+
+.tour-tooltip {
+  position: fixed;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 18px;
+  width: 260px;
+  max-width: calc(100vw - 32px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  z-index: 401;
+  animation: fadeIn 0.2s ease;
+}
+
+.tour-tooltip::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 8px solid transparent;
+}
+
+.tour-tooltip-below::after {
+  bottom: 100%;
+  left: 24px;
+  border-bottom-color: #fff;
+}
+
+.tour-tooltip-above::after {
+  top: 100%;
+  left: 24px;
+  border-top-color: #fff;
 }

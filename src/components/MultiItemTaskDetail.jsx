@@ -9,6 +9,7 @@ import {
   getItemEntries, addItemEntry, updateItemEntry, removeItemEntry,
   updateTask, getStudentsByClassList, getRosterMeta, deleteTaskItem, updateTaskItem, getEntriesByTask
 } from '../api/index'
+import Tour from './Tour'
 
 const MAX_DOTS = 5
 
@@ -59,6 +60,23 @@ function MultiItemTaskDetail({ task, onTitleUpdate, onRosterSync }) {
 
   const channelId = useRef(`multi-${Date.now()}-${Math.random()}`)
 
+  const multiTaskTourSteps = [
+  { selector: '.edit-title-btn', title: 'Rename this task', text: 'Tap here anytime to change the task name.' },
+  { selector: '.task-details-export-btn', title: 'Export your data', text: 'Download your records as an Excel file anytime.' },
+  { selector: '.multi-item-stats-scroller', title: 'Per-course stats', text: 'Tap any course stats card to see who\'s paid for, or collected that item specifically.' },
+  { selector: '.multi-item-view-all', title: 'View all courses', text: 'See stats for every course in one place, not just what fits on screen.' },
+  { selector: '.input-wrapper', title: 'Search students', text: 'Quickly find any student by name or reg number.' },
+  { selector: '.multi-add-student-wrapper', title: 'Add a student', text: 'Add someone who isn\'t on your class list.' },
+  { selector: '.multi-item-add-btn', title: 'Add items for a student', text: 'Tap here on any student to mark which items they\'ve paid for.' }
+]
+
+/*
+  const multiTaskTourSteps = [
+  { selector: '.multi-item-stats-section', title: 'Per-course stats', text: 'Tap any course card to see who\'s paid for that item specifically.' },
+  { selector: '.multi-item-add-btn', title: 'Add items for a student', text: 'Tap here on any student to mark which items they\'ve paid for.' }
+]
+*/
+
   // ─── Load ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     const init = async () => {
@@ -87,12 +105,7 @@ const resolvedStudents = entriesData.map(e => ({
 setStudents(resolvedStudents)
 
 // Detect roster changes
-console.log('[roster-detect]', {
-  task_class_list_id: task.class_list_id,
-  task_roster_synced_at: task.roster_synced_at,
-  rosterMeta,
-  resolvedStudentsCount: resolvedStudents.length
-})
+
 if (
   task.class_list_id &&
   rosterMeta?.updated_at &&
@@ -620,6 +633,10 @@ const handleRosterSync = async () => {
   setSyncingRoster(false)
 }
 
+const collectedHintStep = [
+  { selector: '.multi-item-chip', title: 'Mark as collected', text: 'Tap a student\'s chip to strike it through and mark that item as collected.' }
+]
+
   // ─── Loading skeleton ──────────────────────────────────────────────────────
   if (loading) {
     return (
@@ -671,6 +688,18 @@ const handleRosterSync = async () => {
       <div className="page-header">
         <Link to="/" className="back-link"><FontAwesomeIcon icon={faChevronLeft} /> Back</Link>
       </div>
+      
+      {students.length > 0 && (
+  <Tour
+    steps={multiTaskTourSteps}
+    storageKey="roundup_tour_task_detail_multi"
+    onComplete={() => {}}
+  />
+)}
+
+{itemEntries.length > 0 && localStorage.getItem('roundup_tour_task_detail_multi') && (
+  <Tour steps={collectedHintStep} storageKey="roundup_tour_multi_collected_hint" onComplete={() => {}} />
+)}
 
       {/* Title */}
       {editingTitle ? (
@@ -702,6 +731,7 @@ const handleRosterSync = async () => {
       {students.length > 0 && (
         <>
         <div className="multi-item-stats-section">
+          <div className='multi-item-stats-scroller'>
         <div
           ref={scrollRef}
           className={`multi-item-stats-scroll ${isCentered ? 'multi-item-stats-centered' : ''}`}
@@ -747,6 +777,7 @@ const handleRosterSync = async () => {
             ))}
           </div>
         )}
+        </div>
 
         {/* View all courses — always visible */}
         <button className="multi-item-view-all" onClick={() => navigate(`/tasks/${task.id}/courses`)}>
@@ -762,15 +793,13 @@ const handleRosterSync = async () => {
         <input className="form-input search-icon" type="text" placeholder="Search by name or reg number…" value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>)}
       
-      {students.length > 0 && (<div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-  <button
-    className="btn-secondary"
-    style={{ whiteSpace: 'nowrap', fontSize: '13px', padding: '8px 14px' }}
-    onClick={() => setShowAddStudent(true)}
-  >
+      {students.length > 0 && (
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }} className="multi-add-student-wrapper">
+  <button className="btn-secondary" style={{ whiteSpace: 'nowrap', fontSize: '13px', padding: '8px 14px' }} onClick={() => setShowAddStudent(true)}>
     + Add student
   </button>
-</div>)}
+</div>
+      )}
 
 {/* Empty students state */}
 {students.length === 0 && !noCourses && task.class_list_id && (
@@ -925,7 +954,7 @@ const handleRosterSync = async () => {
             </div>
             <div style={{ padding: '16px 24px', borderTop: '1px solid #e5e5e5', display: 'flex', gap: '8px', background: '#fff', flexShrink: 0 }}>
               <button className="btn-primary" style={{ flex: 1, padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} onClick={() => {
-  console.log('confirm clicked')
+  
   handleModalConfirm()
 }} disabled={modalSaving}>
                 {modalSaving ? <><Spinner size={14} /> Saving...</> : 'Confirm'}

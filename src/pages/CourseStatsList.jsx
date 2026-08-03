@@ -5,6 +5,7 @@ import { faChevronLeft, faSearch, faChevronRight } from '@fortawesome/free-solid
 import { getTaskItems, getItemEntries, getEntriesByTask, getStudentsByClassList, getTasks } from '../api/index'
 import Spinner from '../components/Spinner'
 import { CourseStatsListSkeleton } from '../components/Skeleton'
+import Tour from '../components/Tour'
 
 function CourseStatsList() {
   const { id } = useParams()
@@ -15,6 +16,11 @@ function CourseStatsList() {
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+
+  const courseStatsListTourSteps = [
+  { selector: '.input-wrapper', title: 'Search courses', text: 'Quickly find a course by name.' },
+  { selector: '.course-stats-grid-card', title: 'View course details', text: 'Tap any course stats to see who\'s paid/collected and who hasn\'t.' }
+]
 
   useEffect(() => {
   const init = async () => {
@@ -65,6 +71,10 @@ function CourseStatsList() {
           <FontAwesomeIcon icon={faChevronLeft} /> {task?.title || 'Back'}
         </Link>
       </div>
+
+      {taskItems.length > 0 && (
+        <Tour steps={courseStatsListTourSteps} storageKey="roundup_tour_course_stats_list" onComplete={() => {}} />
+      )}
 
       <h1 className="page-title bold" style={{ marginBottom: '6px' }}>All courses</h1>
       <p style={{ fontSize: '13px', color: '#888', marginBottom: '20px' }}>

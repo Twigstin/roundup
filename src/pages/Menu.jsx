@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import Spinner from '../components/Spinner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronRight, faUserPlus, faCircleInfo, faArrowRight, faCirclePlay, faHeadset, faPeopleGroup, faRightFromBracket, faUserCog } from '@fortawesome/free-solid-svg-icons'
+import Tour from '../components/Tour'
 
 function Menu() {
   const [user, setUser] = useState(null)
@@ -28,6 +29,16 @@ function Menu() {
     }
     fetchUser()
   }, [])
+
+  const menuTourSteps = [
+  { selector: '.menu-account-card', title: 'Your profile', text: 'Tap here anytime to update your name and details.' },
+  { selector: '.menu-item-about', title: 'About Roundup', text: 'Learn more about Roundup here.' },
+  { selector: '.menu-item-invite', title: 'Invite others', text: 'Invite fellow class reps to use Roundup.' },
+  { selector: '.menu-item-support', title: 'Need help?', text: 'Reach out to support anytime from here.' },
+  { selector: '.menu-item-community', title: 'Join the community', text: 'Stay updated on new features and connect with fellow class reps using Roundup.' },
+  { selector: '.menu-item-manage-account', title: 'Manage your account', text: 'Update your password and account settings here.' },
+  { selector: '.menu-item-logout', title: 'Log out', text: 'Tap here anytime to sign out.' }
+]
 
   const handleLogout = async () => {
     setLoggingOut(true)
@@ -56,6 +67,7 @@ function Menu() {
   return (
     <div className="menu-page">
       <h1 className="page-title bold">Menu</h1>
+      <Tour steps={menuTourSteps} storageKey="roundup_tour_menu" onComplete={() => {}} />
       {/* Account banner — tapping goes to edit profile */}
       <div className="menu-section">
         <div
@@ -103,7 +115,7 @@ function Menu() {
       <div className="menu-section">
         <p className="menu-section-label">App</p>
         <div className="menu-list">
-          <div className="menu-list-item" onClick={() => navigate('/about')}>
+          <div className="menu-list-item menu-item-about" onClick={() => navigate('/about')}>
             <span className="menu-list-item-label">
               <span style={{ marginRight: '10px' }}>
                 <FontAwesomeIcon icon={faCircleInfo} style={{ color: '#111' }} />
@@ -114,7 +126,7 @@ function Menu() {
               <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
             </span>
           </div>
-          <div className="menu-list-item" onClick={() => navigate('/tutorials')}>
+          {/* <div className="menu-list-item" onClick={() => navigate('/tutorials')}>
             <span className="menu-list-item-label">
               <span style={{ marginRight: '10px' }}>
                 <FontAwesomeIcon icon={faCirclePlay} style={{ color: '#111' }} />
@@ -124,9 +136,9 @@ function Menu() {
             <span className="menu-list-chevron">
               <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
             </span>
-          </div>
+          </div> */}
 
-          <div className="menu-list-item" onClick={() => navigate('/invite')}>
+          <div className="menu-list-item menu-item-invite" onClick={() => navigate('/invite')}>
             <span className="menu-list-item-label">
               <span style={{ marginRight: '10px' }}>
                 <FontAwesomeIcon icon={faUserPlus} style={{ color: '#111' }} />
@@ -137,7 +149,7 @@ function Menu() {
               <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
             </span>
           </div>
-          <div className="menu-list-item" onClick={() => {
+          <div className="menu-list-item menu-item-support" onClick={() => {
             navigate('/support')
           }}>
             <span className="menu-list-item-label">
@@ -150,7 +162,7 @@ function Menu() {
               <FontAwesomeIcon icon={faChevronRight} className="back-linky" />
             </span>
           </div>
-          <div className="menu-list-item" onClick={() => {
+          <div className="menu-list-item menu-item-community" onClick={() => {
             navigate('/community')
           }}>
             <span className="menu-list-item-label">
@@ -170,7 +182,7 @@ function Menu() {
       <div className="menu-section">
         <p className="menu-section-label">Account</p>
         <div className="menu-list">
-          <div className="menu-list-item" onClick={() => navigate('/account')}>
+          <div className="menu-list-item menu-item-manage-account" onClick={() => navigate('/account')}>
             <span className="menu-list-item-label">
               <span style={{ marginRight: '10px' }}>
                 <FontAwesomeIcon icon={faUserCog} style={{ color: '#111' }} />
@@ -182,7 +194,7 @@ function Menu() {
             </span>
           </div>
           
-          <div className="menu-list-item menu-list-item-danger" onClick={handleLogout}>
+          <div className="menu-list-item menu-list-item-danger menu-item-logout" onClick={handleLogout}>
             <span className="menu-list-item-label logout-label">
               {loggingOut ? (
                 <>

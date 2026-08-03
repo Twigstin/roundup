@@ -49,7 +49,7 @@ function Support() {
         rel="noopener noreferrer"
         className="btn-primary support-cta-btn"
       >
-        <FontAwesomeIcon icon={faWhatsapp} className="invite-whatsapp-icon" /> Message on WhatsApp <FontAwesomeIcon style={{ fontSize: "10px" }} icon={faArrowRight} />
+        <FontAwesomeIcon icon={faWhatsapp} className="invite-whatsapp-icon" /> Message on WhatsApp
       </a>
     </div>
   )

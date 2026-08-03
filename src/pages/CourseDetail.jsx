@@ -6,6 +6,7 @@ import { getTaskItems, touchTask, getItemEntries, getEntriesByTask, getStudentsB
 import { TaskDetailSkeleton } from '../components/Skeleton'
 import Spinner from '../components/Spinner'
 import { supabase } from '../api/supabase'
+import Tour from '../components/Tour'
 
 function CourseDetail() {
   const { id, itemId } = useParams()
@@ -34,7 +35,13 @@ const [exportDate, setExportDate] = useState(false)
 const [exportSummary, setExportSummary] = useState(false)
 const [regNumberFixes, setRegNumberFixes] = useState({})
 const [exportBlockedMsg, setExportBlockedMsg] = useState('')
- 
+
+const courseDetailTourSteps = [
+  { selector: '.task-details-export-btn', title: 'Export your data', text: 'Download this course\'s records as an Excel file anytime.' },
+  { selector: '.summary-grid', title: 'Track progress at a glance', text: 'Tap any card to filter the list by that status.' },
+  { selector: '.input-wrapper', title: 'Search students', text: 'Quickly find any student by name or reg number.' },
+  { selector: '.toggle-btn', title: 'Mark paid or collected', text: 'Tap here to mark a student as paid, then mark it collected once received.' }
+]
 
   useEffect(() => {
     const init = async () => {
@@ -403,6 +410,8 @@ const openExportModal = () => {
         <Link to={backPath} className="back-link">
           <FontAwesomeIcon icon={faChevronLeft} /> {backLabel}
         </Link>
+
+        <Tour steps={courseDetailTourSteps} storageKey="roundup_tour_course_detail" onComplete={() => {}} />
         <button
           className="task-details-export-btn"
           onClick={openExportModal}

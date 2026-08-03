@@ -2,11 +2,13 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { getTasks, deleteTask, getClassLists, getCourses } from '../api/index'
 import ConfirmModal from '../components/ConfirmModal'
+import OnboardingCarousel from '../components/OnboardingCarousel'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLayerGroup, faArrowUp, faArrowDown, faBook, faSearch, faClipboardList, faTrashCan, faArrowRight, faCreditCard, faFileCircleCheck, faUserCheck, faEllipsisVertical } from '@fortawesome/free-solid-svg-icons'
 import Spinner from '../components/Spinner'
 import { DashboardSkeleton } from '../components/Skeleton'
 import { supabase } from '../api/supabase'
+import Tour from '../components/Tour'
 
 function Dashboard() {
   const [tasks, setTasks] = useState([])
@@ -35,6 +37,12 @@ function Dashboard() {
     document.addEventListener('click', handleClickOutside)
     return () => document.removeEventListener('click', handleClickOutside)
   }, [])
+
+  const dashboardTourSteps = [
+  { selector: '.dashboard-toolbar', title: 'Find any task', text: 'Search or filter your tasks by type — payment, submission, or attendance.' },
+  { selector: '.btn-primary', title: 'Create a task', text: 'Tap here anytime to start tracking a new payment, submission, or attendance list.' },
+  { selector: '.task-card', title: 'Your tasks', text: 'Tap any task to view and update student records.' }
+]
   
 
   const handleDeleteClick = (e, taskId) => {
@@ -407,73 +415,20 @@ useEffect(() => {
     </div>)}
 
       {isNewUser && (
-  <div className="onboarding-banner">
-    <div className="onboarding-header">
-      <p className="onboarding-title bold">Welcome to Roundup 👋</p>
-      <p className="onboarding-subtitle">Get started in three steps. It takes less than 5 minutes.</p>
-    </div>
-    <div className="onboarding-steps">
-
-      {/* Step 1 — Class list */}
-      <div className="onboarding-step">
-        <div className={`onboarding-step-number ${hasClassList ? 'onboarding-step-done' : ''}`}>
-          {hasClassList ? '✓' : '1'}
-        </div>
-        <div className="onboarding-step-content">
-          <p className="onboarding-step-title light-bold">Add your class list</p>
-          <p className="onboarding-step-desc">Import your class list so Roundup can track entries for each student.</p>
-          {!hasClassList && (
-            <button className="btn-primary" style={{ marginTop: '10px', fontSize: '13px', padding: '8px 14px' }} onClick={() => navigate('/roster')}>
-              Go to Roster<span style={{ fontSize: '10px', paddingTop: '2px' , marginLeft: '3px'}}><FontAwesomeIcon icon={faArrowRight} /></span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Step 2 — Courses */}
-      <div className="onboarding-step">
-        <div className={`onboarding-step-number ${hasCourses ? 'onboarding-step-done' : !hasClassList ? 'onboarding-step-number-muted' : ''}`}>
-          {hasCourses ? '✓' : '2'}
-        </div>
-        <div className="onboarding-step-content">
-          <p className="onboarding-step-title light-bold">Add your courses</p>
-          <p className="onboarding-step-desc">Add the courses your class is offering this semester. Roundup uses these for multi-item payment tracking.</p>
-          {hasClassList && !hasCourses && (
-            <button
-              className="btn-primary"
-              style={{ marginTop: '10px', fontSize: '13px', padding: '8px 14px' }}
-              onClick={() => navigate('/roster?tab=courses')}
-            >
-              Add courses<span style={{ fontSize: '10px', paddingTop: '2px' , marginLeft: '3px'}}><FontAwesomeIcon icon={faArrowRight} /></span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Step 3 — Create task */}
-      <div className="onboarding-step">
-        <div className={`onboarding-step-number ${tasks.filter(t => !t.is_archived).length > 0 ? 'onboarding-step-done' : !hasClassList ? 'onboarding-step-number-muted' : ''}`}>
-          {tasks.filter(t => !t.is_archived).length > 0 ? '✓' : '3'}
-        </div>
-        <div className="onboarding-step-content">
-          <p className="onboarding-step-title light-bold">Create your first task</p>
-          <p className="onboarding-step-desc">Track payments, submissions or attendance for your class.</p>
-          {hasClassList && tasks.filter(t => !t.is_archived).length === 0 && (
-            <button className="btn-primary"
-              style={{ marginTop: '10px', fontSize: '13px', padding: '8px 14px' }}
-              onClick={() => navigate('/tasks/new')}
-            >
-              Create new task<span style={{ fontSize: '10px', paddingTop: '2px' , marginLeft: '3px'}}><FontAwesomeIcon icon={faArrowRight} /></span>
-            </button>
-          )}
-        </div>
-      </div>
-
-    </div>
-  </div>
+  <OnboardingCarousel
+    hasClassList={hasClassList}
+    hasCourses={hasCourses}
+    hasTasks={tasks.filter(t => !t.is_archived).length > 0}
+    profileComplete={!!userFirstName}
+  />
 )}
 
-      {showProfileBanner && !isNewUser && (
+{!isNewUser && tasks.length > 0 && (
+  <Tour steps={dashboardTourSteps} storageKey="roundup_tour_dashboard" onComplete={() => {}} />
+)}
+
+      {/**
+       showProfileBanner && !isNewUser && (
   <div className="profile-setup-banner">
     <div className="profile-setup-banner-text">
       <p className="profile-setup-banner-title light-bold">Set up your profile</p>
@@ -499,7 +454,8 @@ useEffect(() => {
       </button>
     </div>
   </div>
-)}
+)
+       */}
 
       {tasks.length > 0 && (
   <div className="dashboard-toolbar">

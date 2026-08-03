@@ -7,6 +7,8 @@ import Spinner from '../components/Spinner'
 import { NewTaskSkeleton } from '../components/Skeleton'
 import posthog from 'posthog-js'
 import { supabase } from '../api/supabase'
+import Tour from '../components/Tour'
+
 
 function NewTask() {
   const [title, setTitle] = useState('')
@@ -25,6 +27,13 @@ function NewTask() {
   const [selectedCourseIds, setSelectedCourseIds] = useState([])
   const [coursesLoading, setCoursesLoading] = useState(false)
   const [hasCourses, setHasCourses] = useState(true)
+
+  const newTaskTourSteps = [
+  { selector: '.form-field', title: 'Name your task', text: 'Give it a clear name like "MTH 102 Textbook Payments" so it\'s easy to find later.' },
+  { selector: '.task-type-field', title: 'Choose a task type', text: 'Pick payment, submission, or attendance to categorize how it\'s tracked.' },
+  { selector: '.classlist-field', title: 'Class list', text: 'Roundup automatically tracks entries for every student on this list.' },
+  { selector: '.create-task-submit-btn', title: 'Create your task', text: 'Once everything\'s filled in, tap here to create it and start tracking.' }
+]
 
   useEffect(() => {
   if (!error) return
@@ -156,6 +165,9 @@ if (checkingLimits) return <NewTaskSkeleton />
 
   return (
     <div>
+      <div className="page-header">
+        <Link to="/" className="back-link"><FontAwesomeIcon icon={faChevronLeft}/> Back</Link>
+      </div>
       {classLists.length === 0 ? (
   <div className="task-limit-banner">
     <p className="task-limit-title">No class list yet</p>
@@ -180,6 +192,7 @@ if (checkingLimits) return <NewTaskSkeleton />
   </div>
 ) : (
   <div className="form-card">
+    <Tour steps={newTaskTourSteps} storageKey="roundup_tour_new_task" onComplete={() => {}} />
         <h1 className="page-title bold" style={{ marginBottom: '24px' }}>New task</h1>
 
         {error && <p className="form-error">{error}</p>}
@@ -195,7 +208,7 @@ if (checkingLimits) return <NewTaskSkeleton />
           />
         </div>
 
-        <div className="form-field">
+        <div className="form-field task-type-field">
           <label className="form-label">Task type</label>
           <select
             className="form-input"
@@ -230,7 +243,7 @@ if (checkingLimits) return <NewTaskSkeleton />
   </div>
 )}
 
-        <div className="form-field">
+        <div className="form-field classlist-field">
   <label className="form-label">Class list</label>
   {classLists.length === 1 ? (
     <div style={{
@@ -264,7 +277,7 @@ if (checkingLimits) return <NewTaskSkeleton />
 </div>
 
         <button
-          className="btn-primary"
+          className="btn-primary create-task-submit-btn"
           style={{ width: '100%', padding: '12px' }}
           onClick={handleSubmit}
           disabled={loading}

@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faArrowRight, faSearch, faPenToSquare, faDownload, faUserCheck, faFileCircleCheck, faCreditCard, faArrowDown } from '@fortawesome/free-solid-svg-icons'
 import { supabase } from '../api/supabase'
 import posthog from 'posthog-js'
+import Tour from '../components/Tour'
 
 function TaskDetail() {
   const { id } = useParams()
@@ -48,6 +49,16 @@ function TaskDetail() {
   const [pendingStudent, setPendingStudent] = useState(null)
 
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
+
+
+  const taskDetailTourSteps = [
+  { selector: '.edit-title-btn', title: 'Rename this task', text: 'Tap here anytime to change the task name.' },
+  { selector: '.task-details-export-btn', title: 'Export your data', text: 'Download your records as an Excel file anytime.' },
+  { selector: '.summary-grid', title: 'Track progress at a glance', text: 'Tap any card to filter your list by that status.' },
+  { selector: '.input-wrapper', title: 'Search students', text: 'Quickly find any student by name or reg number.' },
+  { selector: '.task-add-student-btn', title: 'Add a student', text: 'Add someone who isn\'t on your class list.' },
+  { selector: '.toggle-btn', title: 'Update a student\'s status', text: 'Tap here to mark or unmark a student as paid, submitted, or present.' },
+]
 
   useEffect(() => {
   if (!addStudentError) return
@@ -659,6 +670,8 @@ const detectDuplicate = (name, reg) => {
       <Link to="/" className="back-link"><FontAwesomeIcon icon={faChevronLeft}/> Back</Link>
     </div>
 
+    <Tour steps={taskDetailTourSteps} storageKey="roundup_tour_task_detail_single" onComplete={() => {}} />
+
     <div className="task-detail-header">
   {editingTitle ? (
     <div className="title-edit-row">
@@ -867,7 +880,7 @@ const detectDuplicate = (name, reg) => {
                    />
                  </div>
   <button
-  className="btn-secondary"
+  className="btn-secondary task-add-student-btn"
   style={{ alignSelf: 'flex-start', fontSize: '13px', padding: '8px 14px' }}
   onClick={() => setShowAddStudent(true)}
 >

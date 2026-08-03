@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faXmark } from '@fortawesome/free-solid-svg-icons'
 import pkg from '../../package.json'
+import Tour from '../components/Tour'
 
 function About() {
   const [lightboxSrc, setLightboxSrc] = useState(null)
@@ -15,6 +16,10 @@ function About() {
     }
   ]
 
+  const aboutTourSteps = [
+  { selector: '.about-avatar', title: 'View full image', text: 'Tap profile photo to see it full size.' }
+]
+
   /**
    ,
     {
@@ -26,6 +31,7 @@ function About() {
 
   return (
     <div>
+      <Tour steps={aboutTourSteps} storageKey="roundup_tour_about" onComplete={() => {}} />
       {lightboxSrc && (
         <div
           className="lightbox-overlay"

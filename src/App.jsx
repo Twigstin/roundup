@@ -19,6 +19,8 @@ import Community from './pages/Community'
 import Support from './pages/Support'
 import CourseStatsList from './pages/CourseStatsList'
 import CourseDetail from './pages/CourseDetail'
+import TourOptInModal from './components/TourOptInModal'
+import { supabase } from './api/supabase'
 
 function App() {
   const { needRefresh, updateServiceWorker } = useRegisterSW()
@@ -37,12 +39,23 @@ const updateServiceWorker = () => alert('would refresh here')
     document.body.style.overflow = ''
   }
 }, [needRefresh[0]])
+
+useEffect(() => {
+  const checkAndShow = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    const complete = session?.user?.user_metadata?.onboarding_complete || false
+    const asked = localStorage.getItem('roundup_tour_optin_asked')
+    if (complete && !asked) setShow(true)
+  }
+  checkAndShow()
+}, [])
   
   return (
     <>
+    {/* <TourOptInModal /> */}
       {needRefresh[0] && (
   <div className="modal-overlay-new-list">
-    <div className="modal-card-new-list" id='update-banner' style={{ maxWidth: '400px' }}>
+    <div className="update-banner" id='update-banner' style={{ maxWidth: '400px' }}>
       <div style={{ padding: '28px 24px 20px' }}>
         <p className="page-title bold" style={{ fontSize: '18px', marginBottom: '10px' }}>
           ✨ New updates available
