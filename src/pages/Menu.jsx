@@ -5,12 +5,14 @@ import Spinner from '../components/Spinner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronRight, faUserPlus, faCircleInfo, faArrowRight, faCirclePlay, faHeadset, faPeopleGroup, faRightFromBracket, faUserCog } from '@fortawesome/free-solid-svg-icons'
 import Tour from '../components/Tour'
+import ConfirmModal from '../components/ConfirmModal'
 
 function Menu() {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState({ firstName: '', lastName: '', level: '' })
   const [loading, setLoading] = useState(true)
   const [loggingOut, setLoggingOut] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
   const navigate = useNavigate()
 
@@ -194,24 +196,34 @@ function Menu() {
             </span>
           </div>
           
-          <div className="menu-list-item menu-list-item-danger menu-item-logout" onClick={handleLogout}>
-            <span className="menu-list-item-label logout-label">
-              {loggingOut ? (
-                <>
-                  <Spinner size={14} />
-                  <span style={{ marginLeft: '10px' }}>Logging out...</span>
-                </>
-              ) : (
-                <>
-                  <span><FontAwesomeIcon icon={faRightFromBracket} /></span>
-                  <span style={{ marginLeft: '10px' }}>Log out</span>
-                </>
-              )}
-            </span>
-          </div>
+          <div className="menu-list-item menu-list-item-danger menu-item-logout" onClick={() => setShowLogoutConfirm(true)}>
+  <span className="menu-list-item-label logout-label">
+    {loggingOut ? (
+      <>
+        <Spinner size={14} />
+        <span style={{ marginLeft: '10px' }}>Logging out...</span>
+      </>
+    ) : (
+      <>
+        <span><FontAwesomeIcon icon={faRightFromBracket} /></span>
+        <span style={{ marginLeft: '10px' }}>Log out</span>
+      </>
+    )}
+  </span>
+</div>
         </div>
       </div>
-
+      {showLogoutConfirm && (
+  <ConfirmModal
+    message="Are you sure you want to log out?"
+    onConfirm={async () => {
+      setShowLogoutConfirm(false)
+      await handleLogout()
+    }}
+    onCancel={() => setShowLogoutConfirm(false)}
+    loading={loggingOut}
+  />
+)}
     </div>
   )
 }
