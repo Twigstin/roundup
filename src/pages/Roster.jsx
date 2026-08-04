@@ -194,29 +194,41 @@ useEffect(() => {
 
   // ─── Class list handlers ──────────────────────────────────────────────────
   const handleCreateList = async () => {
-    if (!newListName.trim()) {
-      setError('Please enter a list name')
-      return
-    }
-    setCreating(true)
-    const saved = await createClassList(newListName.trim())
-    setClassLists(prev => sortByUpdated([...prev, { ...saved, studentCount: 0 }]))
-    if (!primaryClassListId) setPrimaryClassListId(saved.id)
-    setNewListName('')
-    setError('')
-    setCreating(false)
-    setShowCreateModal(false)
-    navigate(`/roster/${saved.id}`, { state: { showEmptyPrompt: true } })
+  if (!newListName.trim()) {
+    setError('Please enter a list name')
+    return
   }
+  setCreating(true)
+  const saved = await createClassList(newListName.trim())
+  setClassLists(prev => sortByUpdated([...prev, { ...saved, studentCount: 0 }]))
+  if (!primaryClassListId) setPrimaryClassListId(saved.id)
+  setNewListName('')
+  setError('')
+  setCreating(false)
+  setShowCreateModal(false)
+  navigate(`/roster/${saved.id}`, { state: { from: state?.from } })
+}
 
   const classListsTourSteps = [
   { selector: '.roster-tabs', title: 'Switch between class lists and courses', text: 'Manage your class lists and courses from these two tabs.' },
   { selector: '.create-classlist-btn', title: 'Create a class list', text: 'Start here to add a new class list for your students.' }
 ]
 
+const classListRowTourSteps = [
+  { selector: '.input-wrapper', title: 'Search your lists', text: 'Quickly find a class list by name.' },
+  { selector: '.kebab-btn', title: 'Manage a list', text: 'Rename or delete a class list from here.' }
+]
+
+const continueBannerTourSteps = [
+  { selector: '.roster-update-banner', title: 'Ready to continue?', text: 'Once you\'re done here, tap "Yes, continue" to head back and finish setting up Roundup.' }
+]
+
 const coursesTourSteps = [
   { selector: '.form-card', title: 'Add a course', text: 'Add each course your class is offering this semester — you\'ll use these when creating multi-item payment tasks.' }
 ]
+
+
+
 
   const handleRenameList = async (listId) => {
     if (!editingName.trim()) return
@@ -321,6 +333,9 @@ const coursesTourSteps = [
 
       {activeTab === 'lists' && (
   <Tour steps={classListsTourSteps} storageKey="roundup_tour_roster_classlists" onComplete={() => {}} />
+)}
+{activeTab === 'lists' && classLists.length > 0 && localStorage.getItem('roundup_tour_roster_classlists') && (
+  <Tour steps={classListRowTourSteps} storageKey="roundup_tour_roster_classlist_rows" onComplete={() => {}} />
 )}
 {activeTab === 'courses' && primaryClassListId && (
   <Tour steps={coursesTourSteps} storageKey="roundup_tour_roster_courses" onComplete={() => {}} />
@@ -516,6 +531,9 @@ const coursesTourSteps = [
       </button>
     </div>
   </div>
+)}
+{showCoursesOnboardingBanner && (
+  <Tour steps={continueBannerTourSteps} storageKey="roundup_tour_continue_banner_courses" onComplete={() => {}} />
 )}
 
               {/* Add course input */}

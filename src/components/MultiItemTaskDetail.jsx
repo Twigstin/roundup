@@ -67,7 +67,7 @@ function MultiItemTaskDetail({ task, onTitleUpdate, onRosterSync }) {
   { selector: '.multi-item-view-all', title: 'View all courses', text: 'See stats for every course in one place, not just what fits on screen.' },
   { selector: '.input-wrapper', title: 'Search students', text: 'Quickly find any student by name or reg number.' },
   { selector: '.multi-add-student-wrapper', title: 'Add a student', text: 'Add someone who isn\'t on your class list.' },
-  { selector: '.multi-item-add-btn', title: 'Add items for a student', text: 'Tap here on any student to mark which items they\'ve paid for.' }
+  { selector: '.multi-item-add-btn', title: 'Add items for a student', text: 'Tap here on any student\'s entry to mark which items they\'ve paid for.' }
 ]
 
 /*
@@ -634,7 +634,7 @@ const handleRosterSync = async () => {
 }
 
 const collectedHintStep = [
-  { selector: '.multi-item-chip', title: 'Mark as collected', text: 'Tap a student\'s chip to strike it through and mark that item as collected.' }
+  { selector: '.multi-item-chip', title: 'Mark as collected', text: 'Tap a student\'s chip to strike it through and mark that item as collected or press and hold to remove item from student entry.' }
 ]
 
   // ─── Loading skeleton ──────────────────────────────────────────────────────

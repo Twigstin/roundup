@@ -23,7 +23,6 @@ const isValidRegNumber = (reg) => {
 function RosterDetail() {
   const { id } = useParams()
   const { state } = useLocation()
-  const [showUploadPrompt, setShowUploadPrompt] = useState(state?.showEmptyPrompt || false)
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
   const [name, setName] = useState('')
@@ -60,6 +59,7 @@ function RosterDetail() {
   const cameFromOnboarding = state?.from === '/' && onboardingActive
   const backTo = cameFromOnboarding ? '/' : (state?.from || '/roster')
   const backLabel = cameFromOnboarding ? 'Back to setup' : (state?.fromLabel || 'Class lists')
+  const cameFromReroute = !!state?.from
 
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
 
@@ -70,6 +70,35 @@ function RosterDetail() {
   { selector: '.students-add-btn-manual', title: 'Add one student', text: 'Prefer adding students one at a time? Tap here for a quick single addition.' },
   { selector: '#input-wrapper', title: 'Search students', text: 'Quickly find any student by name, reg number, or serial.' }
 ]
+
+const continueBannerTourSteps = [
+  { selector: '.roster-update-banner', title: 'Ready to continue?', text: 'Once you\'re done here, tap "Yes, continue" to head back and finish setting up Roundup.' }
+]
+
+const emptyRerouteTourSteps = [
+  { selector: '.student-upload-ctn', title: 'Your class list is empty', text: 'Import a spreadsheet with your whole class, or add students one at a time below.' }
+]
+
+
+useEffect(() => {
+  if (students.length > 0) {
+    localStorage.setItem('roundup_ever_added_students', 'true')
+  }
+}, [students.length])
+
+
+
+useEffect(() => {
+  if (
+    !loading &&
+    students.length === 0 &&
+    localStorage.getItem('roundup_tour_roster_detail') &&
+    !localStorage.getItem('roundup_ever_added_students')
+  ) {
+    localStorage.removeItem('roundup_tour_empty_reroute')
+  }
+}, [loading, students.length])
+
 
   useEffect(() => {
   if (location.state?.showEmptyPrompt) {
@@ -97,17 +126,18 @@ useEffect(() => {
   setShowStudentsOnboardingBanner(currentSig !== dismissedSig)
 }, [students, onboardingActive])
 
-useEffect(() => {
-  if (students.length > 0) {
-    setShowUploadPrompt(false)
-  }
-}, [students])
 
   useEffect(() => {
   if (!error) return
   const timer = setTimeout(() => setError(''), 4000)
   return () => clearTimeout(timer)
 }, [error])
+
+useEffect(() => {
+  if (students.length === 0 && !loading) {
+    localStorage.removeItem('roundup_tour_empty_reroute')
+  }
+}, [students.length, loading])
 
 useEffect(() => {
   if (showIncompleteOnly && incompleteStudents.length === 0) {
@@ -155,6 +185,8 @@ useEffect(() => {
       supabase.removeChannel(studentsSub)
     }
   }, [id])
+
+
 
   const handleAddStudent = async () => {
   setError('')
@@ -521,37 +553,15 @@ const handleCancelEdit = () => {
 
   return (
     <div>
-      {showUploadPrompt && (
-  <div className="roster-update-banner">
-    <div className="roster-update-text">
-      <p className="roster-update-title">Your class list is empty</p>
-      <p className="roster-update-subtitle">
-        Upload your student list now so Roundup can start tracking them in your task.
-      </p>
-    </div>
-    <div className="roster-update-actions">
-      <button
-        className="btn-primary"
-        style={{ fontSize: '13px', padding: '8px 14px' }}
-        onClick={() => {
-          setShowUploadPrompt(false)
-          fileInputRef.current.click()
-        }}
-      >
-        Import list
-      </button>
-      <button
-        className="btn-secondary"
-        style={{ fontSize: '13px', padding: '8px 14px' }}
-        onClick={() => setShowUploadPrompt(false)}
-      >
-        Dismiss
-      </button>
-    </div>
-  </div>
+      
+     {!localStorage.getItem('roundup_tour_roster_detail') ? (
+  <Tour steps={rosterDetailTourSteps} storageKey="roundup_tour_roster_detail" onComplete={() => {}} />
+) : (
+  students.length === 0 &&
+  !localStorage.getItem('roundup_ever_added_students') && (
+    <Tour steps={emptyRerouteTourSteps} storageKey="roundup_tour_empty_reroute" onComplete={() => {}} />
+  )
 )}
-
-<Tour steps={rosterDetailTourSteps} storageKey="roundup_tour_roster_detail" onComplete={() => {}} />
 
 {showStudentsOnboardingBanner && (
   <div className="roster-update-banner">
@@ -583,6 +593,9 @@ const handleCancelEdit = () => {
     </div>
   </div>
 )}
+{showStudentsOnboardingBanner && (
+  <Tour steps={continueBannerTourSteps} storageKey="roundup_tour_continue_banner_students" onComplete={() => {}} />
+)}
       <div className="page-header">
         <Link to={backTo} state={state?.fromState} className="back-link">
           <FontAwesomeIcon icon={faChevronLeft}/> {backLabel}
@@ -592,7 +605,7 @@ const handleCancelEdit = () => {
 
       <h1 className="page-title bold" style={{ marginBottom: '20px' }}>{classListName}</h1>
 
-      <div className="form-card" style={{ marginBottom: '16px' }}>
+      <div className="form-card student-upload-ctn" style={{ marginBottom: '16px' }}>
   <div className="add-students-section">
     <p className="add-students-section-title task-limit-title" style={{ textAlign: 'center' }}>Import a class list</p>
     <p className="add-students-section-desc" style={{ textAlign: 'center' }}>

@@ -8,6 +8,12 @@ function TourOptInModal() {
     if (!asked) setShow(true)
   }, [])
 
+
+  useEffect(() => {
+  document.body.style.overflow = show ? 'hidden' : ''
+  return () => { document.body.style.overflow = '' }
+}, [show])
+
   const respond = (wantsTour) => {
     localStorage.setItem('roundup_tour_optin_asked', 'true')
     if (wantsTour) {

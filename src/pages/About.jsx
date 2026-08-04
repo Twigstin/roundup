@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faXmark } from '@fortawesome/free-solid-svg-icons'
@@ -19,6 +19,12 @@ function About() {
   const aboutTourSteps = [
   { selector: '.about-avatar', title: 'View full image', text: 'Tap profile photo to see it full size.' }
 ]
+
+
+useEffect(() => {
+  document.body.style.overflow = lightboxSrc ? 'hidden' : ''
+  return () => { document.body.style.overflow = '' }
+}, [lightboxSrc])
 
   /**
    ,

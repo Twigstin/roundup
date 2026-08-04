@@ -42,6 +42,9 @@ const courseDetailTourSteps = [
   { selector: '.input-wrapper', title: 'Search students', text: 'Quickly find any student by name or reg number.' },
   { selector: '.toggle-btn', title: 'Mark paid or collected', text: 'Tap here to mark a student as paid, then mark it collected once received.' }
 ]
+const exportModalTourSteps = [
+  { selector: '.export-title-field', title: 'Choose what to export', text: 'Pick a title, export type, and sort order for your file.' }
+]
 
   useEffect(() => {
     const init = async () => {
@@ -532,11 +535,11 @@ const openExportModal = () => {
 {showExportModal && (
   <div className="modal-overlay" onClick={() => setShowExportModal(false)}>
     <div className="modal-card" id="modal-card" onClick={(e) => e.stopPropagation()}>
- 
+    <Tour steps={exportModalTourSteps} storageKey="roundup_tour_export_modal_single" onComplete={() => {}} />
       <div style={{ overflowY: 'auto', flex: 1, padding: '24px 24px 0 24px' }}>
         <h2 className="page-title bold" style={{ fontSize: '16px', marginBottom: '16px' }}>Export settings</h2>
  
-        <div className="form-field">
+        <div className="form-field export-title-field">
           <label className="form-label">List title</label>
           <input
             className="form-input"

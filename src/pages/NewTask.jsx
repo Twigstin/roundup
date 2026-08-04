@@ -35,6 +35,10 @@ function NewTask() {
   { selector: '.create-task-submit-btn', title: 'Create your task', text: 'Once everything\'s filled in, tap here to create it and start tracking.' }
 ]
 
+const paymentModeTourSteps = [
+  { selector: '.payment-mode-field', title: 'Choose a payment mode', text: 'Single item tracks one payment per student. Multi item tracks several items per student — like textbooks per course — in one task.' }
+]
+
   useEffect(() => {
   if (!error) return
   const timer = setTimeout(() => setError(''), 4000)
@@ -224,7 +228,10 @@ if (checkingLimits) return <NewTaskSkeleton />
         </div>
 
         {type === 'payment' && (
-  <div className="form-field">
+  <Tour steps={paymentModeTourSteps} storageKey="roundup_tour_payment_mode" onComplete={() => {}} />
+)}
+        {type === 'payment' && (
+  <div className="form-field payment-mode-field">
     <label className="form-label">Payment mode</label>
     <select
   className="form-input"

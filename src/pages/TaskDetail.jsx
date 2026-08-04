@@ -51,14 +51,7 @@ function TaskDetail() {
   const channelId = useRef(`${Date.now()}-${Math.random()}`)
 
 
-  const taskDetailTourSteps = [
-  { selector: '.edit-title-btn', title: 'Rename this task', text: 'Tap here anytime to change the task name.' },
-  { selector: '.task-details-export-btn', title: 'Export your data', text: 'Download your records as an Excel file anytime.' },
-  { selector: '.summary-grid', title: 'Track progress at a glance', text: 'Tap any card to filter your list by that status.' },
-  { selector: '.input-wrapper', title: 'Search students', text: 'Quickly find any student by name or reg number.' },
-  { selector: '.task-add-student-btn', title: 'Add a student', text: 'Add someone who isn\'t on your class list.' },
-  { selector: '.toggle-btn', title: 'Update a student\'s status', text: 'Tap here to mark or unmark a student as paid, submitted, or present.' },
-]
+
 
   useEffect(() => {
   if (!addStudentError) return
@@ -663,6 +656,24 @@ const detectDuplicate = (name, reg) => {
 }
 
 
+  const taskDetailTourSteps = [
+  { selector: '.edit-title-btn', title: 'Rename this task', text: 'Tap here anytime to change the task name.' },
+  { selector: '.task-details-export-btn', title: 'Export your data', text: 'Download your records as an Excel file anytime.' },
+  { selector: '.summary-grid', title: 'Track progress at a glance', text: 'Tap any card to filter your list by that status.' },
+  { selector: '.input-wrapper', title: 'Search students', text: 'Quickly find any student by name or reg number.' },
+  { selector: '.task-add-student-btn', title: 'Add a student', text: 'Add someone who isn\'t on your class list.' },
+  { selector: '.toggle-btn', title: 'Update a student\'s status', text: 'Tap here to mark or unmark a student as paid, submitted, or present.' },
+  ...(isPayment ? [{ selector: '.note-btn', title: 'Add a note', text: 'Leave a note on any student\'s payment — useful for partial payments or special cases.' }] : [])
+]
+
+const exportModalTourSteps = [
+  { selector: '.export-title-field', title: 'Name your export', text: 'Give the file a title — it appears as a header in the exported sheet.' },
+  { selector: '.export-type-field', title: 'Choose export type', text: 'Basic for just names and reg numbers, Full for status and notes too, or Custom to pick exactly what you need.' },
+  { selector: '.export-sort-field', title: 'Sort order', text: 'Export in default order, alphabetically, or by most recently updated.' },
+  { selector: '.export-header-info-field', title: 'Extra header info', text: 'Optionally include the date and a summary of totals at the top of the file.' }
+]
+
+
 
   return (
   <div>
@@ -1149,12 +1160,12 @@ const detectDuplicate = (name, reg) => {
 {showExportModal && (
   <div className="modal-overlay" onClick={() => setShowExportModal(false)}>
     <div className="modal-card" id='modal-card' onClick={(e) => e.stopPropagation()}>
-  
+  <Tour steps={exportModalTourSteps} storageKey="roundup_tour_export_modal_single" onComplete={() => {}} />
   
   <div style={{ overflowY: 'auto', flex: 1, padding: '24px 24px 0 24px' }}>
   <h2 className="page-title bold" style={{ fontSize: '16px', marginBottom: '16px' }}>Export settings</h2>
 
-  <div className="form-field">
+  <div className="form-field export-title-field">
     <label className="form-label">List title</label>
     <input
       className="form-input"
@@ -1166,7 +1177,7 @@ const detectDuplicate = (name, reg) => {
     <span className="form-hint">Appears as a header at the top of the exported file</span>
   </div>
 
-  <div className="form-field">
+  <div className="form-field export-type-field">
     <label className="form-label">Export type</label>
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '6px' }}>
       <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
@@ -1229,7 +1240,7 @@ const detectDuplicate = (name, reg) => {
 
   <hr style={{ height: '1px', border: 'none', backgroundColor: '#e5e5e5', marginTop: '10px', marginBottom: '10px' }}/>
 
-  <div className="form-field">
+  <div className="form-field export-sort-field">
     <label className="form-label">Sort order</label>
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
       <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
@@ -1249,7 +1260,7 @@ const detectDuplicate = (name, reg) => {
 
   <hr style={{ height: '1px', border: 'none', backgroundColor: '#e5e5e5', marginTop: '10px', marginBottom: '10px' }}/>
 
-  <div className="form-field">
+  <div className="form-field export-header-info-field">
     <label className="form-label">Additional header info</label>
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '6px' }}>
       <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>

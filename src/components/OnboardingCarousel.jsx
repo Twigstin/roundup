@@ -2,11 +2,17 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowRight, faArrowLeft } from '@fortawesome/free-solid-svg-icons'
+import Tour from './Tour'
 
 const TOTAL_SLIDES = 5 // intro, classlist, courses, profile, task
 
 function OnboardingCarousel({ hasClassList, hasCourses, hasTasks, profileComplete }) {
   const navigate = useNavigate()
+
+  const introTourSteps = [
+  { selector: '.onboarding-banner', title: 'Welcome!', text: 'This is your setup guide — it\'ll walk you through getting Roundup ready for your class.' },
+  { selector: '.onboarding-slide button', title: 'Tap to begin', text: 'Tap "Get started" to begin, one step at a time.' }
+]
 
   const [slideIndex, setSlideIndex] = useState(() => {
     const saved = localStorage.getItem('roundup_onboarding_slide')
@@ -65,6 +71,9 @@ function OnboardingCarousel({ hasClassList, hasCourses, hasTasks, profileComplet
 
   return (
     <div className="onboarding-banner">
+      {slideIndex === 0 && (
+    <Tour steps={introTourSteps} storageKey="roundup_tour_onboarding_intro" onComplete={() => {}} />
+  )}
       <div
         className="onboarding-carousel-viewport"
         style={{ height: viewportHeight ? `${viewportHeight}px` : 'auto', transition: 'height 0.3s ease' }}
@@ -79,11 +88,11 @@ function OnboardingCarousel({ hasClassList, hasCourses, hasTasks, profileComplet
             {/* <StepProgress current={0} /> */}
             <p className="onboarding-title bold">Welcome to Roundup 👋</p>
             <p className="onboarding-subtitle" style={{ marginBottom: '20px', lineHeight: '20px' }}>
-              Roundup helps class reps track payments, submissions, and attendance — all in one place.<br/>No more spreadsheets, endless WhatsApp chats, or bulky record books.
+              Roundup helps class reps track payments, submissions, and attendance — all in one place.<br/>No more spreadsheets, endless WhatsApp chats scrolling, or bulky record books.
               <span style={{ marginTop: '10px', display: 'block' }}>Add your class list and courses once, then create and manage tasks in seconds.</span>
             </p>
             <div style={{ width: '100%', display: 'flex' }}>
-              <button className="btn-primary" style={{ margin: 'auto' }} onClick={goNext}>
+              <button className="btn-primary onboarding-get-started-btn" style={{ margin: 'auto' }} onClick={goNext}>
                 Get started<FontAwesomeIcon icon={faArrowRight} style={{ fontSize: '10px', marginLeft: '4px' }} />
               </button>
             </div>
