@@ -194,6 +194,12 @@ body {
   max-width: 200px;
 }
 
+.auto-selected-classlist {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .type-badge {
   font-size: 11px;
   padding: 2px 8px;
@@ -756,7 +762,7 @@ button {
 
 
 
-@media (max-width: 401px) {
+@media (max-width: 410px) {
   #not-collected {
     display: none;
   }
@@ -1348,7 +1354,7 @@ button {
   transition: transform 0.13s ease;
 }
 
-button:active {
+button:not(.input-clear-btn):active {
   transform: scale(0.96);
 }
 
@@ -2196,19 +2202,20 @@ button:active {
 }
 
 .lightbox-image {
-  width: 340px;
-  height: 340px;
+  width: 500px;
+  height: 500px;
   border-radius: 10px;
   object-fit: cover;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
-@media (max-width: 350px) {
+@media (max-width: 505px) {
   .lightbox-image {
-    width: 250px;
-    height: 250px;
+    width: 100%;
+    height: auto;
   }
 }
+
 
 .lightbox-close {
   position: absolute;
@@ -3557,6 +3564,8 @@ button:active {
 .multi-item-stat-num.success { color: #27500A; }
 .multi-item-stat-num.danger  { color: #791F1F; }
 
+
+/*
 .multi-item-view-all {
   display: flex;
   align-items: center;
@@ -3570,6 +3579,28 @@ button:active {
   font-family: 'inter', sans-serif;
   width: 100%;
 }
+
+*/
+
+.multi-item-view-all {
+  
+}
+
+.multi-item-view-ctn {
+  width: 100%;
+  text-align: center;
+  display: flex;
+  padding: 10px;
+  justify-content: flex-end;
+}
+
+/*
+@media (max-width: 325px) {
+  .multi-item-view-ctn {
+    justify-content: center;
+  }
+}
+  */
 
 .multi-item-view-all:hover {
   color: #111;
@@ -3745,7 +3776,7 @@ button:active {
   display: none;
 }
 
-@media (max-width: 360px) {
+@media (max-width: 340px) {
   .classlist-auto-select-msg {
     display: none;
   }
@@ -3917,4 +3948,29 @@ button:active {
   top: 100%;
   left: 24px;
   border-top-color: #fff;
+}
+
+
+.input-clear-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #ddd;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #666;
+  font-size: 11px;
+  padding: 0;
+}
+
+.input-clear-btn:hover {
+  background: #ccc;
+  color: #333;
 }

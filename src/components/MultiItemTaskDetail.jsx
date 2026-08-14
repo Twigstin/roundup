@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faArrowDown, faSearch, faPenToSquare, faDownload, faPlus, faArrowRight } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faArrowDown, faSearch, faXmark, faPenToSquare, faDownload, faPlus, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import Spinner from './Spinner'
 import { supabase } from '../api/supabase'
 import {
@@ -780,9 +780,11 @@ const collectedHintStep = [
         </div>
 
         {/* View all courses — always visible */}
-        <button className="multi-item-view-all" onClick={() => navigate(`/tasks/${task.id}/courses`)}>
-          View all {taskItems.length} course{taskItems.length !== 1 ? 's' : ''} <span style={{ fontSize: '10px', paddingTop: '2px' , marginLeft: '3px'}}><FontAwesomeIcon icon={faArrowRight} /></span>
-        </button>
+        <div className='multi-item-view-ctn'>
+          <button className="edit-title-btn multi-item-view-all" onClick={() => navigate(`/tasks/${task.id}/courses`)}>
+            View all {taskItems.length} course{taskItems.length !== 1 ? 's' : ''} <span style={{ fontSize: '10px', paddingTop: '2px' , marginLeft: '3px'}}><FontAwesomeIcon icon={faArrowRight} /></span>
+          </button>
+        </div>
       </div>
       </>
       )}
@@ -790,7 +792,23 @@ const collectedHintStep = [
       {/* Search */}
       {students.length > 0 && (<div className="input-wrapper" style={{ marginBottom: '12px' }}>
         <FontAwesomeIcon icon={faSearch} className="input-icon" />
-        <input className="form-input search-icon" type="text" placeholder="Search by name or reg number…" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <input 
+          className="form-input search-icon" 
+          type="text" 
+          placeholder="Search by name or reg number…" 
+          value={search} 
+          onChange={(e) => setSearch(e.target.value)} 
+        />
+        {search && (
+    <button
+      type="button"
+      className="input-clear-btn"
+      onClick={() => setSearch('')}
+      aria-label="Clear search"
+    >
+      <FontAwesomeIcon icon={faXmark} />
+    </button>
+  )}
       </div>)}
       
       {students.length > 0 && (

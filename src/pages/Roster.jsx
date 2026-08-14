@@ -6,7 +6,7 @@ import Spinner from '../components/Spinner'
 import { RosterSkeleton, CoursesSkeleton } from '../components/Skeleton'
 import { supabase } from '../api/supabase'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTrashCan, faPenToSquare, faEllipsisVertical, faSearch, faArrowRight } from '@fortawesome/free-solid-svg-icons'
+import { faTrashCan, faPenToSquare, faXmark, faEllipsisVertical, faSearch, faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import Tour from '../components/Tour'
 
 function Roster() {
@@ -379,6 +379,16 @@ const coursesTourSteps = [
       value={search}
       onChange={(e) => setSearch(e.target.value)}
     />
+    {search && (
+    <button
+      type="button"
+      className="input-clear-btn"
+      onClick={() => setSearch('')}
+      aria-label="Clear search"
+    >
+      <FontAwesomeIcon icon={faXmark} />
+    </button>
+  )}
   </div>
 
               {filteredClassLists.length === 0 ? (
@@ -699,6 +709,7 @@ const coursesTourSteps = [
                 onKeyDown={(e) => { if (e.key === 'Enter') handleCreateList() }}
                 autoFocus
               />
+              
             </div>
             <div className="create-classlist-modal">
               <button

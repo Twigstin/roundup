@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faSearch, faChevronRight } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faXmark, faSearch, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import { getTaskItems, getItemEntries, getEntriesByTask, getStudentsByClassList, getTasks } from '../api/index'
 import Spinner from '../components/Spinner'
 import { CourseStatsListSkeleton } from '../components/Skeleton'
@@ -90,6 +90,16 @@ function CourseStatsList() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+        {search && (
+    <button
+      type="button"
+      className="input-clear-btn"
+      onClick={() => setSearch('')}
+      aria-label="Clear search"
+    >
+      <FontAwesomeIcon icon={faXmark} />
+    </button>
+  )}
       </div>
 
       {filteredItems.length === 0 ? (

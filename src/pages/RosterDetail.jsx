@@ -704,6 +704,17 @@ const handleCancelEdit = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
                   />
+
+                  {search && (
+    <button
+      type="button"
+      className="input-clear-btn"
+      onClick={() => setSearch('')}
+      aria-label="Clear search"
+    >
+      <FontAwesomeIcon icon={faXmark} />
+    </button>
+  )}
                 </div>
           {students.length > 0 && (<div id="btn-danger-clear-all-div">
           <button

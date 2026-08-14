@@ -264,7 +264,7 @@ if (checkingLimits) return <NewTaskSkeleton />
       fontSize: '14px',
       color: '#111'
     }}>
-      <span>{classLists[0].name}</span>
+      <span className='auto-selected-classlist'>{classLists[0].name}</span>
       <span className="classlist-auto-select-msg">Auto-selected ✓</span>
       <span className="my-auto-select-msg">✓</span>
     </div>

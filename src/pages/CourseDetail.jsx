@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams, useLocation } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faSearch, faDownload } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faSearch, faXmark, faDownload } from '@fortawesome/free-solid-svg-icons'
 import { getTaskItems, touchTask, getItemEntries, getEntriesByTask, getStudentsByClassList, getTasks, updateItemEntry, addItemEntry, removeItemEntry } from '../api/index'
 import { TaskDetailSkeleton } from '../components/Skeleton'
 import Spinner from '../components/Spinner'
@@ -471,6 +471,16 @@ const openExportModal = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+        {search && (
+    <button
+      type="button"
+      className="input-clear-btn"
+      onClick={() => setSearch('')}
+      aria-label="Clear search"
+    >
+      <FontAwesomeIcon icon={faXmark} />
+    </button>
+  )}
       </div>
 
       {/* Student list */}

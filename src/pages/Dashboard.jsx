@@ -4,7 +4,7 @@ import { getTasks, deleteTask, getClassLists, getCourses } from '../api/index'
 import ConfirmModal from '../components/ConfirmModal'
 import OnboardingCarousel from '../components/OnboardingCarousel'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLayerGroup, faArrowUp, faArrowDown, faBook, faSearch, faClipboardList, faTrashCan, faArrowRight, faCreditCard, faFileCircleCheck, faUserCheck, faEllipsisVertical } from '@fortawesome/free-solid-svg-icons'
+import { faLayerGroup, faArrowUp, faArrowDown, faXmark, faBook, faSearch, faClipboardList, faTrashCan, faArrowRight, faCreditCard, faFileCircleCheck, faUserCheck, faEllipsisVertical } from '@fortawesome/free-solid-svg-icons'
 import Spinner from '../components/Spinner'
 import { DashboardSkeleton } from '../components/Skeleton'
 import { supabase } from '../api/supabase'
@@ -468,6 +468,16 @@ useEffect(() => {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
+      {search && (
+    <button
+      type="button"
+      className="input-clear-btn"
+      onClick={() => setSearch('')}
+      aria-label="Clear search"
+    >
+      <FontAwesomeIcon icon={faXmark} />
+    </button>
+  )}
     </div>
 
     {/* Row 1 — Active / Archived toggle */}
@@ -655,8 +665,8 @@ useEffect(() => {
                             <span className="task-stat-num success successy">{doneCount}</span>
                             <span className="task-stat-label">paid</span>
                           </div>
-                          <div className="task-stat-divider" />
-                          <div className="task-stat">
+                          <div className="task-stat-divider not-collectedy" />
+                          <div className="task-stat" id="not-collected">
                             <span className="task-stat-num warning warningy">{partPaidCount}</span>
                             <span className="task-stat-label">part paid</span>
                           </div>
@@ -672,8 +682,8 @@ useEffect(() => {
                             <span className="task-stat-num successy" style={{ color: '#27500A' }}>{collectedCount}</span>
                             <span className="task-stat-label">collected</span>
                           </div>
-                          <div className="task-stat-divider not-collectedy" />
-                          <div className="task-stat" id="not-collected">
+                          <div className="task-stat-divider" />
+                          <div className="task-stat">
                             <span className="task-stat-num danger dangery">{notCollectedCount}</span>
                             <span className="task-stat-label">not collected</span>
                           </div>

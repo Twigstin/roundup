@@ -5,7 +5,7 @@ import Spinner from '../components/Spinner'
 import MultiItemTaskDetail from '../components/MultiItemTaskDetail'
 import { TaskDetailSkeleton } from '../components/Skeleton'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faArrowRight, faSearch, faPenToSquare, faDownload, faUserCheck, faFileCircleCheck, faCreditCard, faArrowDown } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faArrowRight, faXmark, faSearch, faPenToSquare, faDownload, faUserCheck, faFileCircleCheck, faCreditCard, faArrowDown } from '@fortawesome/free-solid-svg-icons'
 import { supabase } from '../api/supabase'
 import posthog from 'posthog-js'
 import Tour from '../components/Tour'
@@ -889,6 +889,17 @@ const exportModalTourSteps = [
     value={search}
     onChange={(e) => setSearch(e.target.value)}
                    />
+                   {search && (
+    <button
+      type="button"
+      className="input-clear-btn"
+      id="my-input-clear-btn"
+      onClick={() => setSearch('')}
+      aria-label="Clear search"
+    >
+      <FontAwesomeIcon icon={faXmark} />
+    </button>
+  )}
                  </div>
   <button
   className="btn-secondary task-add-student-btn"
